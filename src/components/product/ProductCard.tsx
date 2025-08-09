@@ -8,15 +8,17 @@ import { useAppDispatch } from "@/store";
 import { addToCart } from "@/store/slices/cartSlice";
 import { showSuccessNotification } from "@/store/slices/uiSlice";
 import { Product } from "@/types";
-import { ShoppingCart, Plus, Minus, Star } from "lucide-react";
+import { ShoppingCart, Plus, Minus, Weight, Package } from "lucide-react";
 
 interface ProductCardProps {
   product: Product;
+  layout?: "grid" | "list";
   showAddToCart?: boolean;
 }
 
 export function ProductCard({
   product,
+  layout = "grid",
   showAddToCart = true,
 }: ProductCardProps) {
   const dispatch = useAppDispatch();
@@ -50,8 +52,132 @@ export function ProductCard({
 
   const isOutOfStock = product.stock === 0;
 
+  if (layout === "list") {
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300">
+        <div className="flex">
+          {/* Product Image */}
+          <Link href={`/products/${product.id}`} className="flex-shrink-0">
+            <div className="relative w-32 h-32 bg-gray-100">
+              {product.images && product.images.length > 0 ? (
+                <Image
+                  src={product.images[0]}
+                  alt={product.name}
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-400">
+                  <Package className="w-8 h-8" />
+                </div>
+              )}
+              {isOutOfStock && (
+                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                  <span className="text-white text-xs font-semibold">
+                    Out of Stock
+                  </span>
+                </div>
+              )}
+            </div>
+          </Link>
+
+          {/* Product Info */}
+          <div className="flex-1 p-4 flex justify-between">
+            <div className="flex-1">
+              <Link href={`/products/${product.id}`}>
+                <h3 className="font-semibold text-gray-900 mb-1 hover:text-primary-600 transition-colors line-clamp-1">
+                  {product.name}
+                </h3>
+              </Link>
+
+              <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+                {product.description}
+              </p>
+
+              <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
+                <div className="flex items-center gap-1">
+                  <Weight className="w-4 h-4" />
+                  <span>{product.weight}kg</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Package className="w-4 h-4" />
+                  <span>{product.stock} in stock</span>
+                </div>
+                <span className="bg-gray-100 px-2 py-1 rounded text-xs">
+                  {product.category}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-xl font-bold text-gray-900">
+                    ₹{product.price.toFixed(2)}
+                  </span>
+                  {product.isEligibleForFreeDelivery && (
+                    <span className="ml-2 text-xs text-green-600 font-medium">
+                      Free Delivery
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Add to Cart Section */}
+            {showAddToCart && !isOutOfStock && (
+              <div className="flex flex-col items-end justify-between">
+                {/* Quantity Selector */}
+                <div className="flex items-center gap-2 mb-3">
+                  <button
+                    onClick={decrementQuantity}
+                    disabled={quantity <= 1}
+                    className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <span className="w-8 text-center font-semibold">
+                    {quantity}
+                  </span>
+                  <button
+                    onClick={incrementQuantity}
+                    disabled={quantity >= product.stock}
+                    className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Add to Cart Button */}
+                <button
+                  onClick={handleAddToCart}
+                  disabled={isLoading}
+                  className="bg-primary-500 hover:bg-primary-600 disabled:bg-gray-300 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+                >
+                  {isLoading ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <ShoppingCart className="w-4 h-4" />
+                  )}
+                  <span>Add to Cart</span>
+                </button>
+              </div>
+            )}
+
+            {isOutOfStock && (
+              <div className="flex items-center">
+                <span className="bg-gray-300 text-gray-500 px-4 py-2 rounded-lg font-medium">
+                  Out of Stock
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Grid layout (default)
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300">
       {/* Product Image */}
       <Link href={`/products/${product.id}`}>
         <div className="relative h-48 bg-gray-100">
@@ -64,19 +190,17 @@ export function ProductCard({
             />
           ) : (
             <div className="flex items-center justify-center h-full text-gray-400">
-              <span>No Image</span>
+              <Package className="w-16 h-16" />
             </div>
           )}
 
-          {/* Stock Badge */}
           {isOutOfStock && (
             <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-semibold">
               Out of Stock
             </div>
           )}
 
-          {/* Free Delivery Badge */}
-          {product.isEligibleForFreeDelivery && (
+          {product.isEligibleForFreeDelivery && !isOutOfStock && (
             <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded text-xs font-semibold">
               Free Delivery
             </div>
@@ -101,17 +225,13 @@ export function ProductCard({
             <span className="text-lg font-bold text-gray-900">
               ₹{product.price.toFixed(2)}
             </span>
-            <span className="text-sm text-gray-500 ml-2">
-              ({product.weight}kg)
-            </span>
+            <div className="text-xs text-gray-500 mt-1">
+              {product.weight}kg • {product.stock} in stock
+            </div>
           </div>
         </div>
 
-        {/* Stock Info */}
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-sm text-gray-600">
-            Stock: {product.stock} available
-          </span>
+        <div className="mb-3">
           <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
             {product.category}
           </span>
@@ -129,7 +249,7 @@ export function ProductCard({
                 <button
                   onClick={decrementQuantity}
                   disabled={quantity <= 1}
-                  className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50"
                 >
                   <Minus className="w-4 h-4" />
                 </button>
@@ -139,7 +259,7 @@ export function ProductCard({
                 <button
                   onClick={incrementQuantity}
                   disabled={quantity >= product.stock}
-                  className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50"
                 >
                   <Plus className="w-4 h-4" />
                 </button>
@@ -149,8 +269,8 @@ export function ProductCard({
             {/* Add to Cart Button */}
             <button
               onClick={handleAddToCart}
-              disabled={isLoading || isOutOfStock}
-              className="w-full bg-primary-500 hover:bg-primary-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-2 px-4 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2"
+              disabled={isLoading}
+              className="w-full bg-primary-500 hover:bg-primary-600 disabled:bg-gray-300 text-white py-2 px-4 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2"
             >
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -164,7 +284,6 @@ export function ProductCard({
           </div>
         )}
 
-        {/* Out of Stock Button */}
         {isOutOfStock && (
           <button
             disabled
