@@ -6,7 +6,7 @@ import {
   ProductFilters,
   PaginatedResponse,
 } from "@/types";
-import { api } from "@/lib/api";
+import { mockProductAPI } from "@/lib/demoData";
 
 const initialState: ProductState = {
   products: [],
@@ -22,7 +22,7 @@ const initialState: ProductState = {
   },
 };
 
-// Async thunks
+// Async thunks using demo data
 export const fetchProducts = createAsyncThunk(
   "products/fetchProducts",
   async (
@@ -34,31 +34,13 @@ export const fetchProducts = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const queryParams = new URLSearchParams();
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
-      if (params?.page) queryParams.append("page", params.page.toString());
-      if (params?.limit) queryParams.append("limit", params.limit.toString());
-      if (params?.filters?.category)
-        queryParams.append("category", params.filters.category);
-      if (params?.filters?.searchQuery)
-        queryParams.append("search", params.filters.searchQuery);
-      if (params?.filters?.sortBy)
-        queryParams.append("sortBy", params.filters.sortBy);
-      if (params?.filters?.sortOrder)
-        queryParams.append("sortOrder", params.filters.sortOrder);
-      if (params?.filters?.priceRange) {
-        queryParams.append("minPrice", params.filters.priceRange[0].toString());
-        queryParams.append("maxPrice", params.filters.priceRange[1].toString());
-      }
-
-      const response = await api.get<PaginatedResponse<Product>>(
-        `/api/products?${queryParams.toString()}`
-      );
-      return response.data;
+      const response = await mockProductAPI.getProducts(params?.filters);
+      return response;
     } catch (error: any) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch products"
-      );
+      return rejectWithValue("Failed to fetch products");
     }
   }
 );
@@ -67,12 +49,16 @@ export const fetchProductById = createAsyncThunk(
   "products/fetchProductById",
   async (productId: string, { rejectWithValue }) => {
     try {
-      const response = await api.get<Product>(`/api/products/${productId}`);
-      return response.data;
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      const product = await mockProductAPI.getProductById(productId);
+      if (!product) {
+        throw new Error("Product not found");
+      }
+      return product;
     } catch (error: any) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch product"
-      );
+      return rejectWithValue("Failed to fetch product");
     }
   }
 );
@@ -81,12 +67,13 @@ export const fetchCategories = createAsyncThunk(
   "products/fetchCategories",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get<string[]>("/api/products/categories");
-      return response.data;
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      const categories = await mockProductAPI.getCategories();
+      return categories;
     } catch (error: any) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch categories"
-      );
+      return rejectWithValue("Failed to fetch categories");
     }
   }
 );
@@ -95,14 +82,13 @@ export const searchProducts = createAsyncThunk(
   "products/searchProducts",
   async (query: string, { rejectWithValue }) => {
     try {
-      const response = await api.get<Product[]>(
-        `/api/products/search?q=${encodeURIComponent(query)}`
-      );
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 400));
+
+      const response = await mockProductAPI.getProducts({ searchQuery: query });
       return response.data;
     } catch (error: any) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to search products"
-      );
+      return rejectWithValue("Failed to search products");
     }
   }
 );

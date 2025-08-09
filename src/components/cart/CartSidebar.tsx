@@ -3,21 +3,19 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { closeCart } from "@/store/slices/uiSlice";
 import {
   updateCartItemQuantity,
   removeFromCart,
 } from "@/store/slices/cartSlice";
-import { X, Plus, Minus, Trash2, ShoppingBag } from "lucide-react";
+import { X, Plus, Minus, Trash2, ShoppingBag, Package } from "lucide-react";
 
 export function CartSidebar() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { isCartOpen } = useAppSelector((state) => state.ui);
   const { cart } = useAppSelector((state) => state.cart);
-  const { isAuthenticated } = useAppSelector((state) => state.auth);
 
   const handleClose = () => {
     dispatch(closeCart());
@@ -32,16 +30,12 @@ export function CartSidebar() {
   };
 
   const handleCheckout = () => {
-    if (!isAuthenticated) {
-      router.push("/auth/login?redirect=/checkout");
-    } else {
-      router.push("/checkout");
-    }
+    router.push("/checkout");
     handleClose();
   };
 
   const handleContinueShopping = () => {
-    router.push("/products");
+    router.push("/");
     handleClose();
   };
 
@@ -81,18 +75,18 @@ export function CartSidebar() {
       />
 
       {/* Sidebar */}
-      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-lg z-50 transform transition-transform duration-300 ease-in-out">
+      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white border-l-2 border-gray-300 z-50 shadow-lg">
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b">
+          <div className="flex items-center justify-between p-4 border-b-2 border-gray-300 bg-gray-50">
             <h2 className="text-lg font-semibold text-gray-900">
               Shopping Cart ({cart.items.length})
             </h2>
             <button
               onClick={handleClose}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-2 hover:bg-gray-200 border-2 border-gray-400"
             >
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5 text-gray-800" />
             </button>
           </div>
 
@@ -100,7 +94,7 @@ export function CartSidebar() {
           <div className="flex-1 overflow-y-auto">
             {cart.items.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full p-8 text-center">
-                <ShoppingBag className="w-16 h-16 text-gray-300 mb-4" />
+                <ShoppingBag className="w-16 h-16 text-gray-400 mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
                   Your cart is empty
                 </h3>
@@ -109,7 +103,7 @@ export function CartSidebar() {
                 </p>
                 <button
                   onClick={handleContinueShopping}
-                  className="bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 font-medium border-2 border-blue-700"
                 >
                   Continue Shopping
                 </button>
@@ -119,22 +113,13 @@ export function CartSidebar() {
                 {cart.items.map((item) => (
                   <div
                     key={item.product.id}
-                    className="flex items-center space-x-3 bg-gray-50 rounded-lg p-3"
+                    className="flex items-center space-x-3 bg-gray-50 border-2 border-gray-200 p-3"
                   >
                     {/* Product Image */}
-                    <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                      {item.product.images && item.product.images.length > 0 ? (
-                        <Image
-                          src={item.product.images[0]}
-                          alt={item.product.name}
-                          fill
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className="flex items-center justify-center h-full text-gray-400 text-xs">
-                          No Image
-                        </div>
-                      )}
+                    <div className="relative w-16 h-16 bg-gray-100 border-2 border-gray-300 flex-shrink-0">
+                      <div className="flex items-center justify-center h-full text-gray-500">
+                        <Package className="w-6 h-6" />
+                      </div>
                     </div>
 
                     {/* Product Details */}
@@ -142,7 +127,7 @@ export function CartSidebar() {
                       <h4 className="font-medium text-gray-900 text-sm line-clamp-2">
                         {item.product.name}
                       </h4>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-700">
                         ₹{item.product.price} × {item.quantity}
                       </p>
                       <p className="text-sm font-semibold text-gray-900">
@@ -152,7 +137,7 @@ export function CartSidebar() {
 
                     {/* Quantity Controls */}
                     <div className="flex flex-col items-center space-y-2">
-                      <div className="flex items-center space-x-1">
+                      <div className="flex items-center border-2 border-gray-300">
                         <button
                           onClick={() =>
                             handleUpdateQuantity(
@@ -161,11 +146,11 @@ export function CartSidebar() {
                             )
                           }
                           disabled={item.quantity <= 1}
-                          className="w-6 h-6 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="w-6 h-6 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed border-r-2 border-gray-300 text-gray-800"
                         >
                           <Minus className="w-3 h-3" />
                         </button>
-                        <span className="w-8 text-center text-sm font-semibold">
+                        <span className="w-8 text-center text-sm font-semibold text-gray-900">
                           {item.quantity}
                         </span>
                         <button
@@ -176,7 +161,7 @@ export function CartSidebar() {
                             )
                           }
                           disabled={item.quantity >= item.product.stock}
-                          className="w-6 h-6 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="w-6 h-6 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed border-l-2 border-gray-300 text-gray-800"
                         >
                           <Plus className="w-3 h-3" />
                         </button>
@@ -184,7 +169,7 @@ export function CartSidebar() {
 
                       <button
                         onClick={() => handleRemoveItem(item.product.id)}
-                        className="text-red-500 hover:text-red-700 p-1"
+                        className="text-red-600 hover:text-red-800 p-1 border-2 border-red-400 hover:border-red-600 bg-white hover:bg-red-50"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -197,22 +182,24 @@ export function CartSidebar() {
 
           {/* Footer */}
           {cart.items.length > 0 && (
-            <div className="border-t p-4 space-y-4">
+            <div className="border-t-2 border-gray-300 p-4 space-y-4 bg-gray-50">
               {/* Order Summary */}
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
+              <div className="space-y-2 text-sm bg-white p-3 border-2 border-gray-300">
+                <div className="flex justify-between text-gray-800">
                   <span>Subtotal:</span>
                   <span>₹{cart.totalAmount.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between text-gray-800">
                   <span>Weight:</span>
                   <span>{cart.totalWeight.toFixed(2)}kg</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between text-gray-800">
                   <span>Delivery Fee:</span>
                   <span
                     className={
-                      cart.isEligibleForFreeDelivery ? "text-green-600" : ""
+                      cart.isEligibleForFreeDelivery
+                        ? "text-green-600 font-semibold"
+                        : "text-gray-800"
                     }
                   >
                     {cart.isEligibleForFreeDelivery
@@ -220,8 +207,8 @@ export function CartSidebar() {
                       : `₹${deliveryFee}`}
                   </span>
                 </div>
-                <hr />
-                <div className="flex justify-between font-semibold">
+                <hr className="border-gray-300" />
+                <div className="flex justify-between font-semibold text-lg text-gray-900">
                   <span>Total:</span>
                   <span>₹{totalWithDelivery.toFixed(2)}</span>
                 </div>
@@ -229,7 +216,7 @@ export function CartSidebar() {
 
               {/* Free Delivery Message */}
               {!cart.isEligibleForFreeDelivery && (
-                <div className="text-xs text-amber-600 bg-amber-50 p-2 rounded">
+                <div className="text-xs text-amber-800 bg-amber-100 p-2 border-2 border-amber-300">
                   Add ₹{(1000 - cart.totalAmount).toFixed(2)} more for free
                   delivery
                 </div>
@@ -239,15 +226,13 @@ export function CartSidebar() {
               <div className="space-y-2">
                 <button
                   onClick={handleCheckout}
-                  className="w-full bg-primary-500 hover:bg-primary-600 text-white py-3 rounded-lg font-medium transition-colors"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 font-medium border-2 border-blue-700"
                 >
-                  {isAuthenticated
-                    ? "Proceed to Checkout"
-                    : "Login to Checkout"}
+                  Proceed to Checkout
                 </button>
                 <button
                   onClick={handleContinueShopping}
-                  className="w-full border border-gray-300 hover:bg-gray-50 text-gray-700 py-3 rounded-lg font-medium transition-colors"
+                  className="w-full border-2 border-gray-400 hover:bg-gray-100 text-gray-800 py-3 font-medium bg-white"
                 >
                   Continue Shopping
                 </button>

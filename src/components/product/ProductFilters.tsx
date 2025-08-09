@@ -54,16 +54,16 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
     filters.priceRange[1] < 10000;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Clear Filters */}
       {hasActiveFilters && (
-        <div className="flex items-center justify-between p-3 bg-primary-50 rounded-lg">
-          <span className="text-sm font-medium text-primary-700">
+        <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200">
+          <span className="text-sm font-medium text-blue-700">
             Filters Applied
           </span>
           <button
             onClick={clearAllFilters}
-            className="text-sm text-primary-600 hover:text-primary-800 font-medium"
+            className="text-sm text-blue-600 hover:text-blue-800 font-medium"
           >
             Clear All
           </button>
@@ -71,10 +71,10 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
       )}
 
       {/* Categories */}
-      <div className="border border-gray-200 rounded-lg">
+      <div className="border border-gray-200">
         <button
           onClick={() => toggleSection("categories")}
-          className="w-full flex items-center justify-between p-4 text-left"
+          className="w-full flex items-center justify-between p-4 text-left bg-gray-50 border-b border-gray-200"
         >
           <h3 className="font-semibold text-gray-900">Categories</h3>
           {expandedSections.categories ? (
@@ -85,13 +85,13 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
         </button>
 
         {expandedSections.categories && (
-          <div className="px-4 pb-4 space-y-2">
+          <div className="p-4 space-y-2">
             <button
               onClick={() => handleCategoryChange("")}
-              className={`block w-full text-left px-3 py-2 rounded text-sm transition-colors ${
+              className={`block w-full text-left px-3 py-2 text-sm border ${
                 !filters.category
-                  ? "bg-primary-500 text-white"
-                  : "hover:bg-gray-100"
+                  ? "bg-blue-600 text-white border-blue-600"
+                  : "hover:bg-gray-50 border-gray-300"
               }`}
             >
               All Categories
@@ -100,10 +100,10 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
               <button
                 key={category}
                 onClick={() => handleCategoryChange(category)}
-                className={`block w-full text-left px-3 py-2 rounded text-sm transition-colors ${
+                className={`block w-full text-left px-3 py-2 text-sm border ${
                   filters.category === category
-                    ? "bg-primary-500 text-white"
-                    : "hover:bg-gray-100"
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "hover:bg-gray-50 border-gray-300"
                 }`}
               >
                 {category}
@@ -114,10 +114,10 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
       </div>
 
       {/* Price Range */}
-      <div className="border border-gray-200 rounded-lg">
+      <div className="border border-gray-200">
         <button
           onClick={() => toggleSection("price")}
-          className="w-full flex items-center justify-between p-4 text-left"
+          className="w-full flex items-center justify-between p-4 text-left bg-gray-50 border-b border-gray-200"
         >
           <h3 className="font-semibold text-gray-900">Price Range</h3>
           {expandedSections.price ? (
@@ -128,7 +128,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
         </button>
 
         {expandedSections.price && (
-          <div className="px-4 pb-4 space-y-4">
+          <div className="p-4 space-y-4">
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm text-gray-600">
                 <span>₹{filters.priceRange[0]}</span>
@@ -161,7 +161,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
                     filters.priceRange[1]
                   )
                 }
-                className="px-3 py-2 border border-gray-300 rounded text-sm"
+                className="px-3 py-2 border border-gray-300 text-sm"
               />
               <input
                 type="number"
@@ -173,7 +173,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
                     parseInt(e.target.value) || 10000
                   )
                 }
-                className="px-3 py-2 border border-gray-300 rounded text-sm"
+                className="px-3 py-2 border border-gray-300 text-sm"
               />
             </div>
           </div>
@@ -181,10 +181,10 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
       </div>
 
       {/* Sort Options */}
-      <div className="border border-gray-200 rounded-lg">
+      <div className="border border-gray-200">
         <button
           onClick={() => toggleSection("sort")}
-          className="w-full flex items-center justify-between p-4 text-left"
+          className="w-full flex items-center justify-between p-4 text-left bg-gray-50 border-b border-gray-200"
         >
           <h3 className="font-semibold text-gray-900">Sort By</h3>
           {expandedSections.sort ? (
@@ -195,7 +195,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
         </button>
 
         {expandedSections.sort && (
-          <div className="px-4 pb-4 space-y-2">
+          <div className="p-4 space-y-2">
             {[
               {
                 label: "Name (A-Z)",
@@ -228,11 +228,11 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
                 onClick={() =>
                   handleSortChange(option.sortBy, option.sortOrder)
                 }
-                className={`block w-full text-left px-3 py-2 rounded text-sm transition-colors ${
+                className={`block w-full text-left px-3 py-2 text-sm border ${
                   filters.sortBy === option.sortBy &&
                   filters.sortOrder === option.sortOrder
-                    ? "bg-primary-500 text-white"
-                    : "hover:bg-gray-100"
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "hover:bg-gray-50 border-gray-300"
                 }`}
               >
                 {option.label}

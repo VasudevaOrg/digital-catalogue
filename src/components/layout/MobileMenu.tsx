@@ -5,9 +5,8 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { logout } from "@/store/slices/authSlice";
-import { closeMobileMenu } from "@/store/slices/uiSlice";
-import { User, ShoppingBag, Package, LogOut, X } from "lucide-react";
+import { closeMobileMenu, openCart } from "@/store/slices/uiSlice";
+import { ShoppingBag, Package, X, MessageCircle, Phone } from "lucide-react";
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -17,7 +16,6 @@ interface MobileMenuProps {
 export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const { isAuthenticated, customer } = useAppSelector((state) => state.auth);
   const { cart } = useAppSelector((state) => state.cart);
 
   const cartItemsCount = cart.items.reduce(
@@ -37,15 +35,14 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
     };
   }, [isOpen]);
 
-  const handleLogout = () => {
-    dispatch(logout());
-    onClose();
-    router.push("/");
-  };
-
   const handleLinkClick = (href: string) => {
     onClose();
     router.push(href);
+  };
+
+  const handleCartClick = () => {
+    onClose();
+    dispatch(openCart());
   };
 
   if (!isOpen) return null;
@@ -59,30 +56,26 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
       />
 
       {/* Sidebar */}
-      <div className="fixed left-0 top-0 h-full w-80 bg-white shadow-lg z-50 transform transition-transform duration-300 ease-in-out md:hidden">
+      <div className="fixed left-0 top-0 h-full w-80 bg-white shadow-lg z-50 transform transition-transform duration-300 ease-in-out md:hidden border-r-2 border-gray-300">
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b">
+          <div className="flex items-center justify-between p-4 border-b-2 border-gray-300 bg-gray-50">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-primary-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">DC</span>
+              <div className="w-10 h-10 bg-blue-600 border-2 border-blue-700 flex items-center justify-center">
+                <Package className="w-6 h-6 text-white" />
               </div>
               <div>
                 <h2 className="font-semibold text-gray-900">
                   Digital Catalogue
                 </h2>
-                {isAuthenticated && customer && (
-                  <p className="text-sm text-gray-600">
-                    {customer.name || customer.phoneNumber}
-                  </p>
-                )}
+                <p className="text-sm text-gray-600">Quality Products</p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-2 hover:bg-gray-200 border-2 border-gray-400"
             >
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5 text-gray-800" />
             </button>
           </div>
 
@@ -91,97 +84,71 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
             <nav className="space-y-2 px-4">
               {/* Products */}
               <button
-                onClick={() => handleLinkClick("/products")}
-                className="flex items-center w-full px-3 py-3 text-left text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                onClick={() => handleLinkClick("/")}
+                className="flex items-center w-full px-3 py-3 text-left text-gray-800 hover:bg-gray-100 border-2 border-transparent hover:border-gray-300"
               >
-                <Package className="w-5 h-5 mr-3" />
+                <Package className="w-5 h-5 mr-3 text-blue-600" />
                 <span className="font-medium">Products</span>
               </button>
 
               {/* Cart */}
               <button
-                onClick={() => {
-                  onClose();
-                  dispatch(openCart());
-                }}
-                className="flex items-center justify-between w-full px-3 py-3 text-left text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                onClick={handleCartClick}
+                className="flex items-center justify-between w-full px-3 py-3 text-left text-gray-800 hover:bg-gray-100 border-2 border-transparent hover:border-gray-300"
               >
                 <div className="flex items-center">
-                  <ShoppingBag className="w-5 h-5 mr-3" />
+                  <ShoppingBag className="w-5 h-5 mr-3 text-blue-600" />
                   <span className="font-medium">Cart</span>
                 </div>
                 {cartItemsCount > 0 && (
-                  <span className="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  <span className="bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center font-semibold border border-red-600">
                     {cartItemsCount}
                   </span>
                 )}
               </button>
-
-              {/* Orders (only if authenticated) */}
-              {isAuthenticated && (
-                <button
-                  onClick={() => handleLinkClick("/orders")}
-                  className="flex items-center w-full px-3 py-3 text-left text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <Package className="w-5 h-5 mr-3" />
-                  <span className="font-medium">My Orders</span>
-                </button>
-              )}
-
-              {/* Profile (only if authenticated) */}
-              {isAuthenticated && (
-                <button
-                  onClick={() => handleLinkClick("/profile")}
-                  className="flex items-center w-full px-3 py-3 text-left text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <User className="w-5 h-5 mr-3" />
-                  <span className="font-medium">Profile</span>
-                </button>
-              )}
             </nav>
 
             {/* Divider */}
-            <div className="border-t my-4 mx-4" />
+            <div className="border-t-2 border-gray-300 my-4 mx-4" />
 
             {/* Contact Info */}
             <div className="px-4 space-y-3">
-              <div>
+              <div className="bg-gray-50 p-3 border-2 border-gray-300">
                 <h3 className="font-semibold text-gray-900 mb-2">Contact Us</h3>
-                <p className="text-sm text-gray-600">📞 +91 98765 43210</p>
-                <p className="text-sm text-gray-600">
-                  📧 info@digitalcatalogue.com
-                </p>
+                <div className="space-y-2">
+                  <div className="flex items-center text-sm text-gray-700">
+                    <Phone className="w-4 h-4 mr-2 text-blue-600" />
+                    <span>+91 98765 43210</span>
+                  </div>
+                  <p className="text-sm text-gray-700">
+                    📧 info@digitalcatalogue.com
+                  </p>
+                  <p className="text-sm text-gray-700">
+                    📍 123 Main Street, 573103
+                  </p>
+                </div>
               </div>
 
               <button
                 onClick={() =>
                   window.open("https://wa.me/919876543210", "_blank")
                 }
-                className="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg font-medium transition-colors"
+                className="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 font-medium border-2 border-green-600 flex items-center justify-center space-x-2"
               >
-                WhatsApp Support
+                <MessageCircle className="w-4 h-4" />
+                <span>WhatsApp Support</span>
               </button>
             </div>
           </div>
 
           {/* Footer */}
-          <div className="border-t p-4">
-            {isAuthenticated ? (
-              <button
-                onClick={handleLogout}
-                className="flex items-center w-full px-3 py-3 text-left text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-              >
-                <LogOut className="w-5 h-5 mr-3" />
-                <span className="font-medium">Logout</span>
-              </button>
-            ) : (
-              <button
-                onClick={() => handleLinkClick("/auth/login")}
-                className="w-full bg-primary-500 hover:bg-primary-600 text-white py-3 px-4 rounded-lg font-medium transition-colors"
-              >
-                Login / Sign Up
-              </button>
-            )}
+          <div className="border-t-2 border-gray-300 p-4 bg-gray-50">
+            <div className="text-center">
+              <p className="text-sm text-gray-600">
+                Free delivery on orders ₹1000+
+              </p>
+              <p className="text-xs text-gray-500">Within 573103 area only</p>
+            </div>
           </div>
         </div>
       </div>
