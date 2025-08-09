@@ -43,6 +43,7 @@ export default function CheckoutPage() {
 
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
+  const [whatsappResult, setWhatsappResult] = useState<any>(null);
 
   // Check if delivery is available based on pincode
   const [isDeliveryAvailable, setIsDeliveryAvailable] = useState(true);
@@ -222,12 +223,12 @@ export default function CheckoutPage() {
 
   const sendWhatsAppMessage = async (phoneNumber: string, message: string) => {
     try {
-      // Use direct fetch instead of the api client to avoid auth headers
+      console.log("📱 Sending WhatsApp message to:", phoneNumber);
+
       const response = await fetch("/api/whatsapp/send", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // No Authorization header
         },
         body: JSON.stringify({
           phoneNumber: phoneNumber,
@@ -238,13 +239,15 @@ export default function CheckoutPage() {
 
       const data = await response.json();
 
+      console.log("📨 WhatsApp API Response:", data);
+
       if (!response.ok) {
         throw new Error(data.message || "Failed to send WhatsApp message");
       }
 
       return data;
     } catch (error) {
-      console.error("WhatsApp API error:", error);
+      console.error("❌ WhatsApp API error:", error);
       throw error;
     }
   };
@@ -278,6 +281,8 @@ export default function CheckoutPage() {
         status: "pending",
       };
 
+      console.log("📦 Order Data:", orderData);
+
       // Generate WhatsApp message
       const whatsappMessage = generateWhatsAppMessage(orderData);
 
@@ -287,7 +292,8 @@ export default function CheckoutPage() {
         whatsappMessage
       );
 
-      console.log("WhatsApp message sent successfully:", messageResult);
+      console.log("✅ WhatsApp message sent successfully:", messageResult);
+      setWhatsappResult(messageResult);
 
       // Save order to backend (you can implement this API endpoint)
       try {
@@ -308,21 +314,37 @@ export default function CheckoutPage() {
 
       dispatch(
         showSuccessNotification(
-          `Order placed successfully! WhatsApp confirmation sent to +91${orderData.customerInfo.phoneNumber}`
+          `Order placed successfully! WhatsApp confirmation sent to +91${orderData.customerInfo.phoneNumber}. Check your WhatsApp for details.`
         )
       );
 
-      // Redirect to home after 3 seconds
+      // Redirect to home after 5 seconds
       setTimeout(() => {
         router.push("/");
-      }, 3000);
-    } catch (error) {
-      console.error("Order placement error:", error);
-      dispatch(
-        showErrorNotification(
-          `Failed to place order: ${error.message}. Please try again or contact support.`
-        )
-      );
+      }, 5000);
+    } catch (error: any) {
+      console.error("❌ Order placement error:", error);
+
+      let errorMessage = "Failed to place order. Please try again.";
+
+      // Handle specific WhatsApp API errors
+      if (
+        error.message.includes("131000") ||
+        error.message.includes("test list")
+      ) {
+        errorMessage =
+          "Phone number not in test list. Please contact support or try a different number.";
+      } else if (
+        error.message.includes("190") ||
+        error.message.includes("token")
+      ) {
+        errorMessage =
+          "WhatsApp service temporarily unavailable. Please try again later.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      dispatch(showErrorNotification(errorMessage));
     } finally {
       setIsPlacingOrder(false);
     }
@@ -362,38 +384,40 @@ export default function CheckoutPage() {
             Order Placed Successfully! 🎉
           </h1>
           <p className="text-gray-700 mb-4">
-            Your order has been processed and confirmation details have been
-            prepared.
+            Your order has been processed and WhatsApp confirmation has been
+            sent.
           </p>
+
+          <div className="bg-green-50 border border-green-200 p-4 mb-6 text-left">
+            <h3 className="font-semibold text-green-900 mb-2">
+              📱 WhatsApp Message Sent
+            </h3>
+            <p className="text-sm text-green-800 mb-2">
+              Order confirmation sent to:{" "}
+              <strong>+91{customerInfo.phoneNumber}</strong>
+            </p>
+            {whatsappResult?.messageId && (
+              <p className="text-xs text-green-700">
+                Message ID: {whatsappResult.messageId}
+              </p>
+            )}
+            <p className="text-xs text-green-700 mt-2">
+              Please check your WhatsApp for complete order details and next
+              steps.
+            </p>
+          </div>
 
           <div className="bg-blue-50 border border-blue-200 p-4 mb-6 text-left">
             <h3 className="font-semibold text-blue-900 mb-2">
-              📱 Demo Mode Active
+              📞 What's Next?
             </h3>
-            <p className="text-sm text-blue-800 mb-2">
-              WhatsApp Business API is not configured yet. To see the message
-              that would be sent:
-            </p>
-            <ol className="text-sm text-blue-700 list-decimal list-inside space-y-1">
-              <li>Open your browser's developer console (F12)</li>
-              <li>Look for the WhatsApp message in the console logs</li>
-              <li>
-                This shows exactly what would be sent to +91
-                {customerInfo.phoneNumber}
-              </li>
-            </ol>
-          </div>
-
-          <div className="bg-gray-50 border border-gray-200 p-4 mb-6 text-left">
-            <h3 className="font-semibold text-gray-900 mb-2">
-              🔧 To Enable Real WhatsApp:
-            </h3>
-            <ol className="text-sm text-gray-700 list-decimal list-inside space-y-1">
-              <li>Get WhatsApp Business API credentials</li>
-              <li>Add WHATSAPP_PHONE_ID to .env.local</li>
-              <li>Add WHATSAPP_ACCESS_TOKEN to .env.local</li>
-              <li>Restart the server</li>
-            </ol>
+            <ul className="text-sm text-blue-700 list-disc list-inside space-y-1">
+              <li>Check your WhatsApp for order confirmation</li>
+              <li>We'll contact you within 10-15 minutes</li>
+              <li>Confirm your order details with us</li>
+              <li>Process payment (if prepaid)</li>
+              <li>Get delivery/pickup timeline</li>
+            </ul>
           </div>
 
           <div className="space-y-2">
@@ -404,7 +428,7 @@ export default function CheckoutPage() {
               Continue Shopping
             </button>
             <p className="text-xs text-gray-500">
-              Redirecting to home page in 3 seconds...
+              Redirecting to home page in 5 seconds...
             </p>
           </div>
         </div>
@@ -463,7 +487,6 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* Rest of the form components remain the same... */}
             {/* Delivery Options */}
             <div className="border-2 border-gray-300 p-6 bg-white">
               <h2 className="text-xl font-semibold text-gray-900 mb-4 border-b border-gray-400 pb-2">

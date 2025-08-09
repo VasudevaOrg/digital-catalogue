@@ -28,50 +28,23 @@ export async function POST(request: NextRequest) {
     // Format phone number for WhatsApp API
     const formattedPhone = `91${cleanPhone}`;
 
-    // WhatsApp Business API configuration
-    const WHATSAPP_API_URL = process.env.WHATSAPP_API_URL;
-    const WHATSAPP_PHONE_ID = process.env.WHATSAPP_PHONE_ID;
-    const WHATSAPP_ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
+    // Hardcoded WhatsApp Business API configuration
+    const WHATSAPP_API_URL = "https://graph.facebook.com/v22.0";
+    const WHATSAPP_PHONE_ID = "802685189585173";
+    const WHATSAPP_ACCESS_TOKEN =
+      "EAASGzwVtiEMBPNLYbV406Ly6aNw1fwBIqQyo80Eq3vs2sTcqUBadrQAzo2ZACGZAevffH57gD6GURmZAFPWFc9sbYLlcvU65xu1i4aiBl0dY883sXXzTTzEd1oe3kCd3Urb3KAzEg3wbZB69CluW1Rl7OV6Mp8cK2IG2SmJ2l52kD8ZAW6ZCZAweBKS83yLpsEXKepOMJBCmWh7hR2CFtS9nvpyDKELmVJL2rNb57PTpExMnAZDZD";
 
-    // Demo mode - WhatsApp API not configured
-    if (!WHATSAPP_PHONE_ID || !WHATSAPP_ACCESS_TOKEN) {
-      console.log("\n📱 WHATSAPP DEMO MODE - API NOT CONFIGURED");
-      console.log("=".repeat(60));
-      console.log(`📞 To: +${formattedPhone}`);
-      console.log(`📝 Type: ${messageType}`);
-      console.log(`⏰ Timestamp: ${new Date().toLocaleString("en-IN")}`);
-      console.log("\n📄 MESSAGE CONTENT:");
-      console.log("-".repeat(40));
-      console.log(message);
-      console.log("=".repeat(60));
-      console.log("\n🔧 TO ENABLE REAL WHATSAPP MESSAGING:");
-      console.log("1. Get WhatsApp Business API credentials from Meta");
-      console.log("2. Create .env.local file with:");
-      console.log("   WHATSAPP_PHONE_ID=your_phone_id");
-      console.log("   WHATSAPP_ACCESS_TOKEN=your_token");
-      console.log("3. Restart the development server");
-      console.log("=".repeat(60));
+    console.log("\n📱 WHATSAPP API - LIVE MODE");
+    console.log("=".repeat(60));
+    console.log(`📞 From: Business Number (Phone ID: ${WHATSAPP_PHONE_ID})`);
+    console.log(`📞 To: +${formattedPhone}`);
+    console.log(`📝 Type: ${messageType}`);
+    console.log(`⏰ Timestamp: ${new Date().toLocaleString("en-IN")}`);
+    console.log("\n📄 MESSAGE CONTENT:");
+    console.log("-".repeat(40));
+    console.log(message);
+    console.log("=".repeat(60));
 
-      // For demo purposes, simulate successful sending
-      return NextResponse.json({
-        success: true,
-        messageId: `demo_${Date.now()}`,
-        message: "Demo mode: Message logged in console",
-        demo: true,
-        demoInfo: {
-          recipient: `+${formattedPhone}`,
-          messageType: messageType,
-          timestamp: new Date().toISOString(),
-          instructions: [
-            "This message was logged in the server console",
-            "To enable real WhatsApp messaging, configure API credentials",
-            "Check console output above to see the full message content",
-          ],
-        },
-      });
-    }
-
-    // Real WhatsApp API implementation
     try {
       const whatsappPayload = {
         messaging_product: "whatsapp",
@@ -81,6 +54,11 @@ export async function POST(request: NextRequest) {
           body: message,
         },
       };
+
+      console.log("\n🚀 Sending to WhatsApp API...");
+      console.log(`📡 URL: ${WHATSAPP_API_URL}/${WHATSAPP_PHONE_ID}/messages`);
+      console.log(`🔑 Token: ${WHATSAPP_ACCESS_TOKEN.substring(0, 20)}...`);
+      console.log("📦 Payload:", JSON.stringify(whatsappPayload, null, 2));
 
       const response = await fetch(
         `${WHATSAPP_API_URL}/${WHATSAPP_PHONE_ID}/messages`,
@@ -96,13 +74,31 @@ export async function POST(request: NextRequest) {
 
       const responseData = await response.json();
 
+      console.log("\n📨 WhatsApp API Response:");
+      console.log(`Status: ${response.status} ${response.statusText}`);
+      console.log("Response:", JSON.stringify(responseData, null, 2));
+
       if (!response.ok) {
-        console.error("WhatsApp API error:", responseData);
+        console.error("❌ WhatsApp API error:", responseData);
+
+        // Handle specific error codes
+        let errorMessage = "Failed to send WhatsApp message";
+        if (responseData.error?.code === 131000) {
+          errorMessage =
+            "Recipient phone number not in test list. Add the number to your WhatsApp Business test list.";
+        } else if (responseData.error?.code === 190) {
+          errorMessage =
+            "WhatsApp access token expired. Please get a new token from Meta Developer Console.";
+        } else if (responseData.error?.message) {
+          errorMessage = responseData.error.message;
+        }
+
         return NextResponse.json(
           {
             success: false,
-            message: "Failed to send WhatsApp message",
-            error: responseData.error?.message || "WhatsApp API error",
+            message: errorMessage,
+            error: responseData.error,
+            errorCode: responseData.error?.code,
           },
           { status: response.status }
         );
@@ -110,7 +106,8 @@ export async function POST(request: NextRequest) {
 
       // Log successful message for tracking
       console.log(`✅ WhatsApp message sent successfully:`, {
-        to: formattedPhone,
+        from: `Phone ID: ${WHATSAPP_PHONE_ID}`,
+        to: `+${formattedPhone}`,
         messageId: responseData.messages?.[0]?.id,
         messageType,
         timestamp: new Date().toISOString(),
@@ -130,9 +127,11 @@ export async function POST(request: NextRequest) {
         success: true,
         messageId: responseData.messages?.[0]?.id,
         message: "WhatsApp message sent successfully",
+        recipient: `+${formattedPhone}`,
+        timestamp: new Date().toISOString(),
       });
     } catch (apiError: any) {
-      console.error("WhatsApp API request failed:", apiError);
+      console.error("❌ WhatsApp API request failed:", apiError);
       return NextResponse.json(
         {
           success: false,
@@ -143,7 +142,7 @@ export async function POST(request: NextRequest) {
       );
     }
   } catch (error: any) {
-    console.error("WhatsApp send error:", error);
+    console.error("❌ WhatsApp send error:", error);
     return NextResponse.json(
       {
         success: false,
