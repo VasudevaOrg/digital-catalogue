@@ -13,7 +13,15 @@ import { ProductGrid } from "@/components/product/ProductGrid";
 import { ProductFilters } from "@/components/product/ProductFilters";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Pagination } from "@/components/ui/Pagination";
-import { Search, Filter, Grid, List, Package } from "lucide-react";
+import {
+  Search,
+  Filter,
+  Grid,
+  List,
+  Package,
+  MapPin,
+  Truck,
+} from "lucide-react";
 
 export default function HomePage() {
   const router = useRouter();
@@ -75,31 +83,24 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Hero Section */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="container mx-auto px-4 py-12">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Digital Catalogue
-            </h1>
-            <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-              Premium quality groceries and daily essentials delivered to your
-              doorstep. Free delivery on orders above ₹1,000 within 573103 area.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-sm text-gray-600">
-              <div className="flex items-center gap-2">
-                <Package className="w-5 h-5 text-blue-600" />
-                <span>Quality Products</span>
+    <div className="min-h-screen bg-gray-50">
+      {/* Quick Info Bar */}
+      <div className="bg-white border-b border-gray-200 shadow-sm">
+        {/* Quick Info Bar */}
+        <div className="bg-white border-b border-gray-200 shadow-sm">
+          <div className="container mx-auto px-4 py-3">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm">
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2 text-green-600">
+                  <Truck className="w-4 h-4" />
+                  <span className="font-medium">Free Delivery ₹1000+</span>
+                </div>
+                <div className="flex items-center gap-2 text-blue-600">
+                  <MapPin className="w-4 h-4" />
+                  <span>Delivery: 573103 Area</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="w-5 h-5 text-center">🚚</span>
-                <span>Free Delivery ₹1000+</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-5 h-5 text-center">📱</span>
-                <span>WhatsApp Ordering</span>
-              </div>
+              <div className="text-gray-600">📱 WhatsApp: +91 82971 37702</div>
             </div>
           </div>
         </div>
@@ -110,11 +111,12 @@ export default function HomePage() {
         <div className="mb-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">
-                Browse Products
-              </h2>
-              <p className="text-gray-600 mt-1">
-                {products.length} Products Available
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Digital Catalogue
+              </h1>
+              <p className="text-gray-600">
+                {products.length} Products Available • Fresh & Quality
+                Guaranteed
               </p>
             </div>
 
@@ -123,17 +125,17 @@ export default function HomePage() {
               {/* Filter Toggle - Mobile */}
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="lg:hidden flex items-center gap-2 px-4 py-2 border border-gray-300 hover:bg-gray-50"
+                className="lg:hidden flex items-center gap-2 px-4 py-2 border-2 border-gray-300 bg-white hover:bg-gray-50 transition-colors"
               >
                 <Filter className="w-4 h-4" />
                 <span>Filters</span>
               </button>
 
               {/* View Mode Toggle */}
-              <div className="flex items-center border border-gray-300">
+              <div className="flex items-center border-2 border-gray-300 bg-white">
                 <button
                   onClick={() => setViewMode("grid")}
-                  className={`p-2 ${
+                  className={`p-2 transition-colors ${
                     viewMode === "grid"
                       ? "bg-blue-600 text-white"
                       : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
@@ -143,7 +145,7 @@ export default function HomePage() {
                 </button>
                 <button
                   onClick={() => setViewMode("list")}
-                  className={`p-2 ${
+                  className={`p-2 transition-colors ${
                     viewMode === "list"
                       ? "bg-blue-600 text-white"
                       : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
@@ -159,7 +161,7 @@ export default function HomePage() {
         <div className="flex gap-6">
           {/* Sidebar Filters - Desktop */}
           <div className="hidden lg:block w-64 flex-shrink-0">
-            <div className="bg-white border border-gray-200 p-4">
+            <div className="bg-white border-2 border-gray-200 p-4 sticky top-24">
               <ProductFilters categories={categories} />
             </div>
           </div>
@@ -167,13 +169,13 @@ export default function HomePage() {
           {/* Mobile Filters */}
           {showFilters && (
             <div className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40">
-              <div className="bg-white w-80 h-full overflow-y-auto">
-                <div className="p-4 border-b border-gray-200">
+              <div className="bg-white w-80 h-full overflow-y-auto border-r-2 border-gray-300">
+                <div className="p-4 border-b-2 border-gray-200 bg-gray-50">
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-semibold">Filters</h3>
                     <button
                       onClick={() => setShowFilters(false)}
-                      className="p-2 hover:bg-gray-100"
+                      className="p-2 hover:bg-gray-200 border-2 border-gray-400"
                     >
                       ×
                     </button>
@@ -190,7 +192,7 @@ export default function HomePage() {
           <div className="flex-1">
             {/* Products */}
             {products.length === 0 ? (
-              <div className="text-center py-12 bg-white border border-gray-200">
+              <div className="text-center py-12 bg-white border-2 border-gray-200">
                 <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
                   No Products Found
@@ -205,7 +207,7 @@ export default function HomePage() {
 
                 {/* Pagination */}
                 {totalPages > 1 && (
-                  <div className="mt-8 bg-white border border-gray-200 p-4">
+                  <div className="mt-8 bg-white border-2 border-gray-200 p-4">
                     <Pagination
                       currentPage={currentPage}
                       totalPages={totalPages}
@@ -217,38 +219,6 @@ export default function HomePage() {
                 )}
               </>
             )}
-          </div>
-        </div>
-      </div>
-
-      {/* Footer Info */}
-      <div className="bg-gray-50 border-t border-gray-200 mt-12">
-        <div className="container mx-auto px-4 py-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">
-                Free Delivery
-              </h3>
-              <p className="text-sm text-gray-600">
-                On orders above ₹1,000 (excluding sugar, oils, jaggery)
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">
-                Quality Assured
-              </h3>
-              <p className="text-sm text-gray-600">
-                Premium products with quality guarantee
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">
-                WhatsApp Support
-              </h3>
-              <p className="text-sm text-gray-600">
-                Order via WhatsApp: +91 98765 43210
-              </p>
-            </div>
           </div>
         </div>
       </div>

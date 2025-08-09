@@ -12,70 +12,106 @@ export interface WhatsAppMessageTemplate {
 
 export const whatsappTemplates: WhatsAppMessageTemplate = {
   orderEnquiry: (customer: Customer, order: Order) => {
-    return `🛒 *Order Enquiry - #${order.invoiceNumber}*
+    return `🛒 *ORDER CONFIRMATION REQUIRED*
+━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Hello ${customer.name || "Customer"}!
+Hello ${customer.name || "Customer"}! 👋
 
-Thank you for your interest in our products. Here are your order details:
+Thank you for your order with Digital Catalogue. We have received your order request and need your confirmation to proceed.
 
-📦 *Items:*
+📋 *ORDER DETAILS*
+Order ID: ${order.invoiceNumber}
+Date: ${new Date(order.createdAt).toLocaleDateString("en-IN")}
+Time: ${new Date(order.createdAt).toLocaleTimeString("en-IN")}
+
+📦 *ITEMS ORDERED*
 ${order.items
   .map(
-    (item) =>
-      `• ${item.product.name} x ${item.quantity} - ₹${
-        item.price * item.quantity
-      }`
+    (item, index) =>
+      `${index + 1}. ${item.product.name}
+   Price: ₹${item.product.price} x ${item.quantity}
+   Weight: ${(item.product.weight * item.quantity).toFixed(2)}kg
+   Subtotal: ₹${(item.price * item.quantity).toFixed(2)}`
   )
-  .join("\n")}
+  .join("\n\n")}
 
-💰 *Total Amount:* ₹${order.totalAmount}
-⚖️ *Total Weight:* ${order.totalWeight}kg
-🚚 *Delivery Type:* ${
-      order.deliveryType === "delivery" ? "Home Delivery" : "Store Pickup"
-    }
-💳 *Payment:* ${
-      order.paymentMethod === "prepaid" ? "Prepaid" : "Cash on Pickup"
-    }
+💰 *ORDER SUMMARY*
+Items Total: ₹${order.totalAmount - order.deliveryFee}
+Total Weight: ${order.totalWeight}kg
+Delivery Fee: ${order.deliveryFee === 0 ? "FREE" : `₹${order.deliveryFee}`}
+*GRAND TOTAL: ₹${order.totalAmount}*
 
+🚚 *DELIVERY INFORMATION*
+Type: ${order.deliveryType === "delivery" ? "Home Delivery" : "Store Pickup"}
 ${
   order.deliveryAddress
-    ? `📍 *Delivery Address:*
-${order.deliveryAddress.street}
-${order.deliveryAddress.city}, ${order.deliveryAddress.state} - ${order.deliveryAddress.pincode}`
+    ? `Address: ${order.deliveryAddress.street}, ${order.deliveryAddress.city}, ${order.deliveryAddress.state} - ${order.deliveryAddress.pincode}`
     : ""
 }
+Payment: ${
+      order.paymentMethod === "prepaid" ? "Prepaid (Online)" : "Cash on Pickup"
+    }
 
-Please confirm if you'd like to proceed with this order.
+━━━━━━━━━━━━━━━━━━━━━━━━━
+🔔 *PLEASE CONFIRM YOUR ORDER*
 
-Thanks,
-Digital Catalogue Team`;
+Reply to this message with:
+✅ "CONFIRM" - To confirm your order
+❌ "CANCEL" - To cancel your order
+📝 "MODIFY" - To make changes
+
+Our team will process your order within 15 minutes after confirmation.
+
+📞 Need help? Call us: +91 82971 37702
+
+Thank you for choosing Digital Catalogue! 🙏`;
   },
 
   orderConfirmation: (customer: Customer, order: Order) => {
-    return `✅ *Order Confirmed - #${order.invoiceNumber}*
+    return `✅ *ORDER CONFIRMED*
+━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Hello ${customer.name || "Customer"}!
+Hello ${customer.name || "Customer"}! 👋
 
-Your order has been confirmed and is being processed.
+Great news! Your order has been confirmed and is now being processed.
 
-📦 *Order Details:*
+📋 *ORDER DETAILS*
+Order ID: ${order.invoiceNumber}
+Status: CONFIRMED ✅
+Total Amount: ₹${order.totalAmount}
+
+📦 *ITEMS*
 ${order.items
-  .map((item) => `• ${item.product.name} x ${item.quantity}`)
+  .map((item, index) => `${index + 1}. ${item.product.name} x ${item.quantity}`)
   .join("\n")}
 
-💰 *Total: ₹${order.totalAmount}*
-🚚 *${order.deliveryType === "delivery" ? "Delivery" : "Pickup"}*
-📅 *Order Date:* ${new Date(order.createdAt).toLocaleDateString()}
-
+🚚 *DELIVERY INFORMATION*
 ${
   order.deliveryType === "delivery"
-    ? "🚚 Your order will be delivered to your address."
-    : "🏪 Your order will be ready for pickup at our store."
+    ? `🏠 Home Delivery
+📍 ${order.deliveryAddress?.street}, ${order.deliveryAddress?.city}
+📅 Expected Delivery: Within 24-48 hours`
+    : `🏪 Store Pickup
+📍 123 Main Street, Karnataka 573103
+📅 Ready for Pickup: Within 2-4 hours`
 }
 
-We'll keep you updated on your order status.
+💳 *PAYMENT*
+Method: ${
+      order.paymentMethod === "prepaid" ? "Prepaid (Online)" : "Cash on Pickup"
+    }
+Status: ${order.paymentStatus === "completed" ? "Paid ✅" : "Pending"}
 
-Thank you for choosing us!`;
+📱 *TRACK YOUR ORDER*
+We'll send you updates as your order progresses:
+• Order Confirmed ✅
+• Preparing 👨‍🍳
+• Ready ${order.deliveryType === "pickup" ? "for Pickup 🏪" : "for Delivery 🚚"}
+• Completed 🎉
+
+Need assistance? Reply to this message or call +91 82971 37702
+
+Thank you for shopping with Digital Catalogue! 🙏`;
   },
 
   orderStatusUpdate: (customer: Customer, order: Order) => {
@@ -90,70 +126,132 @@ Thank you for choosing us!`;
 
     const statusMessages = {
       pending: "Your order is pending confirmation",
-      confirmed: "Your order has been confirmed",
-      preparing: "Your order is being prepared",
+      confirmed: "Your order has been confirmed and is being processed",
+      preparing: "Your order is being prepared with care",
       ready:
         order.deliveryType === "pickup"
-          ? "Your order is ready for pickup"
-          : "Your order is ready for delivery",
+          ? "Your order is ready for pickup at our store"
+          : "Your order is ready and out for delivery",
       delivered: "Your order has been delivered successfully",
       cancelled: "Your order has been cancelled",
     };
 
-    return `${statusEmojis[order.orderStatus]} *Order Update - #${
-      order.invoiceNumber
-    }*
+    return `${statusEmojis[order.orderStatus]} *ORDER UPDATE*
+━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Hello ${customer.name || "Customer"}!
+Hello ${customer.name || "Customer"}! 👋
 
-${statusMessages[order.orderStatus]}.
+📋 Order ID: ${order.invoiceNumber}
+📊 Status: *${statusMessages[order.orderStatus]}*
 
 ${
   order.orderStatus === "ready" && order.deliveryType === "pickup"
-    ? "🏪 Please visit our store to collect your order."
+    ? `
+🏪 *PICKUP INSTRUCTIONS*
+Your order is packed and ready for collection!
+
+📍 Pickup Location:
+Digital Catalogue Store
+123 Main Street
+Karnataka 573103
+
+⏰ Store Hours:
+Monday - Saturday: 9:00 AM - 8:00 PM
+Sunday: 10:00 AM - 6:00 PM
+
+💳 Payment: ${
+        order.paymentMethod === "cash_on_pickup"
+          ? "Cash on Pickup"
+          : "Already Paid"
+      }
+
+Please bring this message and a valid ID for pickup.`
+    : ""
+}
+
+${
+  order.orderStatus === "ready" && order.deliveryType === "delivery"
+    ? `
+🚚 *DELIVERY UPDATE*
+Your order is out for delivery!
+
+📍 Delivery Address:
+${order.deliveryAddress?.street}
+${order.deliveryAddress?.city}, ${order.deliveryAddress?.state} - ${order.deliveryAddress?.pincode}
+
+Our delivery partner will contact you shortly.
+Expected delivery: Within 2-3 hours`
     : ""
 }
 
 ${
   order.orderStatus === "delivered"
-    ? "Thank you for shopping with us! We hope you enjoy your products."
+    ? `
+🎉 *THANK YOU!*
+We hope you enjoy your products!
+
+⭐ Rate your experience and share feedback.
+🔄 Reorder anytime through WhatsApp!`
     : ""
 }
 
-Current Status: *${order.orderStatus.toUpperCase()}*
+Need assistance? Reply to this message anytime.
 
-For any queries, feel free to contact us.`;
+Thank you for choosing Digital Catalogue! 🙏`;
   },
 
   deliveryUpdate: (customer: Customer, order: Order) => {
-    return `🚚 *Delivery Update - #${order.invoiceNumber}*
+    return `🚚 *DELIVERY UPDATE*
+━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Hello ${customer.name || "Customer"}!
+Hello ${customer.name || "Customer"}! 👋
 
 Your order is out for delivery and will reach you soon.
 
-📍 *Delivery Address:*
+📋 Order ID: ${order.invoiceNumber}
+📍 Delivery Address:
 ${order.deliveryAddress?.street}
 ${order.deliveryAddress?.city}, ${order.deliveryAddress?.state} - ${
       order.deliveryAddress?.pincode
     }
 
-💰 *Total Amount:* ₹${order.totalAmount}
-💳 *Payment:* ${order.paymentStatus === "completed" ? "Paid" : "Pending"}
+💰 Total Amount: ₹${order.totalAmount}
+💳 Payment: ${
+      order.paymentStatus === "completed" ? "Paid ✅" : "Cash on Delivery"
+    }
 
-Our delivery partner will contact you shortly.
+🕐 Expected delivery time: Within 2-3 hours
+📞 Delivery partner will call you before arrival
 
-Thank you for your patience!`;
+Please ensure someone is available at the delivery address.
+
+Need to reschedule? Reply to this message.
+
+Thank you for your patience! 🙏`;
   },
 
   promotional: (customer: Customer, message: string) => {
-    return `🎉 *Special Offer for ${customer.name || "You"}!*
+    return `🎉 *SPECIAL OFFER*
+━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Hello ${customer.name || "Customer"}! 👋
 
 ${message}
 
-🛍️ Shop now at our digital catalogue!
+🛍️ *HOW TO ORDER*
+1. Browse our digital catalogue
+2. Add items to cart
+3. Checkout with your details
+4. Get instant WhatsApp confirmation
 
-*Terms and conditions apply.`;
+📱 Visit our website or reply to this message!
+🚚 Free delivery on orders ₹1000+
+💳 Multiple payment options available
+
+*Terms and conditions apply.
+Valid while stocks last.
+
+Thank you for being our valued customer! 🙏`;
   },
 };
 
@@ -295,3 +393,58 @@ export class WhatsAppService {
 }
 
 export const whatsappService = new WhatsAppService();
+
+// Helper function to send order enquiry directly (used in checkout)
+export const sendOrderEnquiry = async (
+  orderData: any
+): Promise<{ success: boolean; messageId?: string; error?: string }> => {
+  try {
+    // Create customer object from order data
+    const customer = {
+      id: "temp",
+      phoneNumber: orderData.customerInfo.phoneNumber,
+      name: orderData.customerInfo.name,
+      addresses: [],
+      createdAt: new Date().toISOString(),
+    };
+
+    // Create order object for WhatsApp template
+    const order = {
+      id: orderData.orderId,
+      customerId: customer.id,
+      customer: customer,
+      items: orderData.items.map((item: any) => ({
+        id: `item_${item.product.id}`,
+        product: item.product,
+        quantity: item.quantity,
+        price: item.product.price,
+        returned: false,
+        returnedQuantity: 0,
+      })),
+      totalAmount: orderData.totalAmount,
+      totalWeight: orderData.totalWeight,
+      deliveryType: orderData.deliveryType,
+      paymentMethod: orderData.paymentMethod,
+      paymentStatus: "pending" as const,
+      orderStatus: "pending" as const,
+      deliveryAddress: orderData.deliveryAddress,
+      deliveryFee: orderData.deliveryFee,
+      invoiceNumber: orderData.orderId,
+      createdAt: orderData.orderDate || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    // Send WhatsApp message using the service
+    const whatsappService = new WhatsAppService();
+    const success = await whatsappService.sendOrderEnquiry(customer, order);
+
+    if (success) {
+      return { success: true, messageId: `msg_${Date.now()}` };
+    } else {
+      return { success: false, error: "Failed to send WhatsApp message" };
+    }
+  } catch (error: any) {
+    console.error("Error sending order enquiry:", error);
+    return { success: false, error: error.message || "Unknown error occurred" };
+  }
+};

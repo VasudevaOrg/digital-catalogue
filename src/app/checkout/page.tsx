@@ -1,12 +1,23 @@
 // src/app/checkout/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/store";
 import { clearCart } from "@/store/slices/cartSlice";
-import { openWhatsAppOrder, whatsappTestService } from "@/lib/whatsappTest";
-import { Package, Truck, Store, MessageCircle, Phone } from "lucide-react";
+import {
+  showSuccessNotification,
+  showErrorNotification,
+} from "@/store/slices/uiSlice";
+import {
+  Package,
+  Truck,
+  Store,
+  MessageCircle,
+  Phone,
+  AlertCircle,
+  CheckCircle,
+} from "lucide-react";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -30,9 +41,36 @@ export default function CheckoutPage() {
     },
   });
 
-  const deliveryFee = cart.isEligibleForFreeDelivery ? 0 : 50;
-  const finalDeliveryFee = deliveryType === "pickup" ? 0 : deliveryFee;
-  const totalAmount = cart.totalAmount + finalDeliveryFee;
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState(false);
+
+  // Check if delivery is available based on pincode
+  const [isDeliveryAvailable, setIsDeliveryAvailable] = useState(true);
+  const [deliveryRadius] = useState(10); // Default radius in km (editable by shop owner in backend)
+
+  useEffect(() => {
+    // Check delivery availability based on pincode
+    const customerPincode = customerInfo.address.pincode;
+    const shopPincode = "573103";
+
+    // Simple check - in real implementation, this would be more sophisticated
+    const isAvailable = customerPincode.startsWith("573");
+    setIsDeliveryAvailable(isAvailable);
+  }, [customerInfo.address.pincode]);
+
+  // Calculate delivery fee based on requirements
+  const calculateDeliveryFee = () => {
+    if (deliveryType === "pickup") return 0;
+
+    // Check if eligible for free delivery
+    if (cart.isEligibleForFreeDelivery && isDeliveryAvailable) return 0;
+
+    // Regular delivery fee if not eligible
+    return isDeliveryAvailable ? 50 : 0;
+  };
+
+  const deliveryFee = calculateDeliveryFee();
+  const totalAmount = cart.totalAmount + deliveryFee;
 
   const handleInputChange = (field: string, value: string) => {
     if (field.startsWith("address.")) {
@@ -52,73 +90,249 @@ export default function CheckoutPage() {
     }
   };
 
-  const handlePlaceOrder = () => {
-    // Validate required fields
-    if (!customerInfo.name || !customerInfo.phoneNumber) {
-      alert("Please fill in your name and phone number");
-      return;
+  const validateForm = () => {
+    if (!customerInfo.name.trim()) {
+      dispatch(showErrorNotification("Please enter your name"));
+      return false;
     }
 
-    if (
-      deliveryType === "delivery" &&
-      (!customerInfo.address.street || !customerInfo.address.city)
-    ) {
-      alert("Please fill in your delivery address");
-      return;
+    if (!customerInfo.phoneNumber.trim()) {
+      dispatch(showErrorNotification("Please enter your phone number"));
+      return false;
     }
 
-    // Prepare order data
-    const orderData = {
-      orderId: `ORD${Date.now()}`,
-      customerInfo,
-      items: cart.items,
-      totalAmount,
-      totalWeight: cart.totalWeight,
-      deliveryType,
-      paymentMethod,
-      deliveryAddress:
-        deliveryType === "delivery" ? customerInfo.address : null,
-      deliveryFee: finalDeliveryFee,
-    };
+    // Validate phone number format
+    const phoneRegex = /^[6-9]\d{9}$/;
+    const cleanPhone = customerInfo.phoneNumber.replace(/\D/g, "");
+    if (!phoneRegex.test(cleanPhone)) {
+      dispatch(
+        showErrorNotification("Please enter a valid 10-digit phone number")
+      );
+      return false;
+    }
 
-    // Open WhatsApp with order details
-    openWhatsAppOrder(orderData);
+    if (deliveryType === "delivery") {
+      if (!isDeliveryAvailable) {
+        dispatch(
+          showErrorNotification(
+            "Delivery is not available for your pincode. Please choose store pickup."
+          )
+        );
+        return false;
+      }
 
-    // Clear cart after placing order
-    dispatch(clearCart());
+      if (!customerInfo.address.street.trim()) {
+        dispatch(showErrorNotification("Please enter your street address"));
+        return false;
+      }
 
-    // Show success message
-    alert(
-      "Order sent via WhatsApp! Please wait for confirmation from our team."
-    );
+      if (!customerInfo.address.city.trim()) {
+        dispatch(showErrorNotification("Please enter your city"));
+        return false;
+      }
+    }
 
-    // Redirect to home
-    router.push("/");
+    return true;
   };
 
-  const handleTestWhatsApp = () => {
-    const orderData = {
-      orderId: `TEST${Date.now()}`,
-      customerInfo,
-      items: cart.items,
-      totalAmount,
-      totalWeight: cart.totalWeight,
-      deliveryType,
-      paymentMethod,
-      deliveryAddress:
-        deliveryType === "delivery" ? customerInfo.address : null,
-      deliveryFee: finalDeliveryFee,
-    };
+  const generateOrderId = () => {
+    const timestamp = Date.now();
+    const random = Math.floor(Math.random() * 1000)
+      .toString()
+      .padStart(3, "0");
+    return `ORD${timestamp}${random}`;
+  };
 
-    // Test WhatsApp integration
-    whatsappTestService.testWhatsAppIntegration(orderData);
+  const generateWhatsAppMessage = (orderData: any) => {
+    const {
+      orderId,
+      customerInfo,
+      items,
+      totalAmount,
+      totalWeight,
+      deliveryType,
+      deliveryAddress,
+      deliveryFee,
+    } = orderData;
+
+    let message = `🛒 *ORDER CONFIRMATION REQUIRED*\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+    // Customer Details
+    message += `👤 *CUSTOMER DETAILS*\n`;
+    message += `Name: ${customerInfo.name}\n`;
+    message += `Phone: +91${customerInfo.phoneNumber}\n\n`;
+
+    // Order Details
+    message += `📋 *ORDER DETAILS*\n`;
+    message += `Order ID: ${orderId}\n`;
+    message += `Date: ${new Date().toLocaleDateString("en-IN")}\n`;
+    message += `Time: ${new Date().toLocaleTimeString("en-IN")}\n\n`;
+
+    // Items List
+    message += `🛍️ *ITEMS ORDERED*\n`;
+    items.forEach((item: any, index: number) => {
+      message += `${index + 1}. ${item.product.name}\n`;
+      message += `   Price: ₹${item.product.price} x ${item.quantity}\n`;
+      message += `   Weight: ${(item.product.weight * item.quantity).toFixed(
+        2
+      )}kg\n`;
+      message += `   Subtotal: ₹${(item.product.price * item.quantity).toFixed(
+        2
+      )}\n\n`;
+    });
+
+    // Order Summary
+    message += `💰 *ORDER SUMMARY*\n`;
+    message += `Items Total: ₹${(totalAmount - deliveryFee).toFixed(2)}\n`;
+    message += `Total Weight: ${totalWeight.toFixed(2)}kg\n`;
+    message += `Delivery Fee: ${
+      deliveryFee === 0 ? "FREE" : `₹${deliveryFee}`
+    }\n`;
+    message += `*TOTAL AMOUNT: ₹${totalAmount.toFixed(2)}*\n\n`;
+
+    // Delivery Information
+    message += `🚚 *DELIVERY INFORMATION*\n`;
+    message += `Type: ${
+      deliveryType === "delivery" ? "Home Delivery" : "Store Pickup"
+    }\n`;
+
+    if (deliveryAddress) {
+      message += `Address: ${deliveryAddress.street}, ${deliveryAddress.city}, ${deliveryAddress.state} - ${deliveryAddress.pincode}\n`;
+    }
+
+    message += `Payment: ${
+      orderData.paymentMethod === "prepaid"
+        ? "Prepaid (Online)"
+        : "Cash on Pickup"
+    }\n\n`;
+
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `🔔 *NEXT STEPS*\n`;
+    message += `We will contact you within 10-15 minutes to:\n`;
+    message += `• Confirm your order details\n`;
+    message += `• Process payment (if prepaid)\n`;
+    message += `• Provide delivery/pickup timeline\n\n`;
+
+    message += `📞 For immediate assistance, call: +91 98765 43210\n\n`;
+    message += `Thank you for choosing Digital Catalogue! 🙏`;
+
+    return message;
+  };
+
+  const sendWhatsAppMessage = async (phoneNumber: string, message: string) => {
+    try {
+      // Use direct fetch instead of the api client to avoid auth headers
+      const response = await fetch("/api/whatsapp/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          // No Authorization header
+        },
+        body: JSON.stringify({
+          phoneNumber: phoneNumber,
+          message: message,
+          messageType: "order_enquiry",
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to send WhatsApp message");
+      }
+
+      return data;
+    } catch (error) {
+      console.error("WhatsApp API error:", error);
+      throw error;
+    }
+  };
+
+  const handlePlaceOrder = async () => {
+    if (!validateForm()) return;
+
+    setIsPlacingOrder(true);
+
+    try {
+      // Prepare order data
+      const orderId = generateOrderId();
+      const orderData = {
+        orderId,
+        customerInfo: {
+          ...customerInfo,
+          phoneNumber: customerInfo.phoneNumber
+            .replace(/\D/g, "")
+            .replace(/^91/, ""), // Clean phone number
+        },
+        items: cart.items,
+        totalAmount,
+        totalWeight: cart.totalWeight,
+        deliveryType,
+        paymentMethod,
+        deliveryAddress:
+          deliveryType === "delivery" ? customerInfo.address : null,
+        deliveryFee,
+        isEligibleForFreeDelivery: cart.isEligibleForFreeDelivery,
+        orderDate: new Date().toISOString(),
+        status: "pending",
+      };
+
+      // Generate WhatsApp message
+      const whatsappMessage = generateWhatsAppMessage(orderData);
+
+      // Send WhatsApp message to customer
+      const messageResult = await sendWhatsAppMessage(
+        orderData.customerInfo.phoneNumber,
+        whatsappMessage
+      );
+
+      console.log("WhatsApp message sent successfully:", messageResult);
+
+      // Save order to backend (you can implement this API endpoint)
+      try {
+        await fetch("/api/orders", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(orderData),
+        });
+      } catch (error) {
+        console.log("Order save failed (backend not implemented):", error);
+      }
+
+      // Clear cart and show success
+      dispatch(clearCart());
+      setOrderSuccess(true);
+
+      dispatch(
+        showSuccessNotification(
+          `Order placed successfully! WhatsApp confirmation sent to +91${orderData.customerInfo.phoneNumber}`
+        )
+      );
+
+      // Redirect to home after 3 seconds
+      setTimeout(() => {
+        router.push("/");
+      }, 3000);
+    } catch (error) {
+      console.error("Order placement error:", error);
+      dispatch(
+        showErrorNotification(
+          `Failed to place order: ${error.message}. Please try again or contact support.`
+        )
+      );
+    } finally {
+      setIsPlacingOrder(false);
+    }
   };
 
   if (cart.items.length === 0) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-12">
-          <div className="text-center bg-gray-50 border-2 border-gray-300 p-8">
+          <div className="text-center bg-white border-2 border-gray-300 p-8 max-w-md mx-auto">
             <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
               Your cart is empty
@@ -128,7 +342,7 @@ export default function CheckoutPage() {
             </p>
             <button
               onClick={() => router.push("/")}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 font-medium border-2 border-blue-700"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 font-medium border-2 border-blue-700 transition-colors"
             >
               Continue Shopping
             </button>
@@ -138,8 +352,68 @@ export default function CheckoutPage() {
     );
   }
 
+  // Order Success Screen
+  if (orderSuccess) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white border-2 border-green-300 p-8 max-w-lg mx-auto text-center">
+          <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            Order Placed Successfully! 🎉
+          </h1>
+          <p className="text-gray-700 mb-4">
+            Your order has been processed and confirmation details have been
+            prepared.
+          </p>
+
+          <div className="bg-blue-50 border border-blue-200 p-4 mb-6 text-left">
+            <h3 className="font-semibold text-blue-900 mb-2">
+              📱 Demo Mode Active
+            </h3>
+            <p className="text-sm text-blue-800 mb-2">
+              WhatsApp Business API is not configured yet. To see the message
+              that would be sent:
+            </p>
+            <ol className="text-sm text-blue-700 list-decimal list-inside space-y-1">
+              <li>Open your browser's developer console (F12)</li>
+              <li>Look for the WhatsApp message in the console logs</li>
+              <li>
+                This shows exactly what would be sent to +91
+                {customerInfo.phoneNumber}
+              </li>
+            </ol>
+          </div>
+
+          <div className="bg-gray-50 border border-gray-200 p-4 mb-6 text-left">
+            <h3 className="font-semibold text-gray-900 mb-2">
+              🔧 To Enable Real WhatsApp:
+            </h3>
+            <ol className="text-sm text-gray-700 list-decimal list-inside space-y-1">
+              <li>Get WhatsApp Business API credentials</li>
+              <li>Add WHATSAPP_PHONE_ID to .env.local</li>
+              <li>Add WHATSAPP_ACCESS_TOKEN to .env.local</li>
+              <li>Restart the server</li>
+            </ol>
+          </div>
+
+          <div className="space-y-2">
+            <button
+              onClick={() => router.push("/")}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 font-medium border-2 border-blue-700 transition-colors"
+            >
+              Continue Shopping
+            </button>
+            <p className="text-xs text-gray-500">
+              Redirecting to home page in 3 seconds...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-8 border-b-2 border-gray-300 pb-4">
           Checkout
@@ -149,7 +423,7 @@ export default function CheckoutPage() {
           {/* Order Details */}
           <div className="space-y-6">
             {/* Customer Information */}
-            <div className="border-2 border-gray-300 p-6 bg-gray-50">
+            <div className="border-2 border-gray-300 p-6 bg-white">
               <h2 className="text-xl font-semibold text-gray-900 mb-4 border-b border-gray-400 pb-2">
                 Customer Information
               </h2>
@@ -162,8 +436,9 @@ export default function CheckoutPage() {
                     type="text"
                     value={customerInfo.name}
                     onChange={(e) => handleInputChange("name", e.target.value)}
-                    className="w-full px-3 py-2 border-2 border-gray-400 bg-white text-gray-900"
+                    className="w-full px-3 py-2 border-2 border-gray-400 bg-white text-gray-900 focus:border-blue-500 outline-none"
                     required
+                    disabled={isPlacingOrder}
                   />
                 </div>
                 <div>
@@ -176,15 +451,21 @@ export default function CheckoutPage() {
                     onChange={(e) =>
                       handleInputChange("phoneNumber", e.target.value)
                     }
-                    className="w-full px-3 py-2 border-2 border-gray-400 bg-white text-gray-900"
+                    placeholder="Enter 10-digit mobile number"
+                    className="w-full px-3 py-2 border-2 border-gray-400 bg-white text-gray-900 focus:border-blue-500 outline-none"
                     required
+                    disabled={isPlacingOrder}
                   />
+                  <p className="text-xs text-gray-600 mt-1">
+                    Order confirmation will be sent to this WhatsApp number
+                  </p>
                 </div>
               </div>
             </div>
 
+            {/* Rest of the form components remain the same... */}
             {/* Delivery Options */}
-            <div className="border-2 border-gray-300 p-6 bg-gray-50">
+            <div className="border-2 border-gray-300 p-6 bg-white">
               <h2 className="text-xl font-semibold text-gray-900 mb-4 border-b border-gray-400 pb-2">
                 Delivery Options
               </h2>
@@ -196,16 +477,24 @@ export default function CheckoutPage() {
                     checked={deliveryType === "delivery"}
                     onChange={() => setDeliveryType("delivery")}
                     className="w-4 h-4"
+                    disabled={!isDeliveryAvailable || isPlacingOrder}
                   />
                   <label
                     htmlFor="delivery"
-                    className="flex items-center space-x-2 text-gray-800"
+                    className={`flex items-center space-x-2 ${
+                      isDeliveryAvailable ? "text-gray-800" : "text-gray-400"
+                    }`}
                   >
                     <Truck className="w-5 h-5 text-blue-600" />
                     <span className="font-medium">Home Delivery</span>
-                    {!cart.isEligibleForFreeDelivery && (
+                    {deliveryFee > 0 && (
                       <span className="text-sm text-gray-600">
                         (₹{deliveryFee} delivery fee)
+                      </span>
+                    )}
+                    {!isDeliveryAvailable && (
+                      <span className="text-sm text-red-600">
+                        (Not available for your area)
                       </span>
                     )}
                   </label>
@@ -217,6 +506,7 @@ export default function CheckoutPage() {
                     checked={deliveryType === "pickup"}
                     onChange={() => setDeliveryType("pickup")}
                     className="w-4 h-4"
+                    disabled={isPlacingOrder}
                   />
                   <label
                     htmlFor="pickup"
@@ -227,11 +517,19 @@ export default function CheckoutPage() {
                   </label>
                 </div>
               </div>
+
+              {!isDeliveryAvailable && (
+                <div className="mt-4 p-3 bg-amber-50 border border-amber-200 text-amber-800 text-sm">
+                  <AlertCircle className="w-4 h-4 inline mr-2" />
+                  Delivery is currently available only within {deliveryRadius}km
+                  radius of pincode 573103.
+                </div>
+              )}
             </div>
 
             {/* Delivery Address */}
             {deliveryType === "delivery" && (
-              <div className="border-2 border-gray-300 p-6 bg-gray-50">
+              <div className="border-2 border-gray-300 p-6 bg-white">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4 border-b border-gray-400 pb-2">
                   Delivery Address
                 </h2>
@@ -246,8 +544,9 @@ export default function CheckoutPage() {
                       onChange={(e) =>
                         handleInputChange("address.street", e.target.value)
                       }
-                      className="w-full px-3 py-2 border-2 border-gray-400 bg-white text-gray-900"
+                      className="w-full px-3 py-2 border-2 border-gray-400 bg-white text-gray-900 focus:border-blue-500 outline-none"
                       required
+                      disabled={isPlacingOrder}
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -261,8 +560,9 @@ export default function CheckoutPage() {
                         onChange={(e) =>
                           handleInputChange("address.city", e.target.value)
                         }
-                        className="w-full px-3 py-2 border-2 border-gray-400 bg-white text-gray-900"
+                        className="w-full px-3 py-2 border-2 border-gray-400 bg-white text-gray-900 focus:border-blue-500 outline-none"
                         required
+                        disabled={isPlacingOrder}
                       />
                     </div>
                     <div>
@@ -275,8 +575,9 @@ export default function CheckoutPage() {
                         onChange={(e) =>
                           handleInputChange("address.pincode", e.target.value)
                         }
-                        className="w-full px-3 py-2 border-2 border-gray-400 bg-white text-gray-900"
+                        className="w-full px-3 py-2 border-2 border-gray-400 bg-white text-gray-900 focus:border-blue-500 outline-none"
                         required
+                        disabled={isPlacingOrder}
                       />
                     </div>
                   </div>
@@ -285,7 +586,7 @@ export default function CheckoutPage() {
             )}
 
             {/* Payment Method */}
-            <div className="border-2 border-gray-300 p-6 bg-gray-50">
+            <div className="border-2 border-gray-300 p-6 bg-white">
               <h2 className="text-xl font-semibold text-gray-900 mb-4 border-b border-gray-400 pb-2">
                 Payment Method
               </h2>
@@ -297,6 +598,7 @@ export default function CheckoutPage() {
                     checked={paymentMethod === "prepaid"}
                     onChange={() => setPaymentMethod("prepaid")}
                     className="w-4 h-4"
+                    disabled={isPlacingOrder}
                   />
                   <label
                     htmlFor="prepaid"
@@ -313,6 +615,7 @@ export default function CheckoutPage() {
                       checked={paymentMethod === "cash_on_pickup"}
                       onChange={() => setPaymentMethod("cash_on_pickup")}
                       className="w-4 h-4"
+                      disabled={isPlacingOrder}
                     />
                     <label
                       htmlFor="cash_on_pickup"
@@ -323,12 +626,18 @@ export default function CheckoutPage() {
                   </div>
                 )}
               </div>
+
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 text-blue-800 text-sm">
+                <strong>Note:</strong> Both delivery and pickup orders require
+                prepaid payment, except for store pickup which allows cash
+                payment.
+              </div>
             </div>
           </div>
 
           {/* Order Summary */}
           <div className="space-y-6">
-            <div className="border-2 border-gray-300 p-6 bg-gray-50">
+            <div className="border-2 border-gray-300 p-6 bg-white">
               <h2 className="text-xl font-semibold text-gray-900 mb-4 border-b border-gray-400 pb-2">
                 Order Summary
               </h2>
@@ -345,7 +654,8 @@ export default function CheckoutPage() {
                         {item.product.name}
                       </h4>
                       <p className="text-sm text-gray-700">
-                        ₹{item.product.price} x {item.quantity}
+                        ₹{item.product.price} x {item.quantity} •{" "}
+                        {item.product.weight * item.quantity}kg
                       </p>
                     </div>
                     <span className="font-semibold text-gray-900">
@@ -356,25 +666,25 @@ export default function CheckoutPage() {
               </div>
 
               {/* Summary */}
-              <div className="space-y-2 border-t-2 border-gray-300 pt-4 bg-white p-3 border-2">
+              <div className="space-y-2 border-t-2 border-gray-300 pt-4 bg-gray-50 p-3 border-2">
                 <div className="flex justify-between text-gray-800">
                   <span>Subtotal:</span>
                   <span>₹{cart.totalAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-gray-800">
-                  <span>Weight:</span>
+                  <span>Total Weight:</span>
                   <span>{cart.totalWeight.toFixed(2)}kg</span>
                 </div>
                 <div className="flex justify-between text-gray-800">
                   <span>Delivery Fee:</span>
                   <span
                     className={
-                      finalDeliveryFee === 0
+                      deliveryFee === 0
                         ? "text-green-600 font-semibold"
                         : "text-gray-800"
                     }
                   >
-                    {finalDeliveryFee === 0 ? "FREE" : `₹${finalDeliveryFee}`}
+                    {deliveryFee === 0 ? "FREE" : `₹${deliveryFee}`}
                   </span>
                 </div>
                 <div className="flex justify-between font-semibold text-lg border-t border-gray-400 pt-2 text-gray-900">
@@ -389,6 +699,10 @@ export default function CheckoutPage() {
                   <div className="mt-4 p-3 bg-amber-100 border-2 border-amber-400 text-sm text-amber-800">
                     Add ₹{(1000 - cart.totalAmount).toFixed(2)} more for free
                     delivery!
+                    <br />
+                    <span className="text-xs">
+                      *Excludes sugar, oils, and jaggery items
+                    </span>
                   </div>
                 )}
             </div>
@@ -397,23 +711,30 @@ export default function CheckoutPage() {
             <div className="space-y-3">
               <button
                 onClick={handlePlaceOrder}
-                className="w-full bg-green-600 hover:bg-green-700 text-white py-4 px-6 font-semibold flex items-center justify-center space-x-2 border-2 border-green-700"
+                disabled={isPlacingOrder}
+                className={`w-full py-4 px-6 font-semibold flex items-center justify-center space-x-2 border-2 transition-colors ${
+                  isPlacingOrder
+                    ? "bg-gray-400 border-gray-500 text-gray-200 cursor-not-allowed"
+                    : "bg-green-600 hover:bg-green-700 text-white border-green-700"
+                }`}
               >
-                <MessageCircle className="w-5 h-5" />
-                <span>Place Order via WhatsApp</span>
+                {isPlacingOrder ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Placing Order...</span>
+                  </>
+                ) : (
+                  <>
+                    <MessageCircle className="w-5 h-5" />
+                    <span>Place Order via WhatsApp</span>
+                  </>
+                )}
               </button>
 
-              <button
-                onClick={handleTestWhatsApp}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 font-medium flex items-center justify-center space-x-2 border-2 border-blue-700"
-              >
-                <Phone className="w-4 h-4" />
-                <span>Test WhatsApp Integration</span>
-              </button>
-
-              <p className="text-xs text-gray-700 text-center bg-gray-100 p-2 border border-gray-300">
-                Your order will be sent via WhatsApp for confirmation. Our team
-                will contact you shortly to finalize the order.
+              <p className="text-xs text-gray-700 text-center bg-gray-100 p-3 border border-gray-300">
+                Your order confirmation will be sent directly to your WhatsApp
+                number. Our team will contact you within 10-15 minutes to
+                finalize the order and process payment.
               </p>
             </div>
           </div>

@@ -118,7 +118,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                 <div className="space-y-2">
                   <div className="flex items-center text-sm text-gray-700">
                     <Phone className="w-4 h-4 mr-2 text-blue-600" />
-                    <span>+91 98765 43210</span>
+                    <span>+91 82971 37702</span>
                   </div>
                   <p className="text-sm text-gray-700">
                     📧 info@digitalcatalogue.com
@@ -131,7 +131,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
 
               <button
                 onClick={() =>
-                  window.open("https://wa.me/919876543210", "_blank")
+                  window.open("https://wa.me/918297137702", "_blank")
                 }
                 className="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 font-medium border-2 border-green-600 flex items-center justify-center space-x-2"
               >

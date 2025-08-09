@@ -3,6 +3,8 @@ import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { CartState, Cart, Product, CartItem } from "@/types";
 import { api } from "@/lib/api";
 
+const CART_STORAGE_KEY = "digital_catalogue_cart";
+
 const initialState: CartState = {
   cart: {
     items: [],
@@ -31,14 +33,12 @@ const calculateCartTotals = (
     0
   );
 
-  // Check if eligible for free delivery
+  // Check if eligible for free delivery (excluding sugar, oils, jaggery)
   const eligibleAmount = items
     .filter((item) => item.product.isEligibleForFreeDelivery)
     .reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 
-  const isEligibleForFreeDelivery =
-    eligibleAmount >=
-    parseInt(process.env.NEXT_PUBLIC_MIN_ORDER_VALUE || "1000");
+  const isEligibleForFreeDelivery = eligibleAmount >= 1000; // Minimum order value for free delivery
 
   return {
     totalAmount: parseFloat(totalAmount.toFixed(2)),
@@ -47,21 +47,64 @@ const calculateCartTotals = (
   };
 };
 
+// Load cart from localStorage
+const loadCartFromStorage = (): Cart => {
+  if (typeof window === "undefined") return initialState.cart;
+
+  try {
+    const storedCart = localStorage.getItem(CART_STORAGE_KEY);
+    if (storedCart) {
+      const parsedCart = JSON.parse(storedCart);
+      // Recalculate totals in case of any changes
+      const totals = calculateCartTotals(parsedCart.items);
+      return { ...parsedCart, ...totals };
+    }
+  } catch (error) {
+    console.error("Error loading cart from localStorage:", error);
+  }
+  return initialState.cart;
+};
+
+// Save cart to localStorage
+const saveCartToStorage = (cart: Cart): void => {
+  if (typeof window === "undefined") return;
+
+  try {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+  } catch (error) {
+    console.error("Error saving cart to localStorage:", error);
+  }
+};
+
 // Async thunks
 export const loadCart = createAsyncThunk(
   "cart/loadCart",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get<Cart>("/api/cart");
-      return response.data;
-    } catch (error: any) {
-      // If no cart exists, return empty cart
-      if (error.response?.status === 404) {
-        return initialState.cart;
+      // First try to load from localStorage
+      const localCart = loadCartFromStorage();
+
+      // If authenticated, try to sync with server
+      const token = localStorage.getItem("authToken");
+      if (token) {
+        try {
+          const response = await api.get<Cart>("/api/cart");
+          return response.data;
+        } catch (error: any) {
+          // If server cart doesn't exist, return local cart
+          if (
+            error.response?.status === 404 ||
+            error.response?.status === 401
+          ) {
+            return localCart;
+          }
+          throw error;
+        }
       }
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to load cart"
-      );
+
+      return localCart;
+    } catch (error: any) {
+      return localCart; // Always fallback to local cart
     }
   }
 );
@@ -70,8 +113,12 @@ export const syncCart = createAsyncThunk(
   "cart/syncCart",
   async (cart: Cart, { rejectWithValue }) => {
     try {
-      const response = await api.post<Cart>("/api/cart/sync", cart);
-      return response.data;
+      const token = localStorage.getItem("authToken");
+      if (token) {
+        const response = await api.post<Cart>("/api/cart/sync", cart);
+        return response.data;
+      }
+      return cart; // If not authenticated, just return the current cart
     } catch (error: any) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to sync cart"
@@ -82,7 +129,10 @@ export const syncCart = createAsyncThunk(
 
 const cartSlice = createSlice({
   name: "cart",
-  initialState,
+  initialState: {
+    ...initialState,
+    cart: loadCartFromStorage(), // Load from storage on initialization
+  },
   reducers: {
     addToCart: (
       state,
@@ -101,6 +151,9 @@ const cartSlice = createSlice({
 
       const totals = calculateCartTotals(state.cart.items);
       state.cart = { ...state.cart, ...totals };
+
+      // Save to localStorage
+      saveCartToStorage(state.cart);
     },
 
     removeFromCart: (state, action: PayloadAction<string>) => {
@@ -111,6 +164,9 @@ const cartSlice = createSlice({
 
       const totals = calculateCartTotals(state.cart.items);
       state.cart = { ...state.cart, ...totals };
+
+      // Save to localStorage
+      saveCartToStorage(state.cart);
     },
 
     updateCartItemQuantity: (
@@ -133,11 +189,16 @@ const cartSlice = createSlice({
 
         const totals = calculateCartTotals(state.cart.items);
         state.cart = { ...state.cart, ...totals };
+
+        // Save to localStorage
+        saveCartToStorage(state.cart);
       }
     },
 
     clearCart: (state) => {
       state.cart = initialState.cart;
+      // Clear from localStorage
+      saveCartToStorage(state.cart);
     },
 
     clearError: (state) => {
@@ -154,6 +215,15 @@ const cartSlice = createSlice({
         const totals = calculateCartTotals(state.cart.items);
         state.cart = { ...state.cart, ...totals };
       }
+
+      // Save to localStorage
+      saveCartToStorage(state.cart);
+    },
+
+    // Initialize cart from storage (called on app start)
+    initializeCart: (state) => {
+      const storedCart = loadCartFromStorage();
+      state.cart = storedCart;
     },
   },
   extraReducers: (builder) => {
@@ -166,6 +236,8 @@ const cartSlice = createSlice({
       .addCase(loadCart.fulfilled, (state, action) => {
         state.isLoading = false;
         state.cart = action.payload;
+        // Save to localStorage
+        saveCartToStorage(state.cart);
       })
       .addCase(loadCart.rejected, (state, action) => {
         state.isLoading = false;
@@ -180,6 +252,8 @@ const cartSlice = createSlice({
       .addCase(syncCart.fulfilled, (state, action) => {
         state.isLoading = false;
         state.cart = action.payload;
+        // Save to localStorage
+        saveCartToStorage(state.cart);
       })
       .addCase(syncCart.rejected, (state, action) => {
         state.isLoading = false;
@@ -195,6 +269,7 @@ export const {
   clearCart,
   clearError,
   setWalkInMode,
+  initializeCart,
 } = cartSlice.actions;
 
 export default cartSlice.reducer;
