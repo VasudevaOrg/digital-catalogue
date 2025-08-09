@@ -3,57 +3,166 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { phoneNumber, message, messageType } = await request.json();
+    const { phoneNumber, message, messageType, orderData } =
+      await request.json();
 
     // Validate input
-    if (!phoneNumber || !message) {
+    if (!phoneNumber) {
       return NextResponse.json(
-        { success: false, message: "Phone number and message are required" },
+        { success: false, message: "Phone number is required" },
         { status: 400 }
       );
     }
 
-    // Clean phone number (remove country code if present, add 91 prefix)
+    // Clean phone number - for test setup, use the exact format Meta expects
     let cleanPhone = phoneNumber.replace(/\D/g, "");
+
     if (cleanPhone.startsWith("91") && cleanPhone.length === 12) {
-      cleanPhone = cleanPhone.substring(2);
+      cleanPhone = cleanPhone; // Keep as is for Indian numbers
+    } else if (cleanPhone.length === 10) {
+      cleanPhone = `91${cleanPhone}`; // Add country code
     }
-    if (cleanPhone.length !== 10) {
+
+    if (cleanPhone !== "918985346102") {
       return NextResponse.json(
-        { success: false, message: "Invalid phone number format" },
+        {
+          success: false,
+          message:
+            "This number is not in the test phone list. Only +91 89853 46102 is allowed for testing.",
+        },
         { status: 400 }
       );
     }
 
-    // Format phone number for WhatsApp API
-    const formattedPhone = `91${cleanPhone}`;
-
-    // Hardcoded WhatsApp Business API configuration
+    // WhatsApp Business API configuration
     const WHATSAPP_API_URL = "https://graph.facebook.com/v22.0";
     const WHATSAPP_PHONE_ID = "802685189585173";
     const WHATSAPP_ACCESS_TOKEN =
-      "EAASGzwVtiEMBPNLYbV406Ly6aNw1fwBIqQyo80Eq3vs2sTcqUBadrQAzo2ZACGZAevffH57gD6GURmZAFPWFc9sbYLlcvU65xu1i4aiBl0dY883sXXzTTzEd1oe3kCd3Urb3KAzEg3wbZB69CluW1Rl7OV6Mp8cK2IG2SmJ2l52kD8ZAW6ZCZAweBKS83yLpsEXKepOMJBCmWh7hR2CFtS9nvpyDKELmVJL2rNb57PTpExMnAZDZD";
+      process.env.WHATSAPP_ACCESS_TOKEN ||
+      "EAASGzwVtiEMBPA6g9NZCbuNEuVMFra05X0BTDMtZBuy9Bop45BcVQM2rdhn2BrCuBB3rCvtXlhiHO4XdFZBP8VqbrrcuGTUuvTsu8CWMTeuZCRttrlWuc4MvpI14RE0N1gnunO88GKixZAQwLtLQDOwA2r3slP9UZBiJkHxzIDSkbrx6XsImzbCwZCAKSLVW1RR9XVBDUIM3Vl8n2mdHSyAO3psynI7yZCOGuwFyflwZARo6SZCgZDZD";
 
-    console.log("\n📱 WHATSAPP API - LIVE MODE");
+    console.log("\n📱 WHATSAPP API - CATALOGUE TEMPLATE MODE");
     console.log("=".repeat(60));
-    console.log(`📞 From: Business Number (Phone ID: ${WHATSAPP_PHONE_ID})`);
-    console.log(`📞 To: +${formattedPhone}`);
+    console.log(
+      `📞 From: Test Number +1 (555) 623-3859 (Phone ID: ${WHATSAPP_PHONE_ID})`
+    );
+    console.log(`📞 To: +${cleanPhone} (Your test number)`);
     console.log(`📝 Type: ${messageType}`);
     console.log(`⏰ Timestamp: ${new Date().toLocaleString("en-IN")}`);
-    console.log("\n📄 MESSAGE CONTENT:");
-    console.log("-".repeat(40));
-    console.log(message);
-    console.log("=".repeat(60));
 
     try {
-      const whatsappPayload = {
-        messaging_product: "whatsapp",
-        to: formattedPhone,
-        type: "text",
-        text: {
-          body: message,
-        },
-      };
+      let whatsappPayload;
+
+      // For order messages, use your custom catalogue_template
+      if (messageType === "order_enquiry" && orderData) {
+        console.log("\n📋 SENDING CATALOGUE_TEMPLATE MESSAGE");
+        console.log("Order Data:", JSON.stringify(orderData, null, 2));
+
+        // Format items list for display
+        const itemsList =
+          orderData.items
+            ?.map(
+              (item: any, index: number) =>
+                `${index + 1}. ${item.product?.name || "Product"} x ${
+                  item.quantity
+                }`
+            )
+            .join(", ") || "No items";
+
+        // Use your custom catalogue_template
+        whatsappPayload = {
+          messaging_product: "whatsapp",
+          to: cleanPhone,
+          type: "template",
+          template: {
+            name: "catalogue_template", // Your exact template name
+            language: {
+              code: "en", // English language code
+            },
+            components: [
+              {
+                type: "body",
+                parameters: [
+                  {
+                    type: "text",
+                    text: orderData.customerInfo?.name || "Customer", // {{1}} - Customer Name
+                  },
+                  {
+                    type: "text",
+                    text: orderData.orderId || "ORD123456", // {{2}} - Order ID
+                  },
+                  {
+                    type: "text",
+                    text: new Date().toLocaleDateString("en-IN"), // {{3}} - Order Date
+                  },
+                  {
+                    type: "text",
+                    text: orderData.totalAmount?.toFixed(2) || "0.00", // {{4}} - Total Amount
+                  },
+                  {
+                    type: "text",
+                    text: orderData.items?.length?.toString() || "0", // {{5}} - Item Count
+                  },
+                  {
+                    type: "text",
+                    text:
+                      orderData.deliveryType === "delivery"
+                        ? "Home Delivery"
+                        : "Store Pickup", // {{6}} - Delivery Type
+                  },
+                  {
+                    type: "text",
+                    text:
+                      orderData.paymentMethod === "prepaid"
+                        ? "Prepaid (Online)"
+                        : "Cash on Pickup", // {{7}} - Payment Method
+                  },
+                ],
+              },
+            ],
+          },
+        };
+
+        console.log("📦 Using catalogue_template with order data...");
+        console.log("Template parameters:");
+        console.log(
+          "{{1}} Customer Name:",
+          orderData.customerInfo?.name || "Customer"
+        );
+        console.log("{{2}} Order ID:", orderData.orderId || "ORD123456");
+        console.log("{{3}} Date:", new Date().toLocaleDateString("en-IN"));
+        console.log(
+          "{{4}} Amount:",
+          orderData.totalAmount?.toFixed(2) || "0.00"
+        );
+        console.log("{{5}} Items:", orderData.items?.length?.toString() || "0");
+        console.log(
+          "{{6}} Delivery:",
+          orderData.deliveryType === "delivery"
+            ? "Home Delivery"
+            : "Store Pickup"
+        );
+        console.log(
+          "{{7}} Payment:",
+          orderData.paymentMethod === "prepaid"
+            ? "Prepaid (Online)"
+            : "Cash on Pickup"
+        );
+      } else {
+        // Fallback to hello_world template if no order data or different message type
+        console.log("\n📋 FALLBACK TO HELLO_WORLD TEMPLATE");
+        whatsappPayload = {
+          messaging_product: "whatsapp",
+          to: cleanPhone,
+          type: "template",
+          template: {
+            name: "hello_world",
+            language: {
+              code: "en_US",
+            },
+          },
+        };
+      }
 
       console.log("\n🚀 Sending to WhatsApp API...");
       console.log(`📡 URL: ${WHATSAPP_API_URL}/${WHATSAPP_PHONE_ID}/messages`);
@@ -83,12 +192,21 @@ export async function POST(request: NextRequest) {
 
         // Handle specific error codes
         let errorMessage = "Failed to send WhatsApp message";
+
         if (responseData.error?.code === 131000) {
+          errorMessage = `Phone number +${cleanPhone} is not in your test list. Please add it in Meta Developer Console.`;
+        } else if (responseData.error?.code === 131047) {
           errorMessage =
-            "Recipient phone number not in test list. Add the number to your WhatsApp Business test list.";
+            "Re-engagement message - User must message you first before you can send custom messages.";
         } else if (responseData.error?.code === 190) {
           errorMessage =
             "WhatsApp access token expired. Please get a new token from Meta Developer Console.";
+        } else if (responseData.error?.code === 132000) {
+          errorMessage =
+            "Template not found. Please check if 'catalogue_template' is approved and available.";
+        } else if (responseData.error?.code === 132012) {
+          errorMessage =
+            "Template parameter count mismatch. Check that all 7 variables are provided correctly.";
         } else if (responseData.error?.message) {
           errorMessage = responseData.error.message;
         }
@@ -99,6 +217,13 @@ export async function POST(request: NextRequest) {
             message: errorMessage,
             error: responseData.error,
             errorCode: responseData.error?.code,
+            debugInfo: {
+              templateName: whatsappPayload.template?.name,
+              phoneNumber: cleanPhone,
+              phoneId: WHATSAPP_PHONE_ID,
+              parameterCount:
+                whatsappPayload.template?.components?.[0]?.parameters?.length,
+            },
           },
           { status: response.status }
         );
@@ -106,17 +231,18 @@ export async function POST(request: NextRequest) {
 
       // Log successful message for tracking
       console.log(`✅ WhatsApp message sent successfully:`, {
-        from: `Phone ID: ${WHATSAPP_PHONE_ID}`,
-        to: `+${formattedPhone}`,
+        from: `Test Number +1 (555) 623-3859 (Phone ID: ${WHATSAPP_PHONE_ID})`,
+        to: `+${cleanPhone}`,
         messageId: responseData.messages?.[0]?.id,
         messageType,
+        templateUsed: whatsappPayload.template?.name,
         timestamp: new Date().toISOString(),
       });
 
       // Store message in database (implement based on your database choice)
       await saveMessageToDatabase({
-        phoneNumber: formattedPhone,
-        message,
+        phoneNumber: cleanPhone,
+        message: `Template: ${whatsappPayload.template?.name}`,
         messageType,
         messageId: responseData.messages?.[0]?.id,
         status: "sent",
@@ -126,8 +252,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         messageId: responseData.messages?.[0]?.id,
-        message: "WhatsApp message sent successfully",
-        recipient: `+${formattedPhone}`,
+        message: "WhatsApp order confirmation sent successfully",
+        templateUsed: whatsappPayload.template?.name,
+        messageType: whatsappPayload.type,
+        recipient: `+${cleanPhone}`,
+        from: "+1 (555) 623-3859",
         timestamp: new Date().toISOString(),
       });
     } catch (apiError: any) {
@@ -165,11 +294,12 @@ async function saveMessageToDatabase(messageData: any) {
     type: messageData.messageType,
     status: messageData.status,
     messageId: messageData.messageId,
+    template: messageData.message,
     timestamp: messageData.sentAt,
   });
 }
 
-// GET endpoint to retrieve message status
+// GET endpoint for message status
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -182,7 +312,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // For demo purposes, return mock status
+    // Return mock status for now
     const mockStatuses = ["sent", "delivered", "read"];
     const randomStatus =
       mockStatuses[Math.floor(Math.random() * mockStatuses.length)];
