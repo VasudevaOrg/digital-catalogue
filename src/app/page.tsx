@@ -1,101 +1,98 @@
 // src/app/page.tsx
 "use client";
 
+import { useEffect, useState } from "react";
 import { staticProducts, staticCategories } from "@/data/staticProducts";
 import { FeaturedProducts } from "@/components/product/FeaturedProducts";
 import { CategoryGrid } from "@/components/product/CategoryGrid";
+import { HeroBanner } from "@/components/layout/HeroBanner";
+import {
+  ShoppingBag,
+  Truck,
+  Shield,
+  Clock,
+  Star,
+  ArrowRight,
+  Zap,
+  Award,
+  Users,
+} from "lucide-react";
 
 export default function HomePage() {
-  // Use static data
+  const [isClient, setIsClient] = useState(false);
   const products = staticProducts.slice(0, 12);
   const categories = staticCategories;
 
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
+      {/* Hero Banner with Corrosion Effects */}
+      <HeroBanner />
+
       {/* Categories Section */}
-      <section className="bg-white border-b">
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-light text-gray-800 mb-2">
+      <section className="relative py-16 bg-white">
+        {/* Decorative Elements */}
+        <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-blue-100 to-transparent rounded-full blur-2xl opacity-60"></div>
+        <div className="absolute bottom-0 right-0 w-40 h-40 bg-gradient-to-tl from-orange-100 to-transparent rounded-full blur-2xl opacity-60"></div>
+
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-gray-800 via-blue-600 to-gray-800 bg-clip-text text-transparent mb-4">
               Shop by Category
-            </h1>
-            <p className="text-gray-600">Browse our premium collection</p>
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Discover our premium collection of quality groceries and daily
+              essentials
+            </p>
           </div>
-          <CategoryGrid categories={categories} />
+
+          <div
+            className={`transition-opacity duration-500 ${
+              isClient ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            <CategoryGrid categories={categories} />
+          </div>
         </div>
       </section>
 
-      {/* Products Section */}
-      <section className="container mx-auto px-4 py-12">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl font-light text-gray-800 mb-2">
-            Featured Products
-          </h2>
-          <p className="text-gray-600">Handpicked quality items for you</p>
+      {/* Featured Products Section */}
+      <section className="relative py-20 bg-gradient-to-br from-gray-50 to-blue-50">
+        {/* Background Pattern - Using CSS instead of inline SVG */}
+        <div className="absolute inset-0 opacity-40">
+          <div
+            className="w-full h-full"
+            style={{
+              backgroundImage:
+                "radial-gradient(circle at 2px 2px, rgba(156,146,172,0.03) 2px, transparent 0)",
+              backgroundSize: "30px 30px",
+            }}
+          ></div>
         </div>
-        <FeaturedProducts products={products} />
-      </section>
 
-      {/* Info Section */}
-      <section className="bg-white border-t py-12">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-12 h-12 mx-auto mb-4 text-gray-700">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="1.5"
-                    d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg font-medium text-gray-800 mb-2">
-                Quality Products
-              </h3>
-              <p className="text-gray-600 text-sm">
-                Premium quality groceries and essentials
-              </p>
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium mb-4">
+              <Star className="w-4 h-4 mr-2" />
+              Premium Quality Products
             </div>
+            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-gray-800 via-blue-600 to-gray-800 bg-clip-text text-transparent mb-4">
+              Featured Products
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Handpicked quality items for your daily needs
+            </p>
+          </div>
 
-            <div className="text-center">
-              <div className="w-12 h-12 mx-auto mb-4 text-gray-700">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="1.5"
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg font-medium text-gray-800 mb-2">
-                Easy Ordering
-              </h3>
-              <p className="text-gray-600 text-sm">
-                Simple WhatsApp ordering process
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-12 h-12 mx-auto mb-4 text-gray-700">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="1.5"
-                    d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg font-medium text-gray-800 mb-2">
-                Quick Delivery
-              </h3>
-              <p className="text-gray-600 text-sm">
-                Fast delivery to your doorstep
-              </p>
-            </div>
+          <div
+            className={`transition-opacity duration-500 ${
+              isClient ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            <FeaturedProducts products={products} />
           </div>
         </div>
       </section>
