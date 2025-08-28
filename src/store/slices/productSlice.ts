@@ -6,7 +6,7 @@ import {
   ProductFilters,
   PaginatedResponse,
 } from "@/types";
-import { mockProductAPI } from "@/lib/demoData";
+import { productAPI } from "@/lib/api";
 
 const initialState: ProductState = {
   products: [],
@@ -22,7 +22,7 @@ const initialState: ProductState = {
   },
 };
 
-// Async thunks using demo data
+// Async thunks
 export const fetchProducts = createAsyncThunk(
   "products/fetchProducts",
   async (
@@ -34,13 +34,26 @@ export const fetchProducts = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const apiParams = {
+        page: params?.page || 1,
+        limit: params?.limit || 50,
+        category: params?.filters?.category || "",
+        search: params?.filters?.searchQuery || "",
+        sortBy: params?.filters?.sortBy || "name",
+        sortOrder: params?.filters?.sortOrder || "asc",
+      };
 
-      const response = await mockProductAPI.getProducts(params?.filters);
+      // Remove empty parameters
+      const cleanParams = Object.fromEntries(
+        Object.entries(apiParams).filter(([_, value]) => value !== "")
+      );
+
+      const response = await productAPI.getAll(cleanParams);
       return response;
     } catch (error: any) {
-      return rejectWithValue("Failed to fetch products");
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch products"
+      );
     }
   }
 );
@@ -49,16 +62,12 @@ export const fetchProductById = createAsyncThunk(
   "products/fetchProductById",
   async (productId: string, { rejectWithValue }) => {
     try {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 300));
-
-      const product = await mockProductAPI.getProductById(productId);
-      if (!product) {
-        throw new Error("Product not found");
-      }
+      const product = await productAPI.getById(productId);
       return product;
     } catch (error: any) {
-      return rejectWithValue("Failed to fetch product");
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch product"
+      );
     }
   }
 );
@@ -67,28 +76,64 @@ export const fetchCategories = createAsyncThunk(
   "products/fetchCategories",
   async (_, { rejectWithValue }) => {
     try {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 200));
-
-      const categories = await mockProductAPI.getCategories();
+      const categories = await productAPI.getCategories();
       return categories;
     } catch (error: any) {
-      return rejectWithValue("Failed to fetch categories");
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch categories"
+      );
     }
   }
 );
 
 export const searchProducts = createAsyncThunk(
   "products/searchProducts",
-  async (query: string, { rejectWithValue }) => {
+  async (
+    { query, filters }: { query: string; filters?: Partial<ProductFilters> },
+    { rejectWithValue }
+  ) => {
     try {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 400));
-
-      const response = await mockProductAPI.getProducts({ searchQuery: query });
+      const response = await productAPI.search(query, {
+        category: filters?.category || "",
+        sortBy: filters?.sortBy || "name",
+        sortOrder: filters?.sortOrder || "asc",
+      });
       return response.data;
     } catch (error: any) {
-      return rejectWithValue("Failed to search products");
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to search products"
+      );
+    }
+  }
+);
+
+export const fetchFeaturedProducts = createAsyncThunk(
+  "products/fetchFeaturedProducts",
+  async (limit: number = 12, { rejectWithValue }) => {
+    try {
+      const products = await productAPI.getFeatured(limit);
+      return products;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch featured products"
+      );
+    }
+  }
+);
+
+export const fetchProductsByCategory = createAsyncThunk(
+  "products/fetchProductsByCategory",
+  async (
+    { category, params }: { category: string; params?: any },
+    { rejectWithValue }
+  ) => {
+    try {
+      const products = await productAPI.getByCategory(category, params);
+      return products;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch products by category"
+      );
     }
   }
 );
@@ -135,7 +180,7 @@ const productSlice = createSlice({
       })
       .addCase(fetchProducts.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.products = action.payload.data;
+        state.products = action.payload.data || [];
       })
       .addCase(fetchProducts.rejected, (state, action) => {
         state.isLoading = false;
@@ -149,7 +194,6 @@ const productSlice = createSlice({
       })
       .addCase(fetchProductById.fulfilled, (state, action) => {
         state.isLoading = false;
-        // Update product in the list if it exists
         const index = state.products.findIndex(
           (p) => p.id === action.payload.id
         );
@@ -190,6 +234,16 @@ const productSlice = createSlice({
       .addCase(searchProducts.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
+      })
+
+      // Fetch Featured Products
+      .addCase(fetchFeaturedProducts.fulfilled, (state, action) => {
+        state.products = action.payload;
+      })
+
+      // Fetch Products by Category
+      .addCase(fetchProductsByCategory.fulfilled, (state, action) => {
+        state.products = action.payload;
       });
   },
 });

@@ -3,96 +3,139 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { staticProducts, staticCategories } from "@/data/staticProducts";
+import { useAppDispatch, useAppSelector } from "@/store";
+import {
+  fetchProducts,
+  fetchCategories,
+  setFilters,
+  clearFilters,
+  searchProducts,
+} from "@/store/slices/productSlice";
 import { ProductCard } from "@/components/product/ProductCard";
-import { Filter, X } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { Filter, X, ShoppingBag } from "lucide-react";
 
 export default function ProductsPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [products, setProducts] = useState(staticProducts);
+  const dispatch = useAppDispatch();
+
+  const { products, categories, isLoading, error, filters } = useAppSelector(
+    (state) => state.products
+  );
+
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [sortBy, setSortBy] = useState("name-asc");
+  const [localFilters, setLocalFilters] = useState(filters);
 
+  // Load initial data and apply URL parameters
   useEffect(() => {
-    const category = searchParams.get("category") || "";
-    const search = searchParams.get("search") || "";
+    const loadData = async () => {
+      // Load categories first
+      await dispatch(fetchCategories());
 
-    setSelectedCategory(category);
+      // Get URL parameters
+      const category = searchParams.get("category") || "";
+      const search = searchParams.get("search") || "";
 
-    // Filter products
-    let filtered = [...staticProducts];
+      // Update filters from URL
+      const urlFilters = {
+        category,
+        searchQuery: search,
+        sortBy: "name" as const,
+        sortOrder: "asc" as const,
+        priceRange: [0, 10000] as [number, number],
+      };
 
-    if (category) {
-      filtered = filtered.filter(
-        (p) =>
-          p.category.toLowerCase() === category.toLowerCase() ||
-          p.category === category // Handle exact match for encoded categories
+      dispatch(setFilters(urlFilters));
+      setLocalFilters(urlFilters);
+
+      // Fetch products with filters
+      await dispatch(
+        fetchProducts({
+          page: 1,
+          limit: 50,
+          filters: urlFilters,
+        })
       );
-    }
+    };
 
-    if (search) {
-      filtered = filtered.filter(
-        (p) =>
-          p.name.toLowerCase().includes(search.toLowerCase()) ||
-          p.description.toLowerCase().includes(search.toLowerCase())
-      );
-    }
+    loadData();
+  }, [dispatch, searchParams]);
 
-    // Sort products
-    const [sortField, sortOrder] = sortBy.split("-");
-    filtered.sort((a, b) => {
-      if (sortField === "name") {
-        return sortOrder === "asc"
-          ? a.name.localeCompare(b.name)
-          : b.name.localeCompare(a.name);
-      } else if (sortField === "price") {
-        return sortOrder === "asc" ? a.price - b.price : b.price - a.price;
-      }
-      return 0;
-    });
+  // Handle filter changes
+  const handleFilterChange = async (newFilters: any) => {
+    const updatedFilters = { ...localFilters, ...newFilters };
+    setLocalFilters(updatedFilters);
+    dispatch(setFilters(updatedFilters));
 
-    setProducts(filtered);
-  }, [searchParams, sortBy]);
-
-  const handleCategoryChange = (category: string) => {
-    setSelectedCategory(category);
-
-    // Update URL with new category
-    const params = new URLSearchParams(searchParams.toString());
-    if (category) {
-      params.set("category", category);
-    } else {
-      params.delete("category");
-    }
-
-    // Keep search param if it exists
-    const search = searchParams.get("search");
-    if (search) {
-      params.set("search", search);
-    }
-
-    router.push(`/products${params.toString() ? `?${params.toString()}` : ""}`);
-  };
-
-  const handleSortChange = (value: string) => {
-    setSortBy(value);
-  };
-
-  const handleClearFilters = () => {
-    setSelectedCategory("");
-    setSortBy("name-asc");
-
-    // Clear URL params but keep search if exists
+    // Update URL
     const params = new URLSearchParams();
-    const search = searchParams.get("search");
-    if (search) {
-      params.set("search", search);
+    if (updatedFilters.category) {
+      params.set("category", updatedFilters.category);
+    }
+    if (updatedFilters.searchQuery) {
+      params.set("search", updatedFilters.searchQuery);
     }
 
-    router.push(`/products${params.toString() ? `?${params.toString()}` : ""}`);
+    const queryString = params.toString();
+    router.push(`/products${queryString ? `?${queryString}` : ""}`);
+
+    // Fetch products with new filters
+    await dispatch(
+      fetchProducts({
+        page: 1,
+        limit: 50,
+        filters: updatedFilters,
+      })
+    );
   };
+
+  const handleClearFilters = async () => {
+    const clearedFilters = {
+      category: "",
+      searchQuery: "",
+      sortBy: "name" as const,
+      sortOrder: "asc" as const,
+      priceRange: [0, 10000] as [number, number],
+    };
+
+    setLocalFilters(clearedFilters);
+    dispatch(clearFilters());
+    router.push("/products");
+
+    // Fetch all products
+    await dispatch(fetchProducts({ page: 1, limit: 50 }));
+  };
+
+  const handleSortChange = async (value: string) => {
+    const [sortBy, sortOrder] = value.split("-") as [
+      "name" | "price" | "newest",
+      "asc" | "desc"
+    ];
+    await handleFilterChange({ sortBy, sortOrder });
+  };
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center bg-white rounded-lg shadow-lg p-8 max-w-md">
+          <div className="text-red-500 mb-4">
+            <ShoppingBag className="w-16 h-16 mx-auto" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-800 mb-2">
+            Unable to load products
+          </h3>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -103,8 +146,8 @@ export default function ProductsPage() {
             All Products
           </h1>
           <p className="text-gray-600">
-            {selectedCategory
-              ? `Showing: ${selectedCategory}`
+            {localFilters.category
+              ? `Showing: ${localFilters.category}`
               : "Browse our complete collection"}
           </p>
         </div>
@@ -132,15 +175,15 @@ export default function ProductsPage() {
                       type="radio"
                       name="category"
                       value=""
-                      checked={selectedCategory === ""}
-                      onChange={() => handleCategoryChange("")}
+                      checked={localFilters.category === ""}
+                      onChange={() => handleFilterChange({ category: "" })}
                       className="mr-2"
                     />
                     <span className="text-sm text-gray-600">
                       All Categories
                     </span>
                   </label>
-                  {staticCategories.map((category) => (
+                  {categories.map((category) => (
                     <label
                       key={category}
                       className="flex items-center cursor-pointer hover:text-gray-900"
@@ -149,8 +192,8 @@ export default function ProductsPage() {
                         type="radio"
                         name="category"
                         value={category}
-                        checked={selectedCategory === category}
-                        onChange={() => handleCategoryChange(category)}
+                        checked={localFilters.category === category}
+                        onChange={() => handleFilterChange({ category })}
                         className="mr-2"
                       />
                       <span className="text-sm text-gray-600">{category}</span>
@@ -163,7 +206,7 @@ export default function ProductsPage() {
               <div>
                 <h3 className="font-medium text-gray-700 mb-3">Sort By</h3>
                 <select
-                  value={sortBy}
+                  value={`${localFilters.sortBy}-${localFilters.sortOrder}`}
                   onChange={(e) => handleSortChange(e.target.value)}
                   className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-gray-400"
                 >
@@ -187,37 +230,63 @@ export default function ProductsPage() {
                 <Filter className="w-5 h-5 mr-2" />
                 Filters
               </button>
-              {selectedCategory && (
+              {localFilters.category && (
                 <span className="text-sm text-gray-600">
-                  Category: {selectedCategory}
+                  Category: {localFilters.category}
                 </span>
               )}
             </div>
 
             {/* Results count */}
             <div className="mb-4 text-sm text-gray-600">
-              Showing {products.length} products
+              {isLoading
+                ? "Loading products..."
+                : `Showing ${products.length} products`}
             </div>
 
+            {/* Loading State */}
+            {isLoading && (
+              <div className="flex items-center justify-center py-20">
+                <div className="text-center">
+                  <LoadingSpinner size="large" />
+                  <p className="mt-4 text-gray-600">Loading products...</p>
+                </div>
+              </div>
+            )}
+
             {/* Products Grid */}
-            {products.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                {products.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12 bg-white rounded-lg">
-                <p className="text-gray-600 mb-4">No products found</p>
-                {selectedCategory && (
-                  <button
-                    onClick={() => handleCategoryChange("")}
-                    className="text-gray-800 hover:text-gray-900 underline"
-                  >
-                    View all products
-                  </button>
+            {!isLoading && (
+              <>
+                {products.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                    {products.map((product, index) => (
+                      <ProductCard
+                        key={product.id}
+                        product={product}
+                        index={index}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 bg-white rounded-lg">
+                    <ShoppingBag className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">
+                      No products found
+                    </h3>
+                    <p className="text-gray-600 mb-4">
+                      Try adjusting your filters or search terms
+                    </p>
+                    {(localFilters.category || localFilters.searchQuery) && (
+                      <button
+                        onClick={handleClearFilters}
+                        className="text-gray-800 hover:text-gray-900 underline"
+                      >
+                        View all products
+                      </button>
+                    )}
+                  </div>
                 )}
-              </div>
+              </>
             )}
           </div>
         </div>
@@ -234,9 +303,8 @@ export default function ProductsPage() {
               </button>
             </div>
 
-            {/* Mobile filter content */}
+            {/* Mobile Categories */}
             <div className="space-y-6">
-              {/* Categories */}
               <div>
                 <h3 className="font-medium text-gray-700 mb-3">Categories</h3>
                 <div className="space-y-2">
@@ -245,24 +313,24 @@ export default function ProductsPage() {
                       type="radio"
                       name="mobile-category"
                       value=""
-                      checked={selectedCategory === ""}
+                      checked={localFilters.category === ""}
                       onChange={() => {
-                        handleCategoryChange("");
+                        handleFilterChange({ category: "" });
                         setShowFilters(false);
                       }}
                       className="mr-2"
                     />
                     <span className="text-sm">All Categories</span>
                   </label>
-                  {staticCategories.map((category) => (
+                  {categories.map((category) => (
                     <label key={category} className="flex items-center">
                       <input
                         type="radio"
                         name="mobile-category"
                         value={category}
-                        checked={selectedCategory === category}
+                        checked={localFilters.category === category}
                         onChange={() => {
-                          handleCategoryChange(category);
+                          handleFilterChange({ category });
                           setShowFilters(false);
                         }}
                         className="mr-2"
@@ -273,11 +341,11 @@ export default function ProductsPage() {
                 </div>
               </div>
 
-              {/* Sort */}
+              {/* Mobile Sort */}
               <div>
                 <h3 className="font-medium text-gray-700 mb-3">Sort By</h3>
                 <select
-                  value={sortBy}
+                  value={`${localFilters.sortBy}-${localFilters.sortOrder}`}
                   onChange={(e) => handleSortChange(e.target.value)}
                   className="w-full px-3 py-2 border rounded-lg text-sm"
                 >

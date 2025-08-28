@@ -2,10 +2,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { staticProducts, staticCategories } from "@/data/staticProducts";
+import { useAppDispatch, useAppSelector } from "@/store";
+import {
+  fetchProducts,
+  fetchCategories,
+  fetchFeaturedProducts,
+} from "@/store/slices/productSlice";
 import { FeaturedProducts } from "@/components/product/FeaturedProducts";
 import { CategoryGrid } from "@/components/product/CategoryGrid";
 import { HeroBanner } from "@/components/layout/HeroBanner";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import {
   ShoppingBag,
   Truck,
@@ -19,13 +25,85 @@ import {
 } from "lucide-react";
 
 export default function HomePage() {
+  const dispatch = useAppDispatch();
+  const { products, categories, isLoading, error } = useAppSelector(
+    (state) => state.products
+  );
   const [isClient, setIsClient] = useState(false);
-  const products = staticProducts.slice(0, 12);
-  const categories = staticCategories;
+  const [dataLoaded, setDataLoaded] = useState(false);
 
+  // Set client-side flag after hydration
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Fetch data on component mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        // Fetch categories first
+        await dispatch(fetchCategories());
+
+        // Fetch featured products (limited to 12)
+        await dispatch(fetchFeaturedProducts(12));
+
+        setDataLoaded(true);
+      } catch (error) {
+        console.error("Error loading homepage data:", error);
+      }
+    };
+
+    if (!dataLoaded) {
+      loadData();
+    }
+  }, [dispatch, dataLoaded]);
+
+  if (!isClient) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-blue-50">
+        <LoadingSpinner size="large" />
+      </div>
+    );
+  }
+
+  if (isLoading && !dataLoaded) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
+        <HeroBanner />
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <LoadingSpinner size="large" />
+            <p className="mt-4 text-gray-600">Loading products...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
+        <HeroBanner />
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center bg-white rounded-lg shadow-lg p-8 max-w-md">
+            <div className="text-red-500 mb-4">
+              <ShoppingBag className="w-16 h-16 mx-auto" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">
+              Unable to load products
+            </h3>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
@@ -49,19 +127,21 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div
-            className={`transition-opacity duration-500 ${
-              isClient ? "opacity-100" : "opacity-0"
-            }`}
-          >
-            <CategoryGrid categories={categories} />
+          <div className="transition-opacity duration-500 opacity-100">
+            {categories.length > 0 ? (
+              <CategoryGrid categories={categories} />
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-500">No categories available</p>
+              </div>
+            )}
           </div>
         </div>
       </section>
 
       {/* Featured Products Section */}
       <section className="relative py-20 bg-gradient-to-br from-gray-50 to-blue-50">
-        {/* Background Pattern - Using CSS instead of inline SVG */}
+        {/* Background Pattern */}
         <div className="absolute inset-0 opacity-40">
           <div
             className="w-full h-full"
@@ -87,12 +167,75 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div
-            className={`transition-opacity duration-500 ${
-              isClient ? "opacity-100" : "opacity-0"
-            }`}
-          >
-            <FeaturedProducts products={products} />
+          <div className="transition-opacity duration-500 opacity-100">
+            {products.length > 0 ? (
+              <FeaturedProducts products={products} />
+            ) : (
+              <div className="text-center py-12">
+                <div className="bg-white rounded-lg shadow-lg p-8 max-w-md mx-auto">
+                  <ShoppingBag className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">
+                    No products available
+                  </h3>
+                  <p className="text-gray-600">
+                    Check back soon for amazing products!
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {[
+              {
+                icon: <Truck className="w-8 h-8" />,
+                title: "Free Delivery",
+                subtitle: "On orders ₹1000+",
+                color: "text-green-600",
+                bg: "bg-green-100",
+              },
+              {
+                icon: <Shield className="w-8 h-8" />,
+                title: "Quality Assured",
+                subtitle: "Premium products",
+                color: "text-blue-600",
+                bg: "bg-blue-100",
+              },
+              {
+                icon: <Clock className="w-8 h-8" />,
+                title: "Same Day Delivery",
+                subtitle: "Order before 2 PM",
+                color: "text-purple-600",
+                bg: "bg-purple-100",
+              },
+              {
+                icon: <Users className="w-8 h-8" />,
+                title: "24/7 Support",
+                subtitle: "Always here to help",
+                color: "text-orange-600",
+                bg: "bg-orange-100",
+              },
+            ].map((feature, index) => (
+              <div
+                key={index}
+                className="text-center p-6 bg-gray-50 rounded-xl hover:shadow-lg transition-shadow duration-300"
+              >
+                <div
+                  className={`inline-flex items-center justify-center w-16 h-16 ${feature.bg} ${feature.color} rounded-xl mb-4`}
+                >
+                  {feature.icon}
+                </div>
+                <h3 className="font-bold text-gray-800 mb-1">
+                  {feature.title}
+                </h3>
+                <p className="text-sm text-gray-600">{feature.subtitle}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
