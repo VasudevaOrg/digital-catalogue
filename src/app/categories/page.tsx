@@ -5,74 +5,84 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { fetchCategories } from "@/store/slices/productSlice";
+import { fetchCategories, fetchProducts } from "@/store/slices/productSlice";
 import { CategoriesGridSkeleton } from "@/components/ui/SkeletonLoader";
 import Link from "next/link";
 import { ArrowLeft, Package, Search } from "lucide-react";
 
 const categoryConfig: Record<
   string,
-  { icon: string; gradient: string; description: string; itemCount?: number }
+  { icon: string; gradient: string; description: string }
 > = {
   "Rice & Grains": {
     icon: "🌾",
     gradient: "from-amber-400 to-orange-500",
     description: "Premium quality rice & grains",
-    itemCount: 12,
   },
   Oils: {
     icon: "🫒",
     gradient: "from-yellow-400 to-amber-500",
     description: "Pure & healthy cooking oils",
-    itemCount: 8,
   },
   "Sugar & Sweeteners": {
     icon: "🍯",
     gradient: "from-pink-400 to-rose-500",
     description: "Natural sweeteners & sugar",
-    itemCount: 6,
   },
   "Fruits & Vegetables": {
     icon: "🥬",
     gradient: "from-green-400 to-emerald-500",
     description: "Fresh fruits & vegetables",
-    itemCount: 25,
   },
   "Spices & Herbs": {
     icon: "🌶️",
     gradient: "from-red-400 to-pink-500",
     description: "Aromatic spices & herbs",
-    itemCount: 18,
   },
   "Pulses & Lentils": {
     icon: "🫘",
     gradient: "from-orange-400 to-red-500",
     description: "Protein-rich pulses & lentils",
-    itemCount: 15,
   },
   "Dairy Products": {
     icon: "🥛",
     gradient: "from-blue-400 to-indigo-500",
     description: "Fresh dairy products",
-    itemCount: 10,
   },
   Seafood: {
     icon: "🐟",
     gradient: "from-cyan-400 to-blue-500",
     description: "Fresh seafood selection",
-    itemCount: 7,
   },
   Snacks: {
     icon: "🍿",
     gradient: "from-purple-400 to-pink-500",
     description: "Delicious snacks & treats",
-    itemCount: 22,
   },
   Beverages: {
     icon: "☕",
     gradient: "from-indigo-400 to-purple-500",
     description: "Refreshing beverages",
-    itemCount: 14,
+  },
+  Bakery: {
+    icon: "🥖",
+    gradient: "from-yellow-300 to-orange-400",
+    description: "Fresh baked goods",
+  },
+  "Frozen Foods": {
+    icon: "🧊",
+    gradient: "from-blue-300 to-cyan-400",
+    description: "Frozen & chilled items",
+  },
+  "Personal Care": {
+    icon: "🧴",
+    gradient: "from-pink-300 to-purple-400",
+    description: "Health & beauty products",
+  },
+  "Household Items": {
+    icon: "🧽",
+    gradient: "from-green-300 to-teal-400",
+    description: "Cleaning & home essentials",
   },
 };
 
@@ -82,36 +92,120 @@ const getCategoryConfig = (category: string) => {
       icon: "📦",
       gradient: "from-gray-400 to-slate-500",
       description: "Quality products",
-      itemCount: 0,
     }
   );
 };
 
+interface CategoryWithCount {
+  name: string;
+  count: number;
+  isLoading: boolean;
+}
+
 export default function CategoriesPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const { categories, isLoading, error } = useAppSelector(
+  const { categories, isLoading, error, products } = useAppSelector(
     (state) => state.products
   );
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredCategories, setFilteredCategories] = useState<string[]>([]);
+  const [categoriesWithCounts, setCategoriesWithCounts] = useState<
+    CategoryWithCount[]
+  >([]);
+  const [filteredCategories, setFilteredCategories] = useState<
+    CategoryWithCount[]
+  >([]);
+  const [isLoadingCounts, setIsLoadingCounts] = useState(true);
 
+  // Load categories
   useEffect(() => {
     if (categories.length === 0) {
       dispatch(fetchCategories());
     }
   }, [dispatch, categories.length]);
 
+  // Load product counts for each category
+  useEffect(() => {
+    const loadCategoryCounts = async () => {
+      if (categories.length === 0) return;
+
+      setIsLoadingCounts(true);
+      const categoriesWithCountsTemp: CategoryWithCount[] = categories.map(
+        (category) => ({
+          name: category,
+          count: 0,
+          isLoading: true,
+        })
+      );
+
+      setCategoriesWithCounts(categoriesWithCountsTemp);
+
+      // Load product counts for each category
+      const countPromises = categories.map(async (category) => {
+        try {
+          const result = await dispatch(
+            fetchProducts({
+              page: 1,
+              limit: 1, // We only need the count, not the actual products
+              filters: {
+                category,
+                searchQuery: "",
+                sortBy: "name",
+                sortOrder: "asc",
+                priceRange: [0, 10000],
+              },
+            })
+          );
+
+          return {
+            category,
+            count: result.payload?.pagination?.total || 0,
+          };
+        } catch (error) {
+          console.error(
+            `Error fetching count for category ${category}:`,
+            error
+          );
+          return {
+            category,
+            count: 0,
+          };
+        }
+      });
+
+      // Wait for all counts to be loaded
+      const counts = await Promise.all(countPromises);
+
+      // Update categories with actual counts
+      const updatedCategories = categories.map((category) => {
+        const countData = counts.find((c) => c.category === category);
+        return {
+          name: category,
+          count: countData?.count || 0,
+          isLoading: false,
+        };
+      });
+
+      setCategoriesWithCounts(updatedCategories);
+      setIsLoadingCounts(false);
+    };
+
+    if (categories.length > 0) {
+      loadCategoryCounts();
+    }
+  }, [categories, dispatch]);
+
+  // Filter categories based on search
   useEffect(() => {
     if (searchQuery) {
-      const filtered = categories.filter((category) =>
-        category.toLowerCase().includes(searchQuery.toLowerCase())
+      const filtered = categoriesWithCounts.filter((category) =>
+        category.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setFilteredCategories(filtered);
     } else {
-      setFilteredCategories(categories);
+      setFilteredCategories(categoriesWithCounts);
     }
-  }, [searchQuery, categories]);
+  }, [searchQuery, categoriesWithCounts]);
 
   if (error) {
     return (
@@ -173,23 +267,39 @@ export default function CategoriesPage() {
         </div>
 
         {/* Categories Grid */}
-        {isLoading ? (
+        {isLoading || isLoadingCounts ? (
           <CategoriesGridSkeleton />
         ) : (
           <>
             {filteredCategories.length > 0 ? (
               <>
-                <div className="text-gray-600 mb-6">
-                  Showing {filteredCategories.length} categories
+                <div className="text-gray-600 mb-6 flex items-center justify-between">
+                  <span>Showing {filteredCategories.length} categories</span>
+                  <div className="text-sm">
+                    {isLoadingCounts ? (
+                      <span className="flex items-center">
+                        <div className="w-3 h-3 border border-blue-600 border-t-transparent rounded-full animate-spin mr-2"></div>
+                        Loading product counts...
+                      </span>
+                    ) : (
+                      <span>
+                        Total products:{" "}
+                        {filteredCategories.reduce(
+                          (sum, cat) => sum + cat.count,
+                          0
+                        )}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                  {filteredCategories.map((category, index) => {
-                    const config = getCategoryConfig(category);
+                  {filteredCategories.map((categoryData, index) => {
+                    const config = getCategoryConfig(categoryData.name);
 
                     return (
                       <motion.div
-                        key={category}
+                        key={categoryData.name}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{
@@ -202,7 +312,7 @@ export default function CategoriesPage() {
                       >
                         <Link
                           href={`/products?category=${encodeURIComponent(
-                            category
+                            categoryData.name
                           )}`}
                           className="group block"
                         >
@@ -224,17 +334,45 @@ export default function CategoriesPage() {
                             {/* Category Info */}
                             <div className="text-center">
                               <h3 className="text-lg font-bold text-gray-800 mb-2 group-hover:text-gray-900 transition-colors duration-300 leading-tight">
-                                {category}
+                                {categoryData.name}
                               </h3>
 
                               <p className="text-sm text-gray-500 mb-4 leading-relaxed group-hover:text-gray-600 transition-colors duration-300">
                                 {config.description}
                               </p>
 
-                              {/* Item Count */}
+                              {/* Product Count */}
                               <div className="inline-flex items-center px-3 py-1 bg-gray-100 group-hover:bg-gray-200 rounded-full text-xs font-medium text-gray-600 transition-colors duration-300">
-                                {config.itemCount || 0} items
+                                {categoryData.isLoading ? (
+                                  <div className="flex items-center">
+                                    <div className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin mr-1"></div>
+                                    Loading...
+                                  </div>
+                                ) : (
+                                  `${categoryData.count} ${
+                                    categoryData.count === 1 ? "item" : "items"
+                                  }`
+                                )}
                               </div>
+
+                              {/* Stock Status */}
+                              {!categoryData.isLoading && (
+                                <div className="mt-2">
+                                  {categoryData.count === 0 ? (
+                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                      Out of Stock
+                                    </span>
+                                  ) : categoryData.count < 5 ? (
+                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                      Limited Stock
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                      In Stock
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                             </div>
 
                             {/* Hover Arrow */}

@@ -45,14 +45,32 @@ export const fetchProducts = createAsyncThunk(
 
       // Remove empty parameters
       const cleanParams = Object.fromEntries(
-        Object.entries(apiParams).filter(([_, value]) => value !== "")
+        Object.entries(apiParams).filter(([key, value]) => {
+          if (key === "page" || key === "limit") return true; // Always include page and limit
+          return value !== "";
+        })
       );
 
+      console.log("Fetching products with params:", cleanParams);
+
       const response = await productAPI.getAll(cleanParams);
-      return response;
+
+      // Ensure we return the correct structure
+      return {
+        data: response.data || [],
+        pagination: response.pagination || {
+          page: apiParams.page,
+          limit: apiParams.limit,
+          total: response.data?.length || 0,
+          totalPages: Math.ceil((response.data?.length || 0) / apiParams.limit),
+        },
+      };
     } catch (error: any) {
+      console.error("Error in fetchProducts:", error);
       return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch products"
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to fetch products"
       );
     }
   }
@@ -89,7 +107,17 @@ export const fetchCategories = createAsyncThunk(
 export const searchProducts = createAsyncThunk(
   "products/searchProducts",
   async (
-    { query, filters }: { query: string; filters?: Partial<ProductFilters> },
+    {
+      query,
+      filters,
+      page = 1,
+      limit = 50,
+    }: {
+      query: string;
+      filters?: Partial<ProductFilters>;
+      page?: number;
+      limit?: number;
+    },
     { rejectWithValue }
   ) => {
     try {
@@ -97,8 +125,19 @@ export const searchProducts = createAsyncThunk(
         category: filters?.category || "",
         sortBy: filters?.sortBy || "name",
         sortOrder: filters?.sortOrder || "asc",
+        page,
+        limit,
       });
-      return response.data;
+
+      return {
+        data: response.data || [],
+        pagination: response.pagination || {
+          page,
+          limit,
+          total: response.data?.length || 0,
+          totalPages: Math.ceil((response.data?.length || 0) / limit),
+        },
+      };
     } catch (error: any) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to search products"
@@ -124,15 +163,60 @@ export const fetchFeaturedProducts = createAsyncThunk(
 export const fetchProductsByCategory = createAsyncThunk(
   "products/fetchProductsByCategory",
   async (
-    { category, params }: { category: string; params?: any },
+    {
+      category,
+      page = 1,
+      limit = 50,
+      params,
+    }: {
+      category: string;
+      page?: number;
+      limit?: number;
+      params?: any;
+    },
     { rejectWithValue }
   ) => {
     try {
-      const products = await productAPI.getByCategory(category, params);
-      return products;
+      const response = await productAPI.getByCategory(category, {
+        page,
+        limit,
+        ...params,
+      });
+
+      return {
+        data: response.data || [],
+        pagination: response.pagination || {
+          page,
+          limit,
+          total: response.data?.length || 0,
+          totalPages: Math.ceil((response.data?.length || 0) / limit),
+        },
+      };
     } catch (error: any) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to fetch products by category"
+      );
+    }
+  }
+);
+
+// New thunk to get product count for a category
+export const fetchCategoryProductCount = createAsyncThunk(
+  "products/fetchCategoryProductCount",
+  async (category: string, { rejectWithValue }) => {
+    try {
+      const response = await productAPI.getByCategory(category, {
+        page: 1,
+        limit: 1, // We only need the count
+      });
+
+      return {
+        category,
+        count: response.pagination?.total || response.data?.length || 0,
+      };
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch category count"
       );
     }
   }
@@ -170,6 +254,10 @@ const productSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    // Add action to clear products (useful when changing filters)
+    clearProducts: (state) => {
+      state.products = [];
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -185,6 +273,7 @@ const productSlice = createSlice({
       .addCase(fetchProducts.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
+        state.products = [];
       })
 
       // Fetch Product by ID
@@ -215,7 +304,7 @@ const productSlice = createSlice({
       })
       .addCase(fetchCategories.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.categories = action.payload;
+        state.categories = action.payload || [];
       })
       .addCase(fetchCategories.rejected, (state, action) => {
         state.isLoading = false;
@@ -229,21 +318,47 @@ const productSlice = createSlice({
       })
       .addCase(searchProducts.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.products = action.payload;
+        state.products = action.payload.data || [];
       })
       .addCase(searchProducts.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
+        state.products = [];
       })
 
       // Fetch Featured Products
+      .addCase(fetchFeaturedProducts.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
       .addCase(fetchFeaturedProducts.fulfilled, (state, action) => {
-        state.products = action.payload;
+        state.isLoading = false;
+        state.products = action.payload || [];
+      })
+      .addCase(fetchFeaturedProducts.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
       })
 
       // Fetch Products by Category
+      .addCase(fetchProductsByCategory.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
       .addCase(fetchProductsByCategory.fulfilled, (state, action) => {
-        state.products = action.payload;
+        state.isLoading = false;
+        state.products = action.payload.data || [];
+      })
+      .addCase(fetchProductsByCategory.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+        state.products = [];
+      })
+
+      // Fetch Category Product Count
+      .addCase(fetchCategoryProductCount.fulfilled, (state, action) => {
+        // This doesn't modify the main products state, just used for category counts
+        // The result is handled in the component that dispatches this action
       });
   },
 });
@@ -256,6 +371,7 @@ export const {
   setPriceRange,
   setSortBy,
   clearError,
+  clearProducts,
 } = productSlice.actions;
 
 export default productSlice.reducer;

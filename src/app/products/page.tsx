@@ -9,11 +9,11 @@ import {
   fetchCategories,
   setFilters,
   clearFilters,
-  searchProducts,
 } from "@/store/slices/productSlice";
 import { ProductCard } from "@/components/product/ProductCard";
 import { ProductsPageSkeleton } from "@/components/ui/SkeletonLoader";
-import { Filter, X, ShoppingBag } from "lucide-react";
+import { Pagination } from "@/components/ui/Pagination";
+import { Filter, X, ShoppingBag, Grid, List } from "lucide-react";
 
 export default function ProductsPage() {
   const searchParams = useSearchParams();
@@ -27,6 +27,13 @@ export default function ProductsPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [localFilters, setLocalFilters] = useState(filters);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [productsPerPage] = useState(20); // Show 20 products per page
 
   // Load initial data and apply URL parameters
   useEffect(() => {
@@ -38,6 +45,7 @@ export default function ProductsPage() {
         // Get URL parameters
         const category = searchParams.get("category") || "";
         const search = searchParams.get("search") || "";
+        const page = parseInt(searchParams.get("page") || "1");
 
         // Update filters from URL
         const urlFilters = {
@@ -50,15 +58,22 @@ export default function ProductsPage() {
 
         dispatch(setFilters(urlFilters));
         setLocalFilters(urlFilters);
+        setCurrentPage(page);
 
-        // Fetch products with filters
-        await dispatch(
+        // Fetch products with filters and pagination
+        const result = await dispatch(
           fetchProducts({
-            page: 1,
-            limit: 50,
+            page: page,
+            limit: productsPerPage,
             filters: urlFilters,
           })
         );
+
+        // Handle pagination data
+        if (result.payload && result.payload.pagination) {
+          setTotalProducts(result.payload.pagination.total);
+          setTotalPages(result.payload.pagination.totalPages);
+        }
 
         setIsInitialized(true);
       } catch (error) {
@@ -70,13 +85,14 @@ export default function ProductsPage() {
     if (!isInitialized) {
       loadData();
     }
-  }, [dispatch, searchParams, isInitialized]);
+  }, [dispatch, searchParams, isInitialized, productsPerPage]);
 
   // Handle filter changes
   const handleFilterChange = async (newFilters: any) => {
     const updatedFilters = { ...localFilters, ...newFilters };
     setLocalFilters(updatedFilters);
     dispatch(setFilters(updatedFilters));
+    setCurrentPage(1); // Reset to first page when filters change
 
     // Update URL
     const params = new URLSearchParams();
@@ -86,18 +102,53 @@ export default function ProductsPage() {
     if (updatedFilters.searchQuery) {
       params.set("search", updatedFilters.searchQuery);
     }
+    params.set("page", "1");
 
     const queryString = params.toString();
     router.push(`/products${queryString ? `?${queryString}` : ""}`);
 
     // Fetch products with new filters
-    await dispatch(
+    const result = await dispatch(
       fetchProducts({
         page: 1,
-        limit: 50,
+        limit: productsPerPage,
         filters: updatedFilters,
       })
     );
+
+    // Update pagination data
+    if (result.payload && result.payload.pagination) {
+      setTotalProducts(result.payload.pagination.total);
+      setTotalPages(result.payload.pagination.totalPages);
+    }
+  };
+
+  // Handle page change
+  const handlePageChange = async (page: number) => {
+    setCurrentPage(page);
+
+    // Update URL with new page
+    const params = new URLSearchParams(searchParams);
+    params.set("page", page.toString());
+    router.push(`/products?${params.toString()}`);
+
+    // Fetch products for new page
+    const result = await dispatch(
+      fetchProducts({
+        page: page,
+        limit: productsPerPage,
+        filters: localFilters,
+      })
+    );
+
+    // Update pagination data
+    if (result.payload && result.payload.pagination) {
+      setTotalProducts(result.payload.pagination.total);
+      setTotalPages(result.payload.pagination.totalPages);
+    }
+
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleClearFilters = async () => {
@@ -111,10 +162,22 @@ export default function ProductsPage() {
 
     setLocalFilters(clearedFilters);
     dispatch(clearFilters());
+    setCurrentPage(1);
     router.push("/products");
 
     // Fetch all products
-    await dispatch(fetchProducts({ page: 1, limit: 50 }));
+    const result = await dispatch(
+      fetchProducts({
+        page: 1,
+        limit: productsPerPage,
+      })
+    );
+
+    // Update pagination data
+    if (result.payload && result.payload.pagination) {
+      setTotalProducts(result.payload.pagination.total);
+      setTotalPages(result.payload.pagination.totalPages);
+    }
   };
 
   const handleSortChange = async (value: string) => {
@@ -160,13 +223,39 @@ export default function ProductsPage() {
           <h1 className="text-3xl font-light text-gray-800 mb-2">
             All Products
           </h1>
-          <p className="text-gray-600">
-            {localFilters.category
-              ? `Showing: ${localFilters.category}`
-              : localFilters.searchQuery
-              ? `Search results for: "${localFilters.searchQuery}"`
-              : "Browse our complete collection"}
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-gray-600">
+              {localFilters.category
+                ? `Category: ${localFilters.category}`
+                : localFilters.searchQuery
+                ? `Search results for: "${localFilters.searchQuery}"`
+                : "Browse our complete collection"}
+            </p>
+
+            {/* View Mode Toggle */}
+            <div className="hidden md:flex items-center space-x-2 bg-white rounded-lg p-1 border">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`p-2 rounded ${
+                  viewMode === "grid"
+                    ? "bg-blue-100 text-blue-600"
+                    : "text-gray-400 hover:text-gray-600"
+                }`}
+              >
+                <Grid className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode("list")}
+                className={`p-2 rounded ${
+                  viewMode === "list"
+                    ? "bg-blue-100 text-blue-600"
+                    : "text-gray-400 hover:text-gray-600"
+                }`}
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="flex gap-8">
@@ -186,7 +275,7 @@ export default function ProductsPage() {
               {/* Categories */}
               <div className="mb-6">
                 <h3 className="font-medium text-gray-700 mb-3">Categories</h3>
-                <div className="space-y-2">
+                <div className="space-y-2 max-h-64 overflow-y-auto">
                   <label className="flex items-center cursor-pointer hover:text-gray-900">
                     <input
                       type="radio"
@@ -266,7 +355,16 @@ export default function ProductsPage() {
                     Loading products...
                   </div>
                 ) : (
-                  `Showing ${products.length} products`
+                  <div className="flex items-center space-x-4">
+                    <span>
+                      Showing {(currentPage - 1) * productsPerPage + 1} -{" "}
+                      {Math.min(currentPage * productsPerPage, totalProducts)}{" "}
+                      of {totalProducts} products
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                  </div>
                 )}
               </div>
 
@@ -288,16 +386,38 @@ export default function ProductsPage() {
             {/* Products Grid */}
             <>
               {products.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                  {products.map((product, index) => (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      index={index}
-                      isLoading={isLoading}
-                    />
-                  ))}
-                </div>
+                <>
+                  <div
+                    className={`${
+                      viewMode === "grid"
+                        ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3"
+                        : "space-y-4"
+                    }`}
+                  >
+                    {products.map((product, index) => (
+                      <ProductCard
+                        key={product.id}
+                        product={product}
+                        index={index}
+                        isLoading={isLoading}
+                        layout={viewMode}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="mt-12 flex justify-center">
+                      <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        totalItems={totalProducts}
+                        itemsPerPage={productsPerPage}
+                        onPageChange={handlePageChange}
+                      />
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="text-center py-12 bg-white rounded-lg">
                   <ShoppingBag className="w-16 h-16 text-gray-400 mx-auto mb-4" />
@@ -337,7 +457,7 @@ export default function ProductsPage() {
             <div className="space-y-6">
               <div>
                 <h3 className="font-medium text-gray-700 mb-3">Categories</h3>
-                <div className="space-y-2">
+                <div className="space-y-2 max-h-64 overflow-y-auto">
                   <label className="flex items-center">
                     <input
                       type="radio"
