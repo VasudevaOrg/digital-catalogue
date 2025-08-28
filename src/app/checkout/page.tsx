@@ -9,6 +9,7 @@ import {
   showSuccessNotification,
   showErrorNotification,
 } from "@/store/slices/uiSlice";
+import { CheckoutPageSkeleton } from "@/components/ui/SkeletonLoader";
 import {
   Package,
   Truck,
@@ -24,6 +25,8 @@ export default function CheckoutPage() {
   const dispatch = useAppDispatch();
   const { cart } = useAppSelector((state) => state.cart);
 
+  const [isClient, setIsClient] = useState(false);
+  const [isPageLoading, setIsPageLoading] = useState(true);
   const [deliveryType, setDeliveryType] = useState<"delivery" | "pickup">(
     "delivery"
   );
@@ -49,15 +52,28 @@ export default function CheckoutPage() {
   const [isDeliveryAvailable, setIsDeliveryAvailable] = useState(true);
   const [deliveryRadius] = useState(10); // Default radius in km (editable by shop owner in backend)
 
+  // Initialize client-side rendering
   useEffect(() => {
-    // Check delivery availability based on pincode
-    const customerPincode = customerInfo.address.pincode;
-    const shopPincode = "573103";
+    setIsClient(true);
+    // Simulate loading time
+    const timer = setTimeout(() => {
+      setIsPageLoading(false);
+    }, 1000);
 
-    // Simple check - in real implementation, this would be more sophisticated
-    const isAvailable = customerPincode.startsWith("573");
-    setIsDeliveryAvailable(isAvailable);
-  }, [customerInfo.address.pincode]);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (isClient) {
+      // Check delivery availability based on pincode
+      const customerPincode = customerInfo.address.pincode;
+      const shopPincode = "573103";
+
+      // Simple check - in real implementation, this would be more sophisticated
+      const isAvailable = customerPincode.startsWith("573");
+      setIsDeliveryAvailable(isAvailable);
+    }
+  }, [customerInfo.address.pincode, isClient]);
 
   // Calculate delivery fee based on requirements
   const calculateDeliveryFee = () => {
@@ -142,83 +158,6 @@ export default function CheckoutPage() {
       .toString()
       .padStart(3, "0");
     return `ORD${timestamp}${random}`;
-  };
-
-  const generateWhatsAppMessage = (orderData: any) => {
-    const {
-      orderId,
-      customerInfo,
-      items,
-      totalAmount,
-      totalWeight,
-      deliveryType,
-      deliveryAddress,
-      deliveryFee,
-    } = orderData;
-
-    let message = `🛒 *ORDER CONFIRMATION REQUIRED*\n`;
-    message += `━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
-
-    // Customer Details
-    message += `👤 *CUSTOMER DETAILS*\n`;
-    message += `Name: ${customerInfo.name}\n`;
-    message += `Phone: +91${customerInfo.phoneNumber}\n\n`;
-
-    // Order Details
-    message += `📋 *ORDER DETAILS*\n`;
-    message += `Order ID: ${orderId}\n`;
-    message += `Date: ${new Date().toLocaleDateString("en-IN")}\n`;
-    message += `Time: ${new Date().toLocaleTimeString("en-IN")}\n\n`;
-
-    // Items List
-    message += `🛍️ *ITEMS ORDERED*\n`;
-    items.forEach((item: any, index: number) => {
-      message += `${index + 1}. ${item.product.name}\n`;
-      message += `   Price: ₹${item.product.price} x ${item.quantity}\n`;
-      message += `   Weight: ${(item.product.weight * item.quantity).toFixed(
-        2
-      )}kg\n`;
-      message += `   Subtotal: ₹${(item.product.price * item.quantity).toFixed(
-        2
-      )}\n\n`;
-    });
-
-    // Order Summary
-    message += `💰 *ORDER SUMMARY*\n`;
-    message += `Items Total: ₹${(totalAmount - deliveryFee).toFixed(2)}\n`;
-    message += `Total Weight: ${totalWeight.toFixed(2)}kg\n`;
-    message += `Delivery Fee: ${
-      deliveryFee === 0 ? "FREE" : `₹${deliveryFee}`
-    }\n`;
-    message += `*TOTAL AMOUNT: ₹${totalAmount.toFixed(2)}*\n\n`;
-
-    // Delivery Information
-    message += `🚚 *DELIVERY INFORMATION*\n`;
-    message += `Type: ${
-      deliveryType === "delivery" ? "Home Delivery" : "Store Pickup"
-    }\n`;
-
-    if (deliveryAddress) {
-      message += `Address: ${deliveryAddress.street}, ${deliveryAddress.city}, ${deliveryAddress.state} - ${deliveryAddress.pincode}\n`;
-    }
-
-    message += `Payment: ${
-      orderData.paymentMethod === "prepaid"
-        ? "Prepaid (Online)"
-        : "Cash on Pickup"
-    }\n\n`;
-
-    message += `━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `🔔 *NEXT STEPS*\n`;
-    message += `We will contact you within 10-15 minutes to:\n`;
-    message += `• Confirm your order details\n`;
-    message += `• Process payment (if prepaid)\n`;
-    message += `• Provide delivery/pickup timeline\n\n`;
-
-    message += `📞 For immediate assistance, call: +91 98765 43210\n\n`;
-    message += `Thank you for choosing Digital Catalogue! 🙏`;
-
-    return message;
   };
 
   const sendWhatsAppMessage = async (phoneNumber: string, orderData: any) => {
@@ -360,6 +299,11 @@ export default function CheckoutPage() {
     }
   };
 
+  // Show skeleton loading while initializing
+  if (!isClient || isPageLoading) {
+    return <CheckoutPageSkeleton />;
+  }
+
   if (cart.items.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -388,7 +332,7 @@ export default function CheckoutPage() {
   if (orderSuccess) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white border-2 border-green-300 p-8 max-w-lg mx-auto text-center">
+        <div className="bg-white border-2 border-green-300 p-8 max-w-lg mx-auto text-center animate-fadeInUp">
           <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
             Order Placed Successfully! 🎉
@@ -457,7 +401,7 @@ export default function CheckoutPage() {
           {/* Order Details */}
           <div className="space-y-6">
             {/* Customer Information */}
-            <div className="border-2 border-gray-300 p-6 bg-white">
+            <div className="border-2 border-gray-300 p-6 bg-white animate-fadeInUp">
               <h2 className="text-xl font-semibold text-gray-900 mb-4 border-b border-gray-400 pb-2">
                 Customer Information
               </h2>
@@ -470,7 +414,7 @@ export default function CheckoutPage() {
                     type="text"
                     value={customerInfo.name}
                     onChange={(e) => handleInputChange("name", e.target.value)}
-                    className="w-full px-3 py-2 border-2 border-gray-400 bg-white text-gray-900 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border-2 border-gray-400 bg-white text-gray-900 focus:border-blue-500 outline-none transition-colors duration-200"
                     required
                     disabled={isPlacingOrder}
                   />
@@ -486,7 +430,7 @@ export default function CheckoutPage() {
                       handleInputChange("phoneNumber", e.target.value)
                     }
                     placeholder="Enter 10-digit mobile number"
-                    className="w-full px-3 py-2 border-2 border-gray-400 bg-white text-gray-900 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border-2 border-gray-400 bg-white text-gray-900 focus:border-blue-500 outline-none transition-colors duration-200"
                     required
                     disabled={isPlacingOrder}
                   />
@@ -498,7 +442,10 @@ export default function CheckoutPage() {
             </div>
 
             {/* Delivery Options */}
-            <div className="border-2 border-gray-300 p-6 bg-white">
+            <div
+              className="border-2 border-gray-300 p-6 bg-white animate-fadeInUp"
+              style={{ animationDelay: "0.1s" }}
+            >
               <h2 className="text-xl font-semibold text-gray-900 mb-4 border-b border-gray-400 pb-2">
                 Delivery Options
               </h2>
@@ -562,7 +509,7 @@ export default function CheckoutPage() {
 
             {/* Delivery Address */}
             {deliveryType === "delivery" && (
-              <div className="border-2 border-gray-300 p-6 bg-white">
+              <div className="border-2 border-gray-300 p-6 bg-white animate-slideInLeft">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4 border-b border-gray-400 pb-2">
                   Delivery Address
                 </h2>
@@ -577,7 +524,7 @@ export default function CheckoutPage() {
                       onChange={(e) =>
                         handleInputChange("address.street", e.target.value)
                       }
-                      className="w-full px-3 py-2 border-2 border-gray-400 bg-white text-gray-900 focus:border-blue-500 outline-none"
+                      className="w-full px-3 py-2 border-2 border-gray-400 bg-white text-gray-900 focus:border-blue-500 outline-none transition-colors duration-200"
                       required
                       disabled={isPlacingOrder}
                     />
@@ -593,7 +540,7 @@ export default function CheckoutPage() {
                         onChange={(e) =>
                           handleInputChange("address.city", e.target.value)
                         }
-                        className="w-full px-3 py-2 border-2 border-gray-400 bg-white text-gray-900 focus:border-blue-500 outline-none"
+                        className="w-full px-3 py-2 border-2 border-gray-400 bg-white text-gray-900 focus:border-blue-500 outline-none transition-colors duration-200"
                         required
                         disabled={isPlacingOrder}
                       />
@@ -608,7 +555,7 @@ export default function CheckoutPage() {
                         onChange={(e) =>
                           handleInputChange("address.pincode", e.target.value)
                         }
-                        className="w-full px-3 py-2 border-2 border-gray-400 bg-white text-gray-900 focus:border-blue-500 outline-none"
+                        className="w-full px-3 py-2 border-2 border-gray-400 bg-white text-gray-900 focus:border-blue-500 outline-none transition-colors duration-200"
                         required
                         disabled={isPlacingOrder}
                       />
@@ -619,7 +566,10 @@ export default function CheckoutPage() {
             )}
 
             {/* Payment Method */}
-            <div className="border-2 border-gray-300 p-6 bg-white">
+            <div
+              className="border-2 border-gray-300 p-6 bg-white animate-fadeInUp"
+              style={{ animationDelay: "0.2s" }}
+            >
               <h2 className="text-xl font-semibold text-gray-900 mb-4 border-b border-gray-400 pb-2">
                 Payment Method
               </h2>
@@ -670,17 +620,18 @@ export default function CheckoutPage() {
 
           {/* Order Summary */}
           <div className="space-y-6">
-            <div className="border-2 border-gray-300 p-6 bg-white">
+            <div className="border-2 border-gray-300 p-6 bg-white animate-slideInRight">
               <h2 className="text-xl font-semibold text-gray-900 mb-4 border-b border-gray-400 pb-2">
                 Order Summary
               </h2>
 
               {/* Items */}
               <div className="space-y-3 mb-4">
-                {cart.items.map((item) => (
+                {cart.items.map((item, index) => (
                   <div
                     key={item.product.id}
-                    className="flex justify-between items-center py-2 border-b border-gray-300"
+                    className="flex justify-between items-center py-2 border-b border-gray-300 animate-fadeInUp"
+                    style={{ animationDelay: `${index * 0.05}s` }}
                   >
                     <div>
                       <h4 className="font-medium text-gray-900">
@@ -745,10 +696,10 @@ export default function CheckoutPage() {
               <button
                 onClick={handlePlaceOrder}
                 disabled={isPlacingOrder}
-                className={`w-full py-4 px-6 font-semibold flex items-center justify-center space-x-2 border-2 transition-colors ${
+                className={`w-full py-4 px-6 font-semibold flex items-center justify-center space-x-2 border-2 transition-all duration-300 ${
                   isPlacingOrder
                     ? "bg-gray-400 border-gray-500 text-gray-200 cursor-not-allowed"
-                    : "bg-green-600 hover:bg-green-700 text-white border-green-700"
+                    : "bg-green-600 hover:bg-green-700 text-white border-green-700 hover:shadow-lg transform hover:-translate-y-1"
                 }`}
               >
                 {isPlacingOrder ? (

@@ -8,6 +8,7 @@ import { useAppDispatch, useAppSelector } from "@/store";
 import { toggleMobileMenu, openCart } from "@/store/slices/uiSlice";
 import { setSearchQuery } from "@/store/slices/productSlice";
 import { MobileMenu } from "@/components/layout/MobileMenu";
+import { HeaderSkeleton } from "@/components/ui/SkeletonLoader";
 import {
   Menu,
   ShoppingCart,
@@ -19,6 +20,7 @@ import {
   Star,
   User,
   Heart,
+  Grid3X3,
 } from "lucide-react";
 
 export function Header() {
@@ -30,6 +32,7 @@ export function Header() {
   const [showSearch, setShowSearch] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const cartItemsCount = cart.items.reduce(
     (sum, item) => sum + item.quantity,
@@ -39,6 +42,9 @@ export function Header() {
   // Set client-side flag after hydration
   useEffect(() => {
     setIsClient(true);
+    // Simulate loading time for demonstration
+    const timer = setTimeout(() => setIsLoading(false), 1000);
+    return () => clearTimeout(timer);
   }, []);
 
   // Handle scroll effect
@@ -61,42 +67,17 @@ export function Header() {
     }
   };
 
+  // Show skeleton loader while loading
+  if (isLoading || !isClient) {
+    return <HeaderSkeleton />;
+  }
+
   return (
     <>
       {/* Top Bar */}
       <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white">
         <div className="container mx-auto px-4">
-          {/* <div className="flex items-center justify-between py-2 text-sm">
-            <div className="hidden md:flex items-center space-x-6">
-              <div className="flex items-center space-x-2">
-                <Truck className="w-4 h-4" />
-                <span className="font-medium">
-                  Free delivery on orders above ₹1,000
-                </span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Clock className="w-4 h-4" />
-                <span>Same day delivery available</span>
-              </div>
-            </div>
-
-            <div className="md:hidden flex items-center space-x-2">
-              <Truck className="w-4 h-4" />
-              <span className="font-medium">Free delivery ₹1000+</span>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <div className="hidden sm:flex items-center space-x-2">
-                <Phone className="w-4 h-4" />
-                <span className="font-medium">+91 98765 43210</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <MapPin className="w-4 h-4" />
-                <span className="hidden sm:inline">Karnataka 573103</span>
-                <span className="sm:hidden">573103</span>
-              </div>
-            </div>
-          </div> */}
+          {/* You can add promotional banner here if needed */}
         </div>
       </div>
 
@@ -131,15 +112,18 @@ export function Header() {
             <nav className="hidden lg:flex items-center space-x-8">
               {[
                 { name: "Products", href: "/products" },
-                { name: "Categories", href: "/products" },
+                { name: "Categories", href: "/categories" }, // Updated to point to categories page
                 { name: "About", href: "/about" },
                 { name: "Contact", href: "/contact" },
               ].map((item, index) => (
                 <div key={item.name}>
                   <Link
                     href={item.href}
-                    className="relative text-gray-700 hover:text-blue-600 font-medium transition-colors duration-300 group py-2"
+                    className="relative text-gray-700 hover:text-blue-600 font-medium transition-colors duration-300 group py-2 flex items-center"
                   >
+                    {item.name === "Categories" && (
+                      <Grid3X3 className="w-4 h-4 mr-2" />
+                    )}
                     {item.name}
                     <span className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
                   </Link>
@@ -174,7 +158,7 @@ export function Header() {
               >
                 <ShoppingCart className="w-5 h-5" />
                 {isClient && cartItemsCount > 0 && (
-                  <span className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full flex items-center justify-center font-bold shadow-lg">
+                  <span className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full flex items-center justify-center font-bold shadow-lg animate-pulse">
                     {cartItemsCount > 99 ? "99+" : cartItemsCount}
                   </span>
                 )}
@@ -197,7 +181,7 @@ export function Header() {
 
           {/* Search Bar */}
           {showSearch && (
-            <div className="pb-4 border-t border-gray-100">
+            <div className="pb-4 border-t border-gray-100 animate-slide-down">
               <form onSubmit={handleSearch} className="max-w-2xl mx-auto pt-4">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center">
@@ -224,26 +208,6 @@ export function Header() {
             </div>
           )}
         </div>
-
-        {/* Features Bar */}
-        {/* <div className="bg-gradient-to-r from-gray-50 to-blue-50 border-t border-gray-100">
-          <div className="container mx-auto px-4 py-3">
-            <div className="flex items-center justify-center space-x-8 text-sm">
-              <div className="flex items-center space-x-2 text-gray-600">
-                <Truck className="w-4 h-4 text-green-600" />
-                <span className="font-medium">Free Delivery</span>
-              </div>
-              <div className="flex items-center space-x-2 text-gray-600">
-                <Star className="w-4 h-4 text-yellow-500" />
-                <span className="font-medium">Premium Quality</span>
-              </div>
-              <div className="hidden sm:flex items-center space-x-2 text-gray-600">
-                <Phone className="w-4 h-4 text-blue-600" />
-                <span className="font-medium">24/7 Support</span>
-              </div>
-            </div>
-          </div>
-        </div> */}
       </header>
 
       <MobileMenu

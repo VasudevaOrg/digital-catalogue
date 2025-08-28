@@ -3,9 +3,12 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { CategoryCardSkeleton } from "@/components/ui/SkeletonLoader";
 
 interface CategoryGridProps {
   categories: string[];
+  isLoading?: boolean;
+  showAll?: boolean;
 }
 
 const categoryConfig: Record<
@@ -62,6 +65,26 @@ const categoryConfig: Record<
     gradient: "from-indigo-400 to-purple-500",
     description: "Refreshing beverages",
   },
+  Bakery: {
+    icon: "🥖",
+    gradient: "from-yellow-300 to-orange-400",
+    description: "Fresh baked goods",
+  },
+  "Frozen Foods": {
+    icon: "🧊",
+    gradient: "from-blue-300 to-cyan-400",
+    description: "Frozen & chilled items",
+  },
+  "Personal Care": {
+    icon: "🧴",
+    gradient: "from-pink-300 to-purple-400",
+    description: "Health & beauty products",
+  },
+  "Household Items": {
+    icon: "🧽",
+    gradient: "from-green-300 to-teal-400",
+    description: "Cleaning & home essentials",
+  },
 };
 
 const getCategoryConfig = (category: string) => {
@@ -74,7 +97,23 @@ const getCategoryConfig = (category: string) => {
   );
 };
 
-export function CategoryGrid({ categories }: CategoryGridProps) {
+export function CategoryGrid({
+  categories,
+  isLoading = false,
+  showAll = false,
+}: CategoryGridProps) {
+  // Show skeleton loading
+  if (isLoading) {
+    const skeletonCount = showAll ? 12 : 6;
+    return (
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+        {Array.from({ length: skeletonCount }).map((_, index) => (
+          <CategoryCardSkeleton key={index} />
+        ))}
+      </div>
+    );
+  }
+
   if (!categories.length) {
     return (
       <div className="text-center py-12">
@@ -86,6 +125,9 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
         >
           <div className="text-4xl mb-4">📦</div>
           <p className="text-gray-600 font-medium">No categories available</p>
+          <p className="text-sm text-gray-500 mt-2">
+            Check back soon for amazing categories!
+          </p>
         </motion.div>
       </div>
     );
@@ -111,9 +153,9 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
           >
             <Link
               href={`/products?category=${encodeURIComponent(category)}`}
-              className="group block"
+              className="group block h-full"
             >
-              <div className="relative bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden">
+              <div className="relative bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden h-full flex flex-col">
                 {/* Background Gradient */}
                 <div
                   className={`absolute inset-0 bg-gradient-to-br ${config.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}
@@ -129,14 +171,34 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
                 </div>
 
                 {/* Category Name */}
-                <h3 className="text-sm md:text-base font-bold text-gray-800 text-center mb-2 group-hover:text-gray-900 transition-colors duration-300 leading-tight">
+                <h3 className="text-sm md:text-base font-bold text-gray-800 text-center mb-2 group-hover:text-gray-900 transition-colors duration-300 leading-tight flex-grow">
                   {category}
                 </h3>
 
                 {/* Description */}
-                <p className="text-xs text-gray-500 text-center leading-relaxed group-hover:text-gray-600 transition-colors duration-300">
+                <p className="text-xs text-gray-500 text-center leading-relaxed group-hover:text-gray-600 transition-colors duration-300 mb-4">
                   {config.description}
                 </p>
+
+                {/* Shop Now Button */}
+                <div className="text-center">
+                  <div className="inline-flex items-center text-xs font-medium text-blue-600 group-hover:text-blue-700 transition-colors duration-300">
+                    <span>Shop Now</span>
+                    <svg
+                      className="w-3 h-3 ml-1 group-hover:translate-x-0.5 transition-transform duration-300"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </div>
+                </div>
 
                 {/* Hover Arrow */}
                 <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0 transition-all duration-300">

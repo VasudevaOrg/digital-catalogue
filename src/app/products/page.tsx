@@ -12,7 +12,7 @@ import {
   searchProducts,
 } from "@/store/slices/productSlice";
 import { ProductCard } from "@/components/product/ProductCard";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { ProductsPageSkeleton } from "@/components/ui/SkeletonLoader";
 import { Filter, X, ShoppingBag } from "lucide-react";
 
 export default function ProductsPage() {
@@ -26,41 +26,51 @@ export default function ProductsPage() {
 
   const [showFilters, setShowFilters] = useState(false);
   const [localFilters, setLocalFilters] = useState(filters);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Load initial data and apply URL parameters
   useEffect(() => {
     const loadData = async () => {
-      // Load categories first
-      await dispatch(fetchCategories());
+      try {
+        // Load categories first
+        await dispatch(fetchCategories());
 
-      // Get URL parameters
-      const category = searchParams.get("category") || "";
-      const search = searchParams.get("search") || "";
+        // Get URL parameters
+        const category = searchParams.get("category") || "";
+        const search = searchParams.get("search") || "";
 
-      // Update filters from URL
-      const urlFilters = {
-        category,
-        searchQuery: search,
-        sortBy: "name" as const,
-        sortOrder: "asc" as const,
-        priceRange: [0, 10000] as [number, number],
-      };
+        // Update filters from URL
+        const urlFilters = {
+          category,
+          searchQuery: search,
+          sortBy: "name" as const,
+          sortOrder: "asc" as const,
+          priceRange: [0, 10000] as [number, number],
+        };
 
-      dispatch(setFilters(urlFilters));
-      setLocalFilters(urlFilters);
+        dispatch(setFilters(urlFilters));
+        setLocalFilters(urlFilters);
 
-      // Fetch products with filters
-      await dispatch(
-        fetchProducts({
-          page: 1,
-          limit: 50,
-          filters: urlFilters,
-        })
-      );
+        // Fetch products with filters
+        await dispatch(
+          fetchProducts({
+            page: 1,
+            limit: 50,
+            filters: urlFilters,
+          })
+        );
+
+        setIsInitialized(true);
+      } catch (error) {
+        console.error("Error loading products page:", error);
+        setIsInitialized(true);
+      }
     };
 
-    loadData();
-  }, [dispatch, searchParams]);
+    if (!isInitialized) {
+      loadData();
+    }
+  }, [dispatch, searchParams, isInitialized]);
 
   // Handle filter changes
   const handleFilterChange = async (newFilters: any) => {
@@ -115,6 +125,11 @@ export default function ProductsPage() {
     await handleFilterChange({ sortBy, sortOrder });
   };
 
+  // Show skeleton loading while initializing
+  if (!isInitialized || (isLoading && products.length === 0)) {
+    return <ProductsPageSkeleton />;
+  }
+
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -148,6 +163,8 @@ export default function ProductsPage() {
           <p className="text-gray-600">
             {localFilters.category
               ? `Showing: ${localFilters.category}`
+              : localFilters.searchQuery
+              ? `Search results for: "${localFilters.searchQuery}"`
               : "Browse our complete collection"}
           </p>
         </div>
@@ -230,64 +247,77 @@ export default function ProductsPage() {
                 <Filter className="w-5 h-5 mr-2" />
                 Filters
               </button>
-              {localFilters.category && (
+              {(localFilters.category || localFilters.searchQuery) && (
                 <span className="text-sm text-gray-600">
-                  Category: {localFilters.category}
+                  {localFilters.category &&
+                    `Category: ${localFilters.category}`}
+                  {localFilters.searchQuery &&
+                    `Search: ${localFilters.searchQuery}`}
                 </span>
               )}
             </div>
 
-            {/* Results count */}
-            <div className="mb-4 text-sm text-gray-600">
-              {isLoading
-                ? "Loading products..."
-                : `Showing ${products.length} products`}
-            </div>
-
-            {/* Loading State */}
-            {isLoading && (
-              <div className="flex items-center justify-center py-20">
-                <div className="text-center">
-                  <LoadingSpinner size="large" />
-                  <p className="mt-4 text-gray-600">Loading products...</p>
-                </div>
-              </div>
-            )}
-
-            {/* Products Grid */}
-            {!isLoading && (
-              <>
-                {products.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                    {products.map((product, index) => (
-                      <ProductCard
-                        key={product.id}
-                        product={product}
-                        index={index}
-                      />
-                    ))}
+            {/* Results count and loading indicator */}
+            <div className="mb-4 flex items-center justify-between">
+              <div className="text-sm text-gray-600">
+                {isLoading ? (
+                  <div className="flex items-center">
+                    <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Loading products...
                   </div>
                 ) : (
-                  <div className="text-center py-12 bg-white rounded-lg">
-                    <ShoppingBag className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-xl font-bold text-gray-800 mb-2">
-                      No products found
-                    </h3>
-                    <p className="text-gray-600 mb-4">
-                      Try adjusting your filters or search terms
-                    </p>
-                    {(localFilters.category || localFilters.searchQuery) && (
-                      <button
-                        onClick={handleClearFilters}
-                        className="text-gray-800 hover:text-gray-900 underline"
-                      >
-                        View all products
-                      </button>
-                    )}
-                  </div>
+                  `Showing ${products.length} products`
                 )}
-              </>
-            )}
+              </div>
+
+              {/* Mobile Sort */}
+              <div className="lg:hidden">
+                <select
+                  value={`${localFilters.sortBy}-${localFilters.sortOrder}`}
+                  onChange={(e) => handleSortChange(e.target.value)}
+                  className="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-gray-400"
+                >
+                  <option value="name-asc">Name (A-Z)</option>
+                  <option value="name-desc">Name (Z-A)</option>
+                  <option value="price-asc">Price (Low to High)</option>
+                  <option value="price-desc">Price (High to Low)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Products Grid */}
+            <>
+              {products.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                  {products.map((product, index) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      index={index}
+                      isLoading={isLoading}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 bg-white rounded-lg">
+                  <ShoppingBag className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">
+                    No products found
+                  </h3>
+                  <p className="text-gray-600 mb-4">
+                    Try adjusting your filters or search terms
+                  </p>
+                  {(localFilters.category || localFilters.searchQuery) && (
+                    <button
+                      onClick={handleClearFilters}
+                      className="text-gray-800 hover:text-gray-900 underline"
+                    >
+                      View all products
+                    </button>
+                  )}
+                </div>
+              )}
+            </>
           </div>
         </div>
       </div>
@@ -295,7 +325,7 @@ export default function ProductsPage() {
       {/* Mobile Filters Modal */}
       {showFilters && (
         <div className="fixed inset-0 bg-black bg-opacity-30 z-50 lg:hidden">
-          <div className="absolute right-0 top-0 h-full w-80 bg-white p-6 overflow-y-auto">
+          <div className="absolute right-0 top-0 h-full w-80 bg-white p-6 overflow-y-auto animate-slide-right">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-medium">Filters</h2>
               <button onClick={() => setShowFilters(false)}>
@@ -346,7 +376,10 @@ export default function ProductsPage() {
                 <h3 className="font-medium text-gray-700 mb-3">Sort By</h3>
                 <select
                   value={`${localFilters.sortBy}-${localFilters.sortOrder}`}
-                  onChange={(e) => handleSortChange(e.target.value)}
+                  onChange={(e) => {
+                    handleSortChange(e.target.value);
+                    setShowFilters(false);
+                  }}
                   className="w-full px-3 py-2 border rounded-lg text-sm"
                 >
                   <option value="name-asc">Name (A-Z)</option>

@@ -9,6 +9,7 @@ import { useAppDispatch } from "@/store";
 import { addToCart } from "@/store/slices/cartSlice";
 import { showSuccessNotification } from "@/store/slices/uiSlice";
 import { Product } from "@/types";
+import { ProductCardSkeleton } from "@/components/ui/SkeletonLoader";
 import {
   ShoppingCart,
   Plus,
@@ -24,17 +25,25 @@ interface ProductCardProps {
   product: Product;
   showAddToCart?: boolean;
   index?: number;
+  isLoading?: boolean;
 }
 
 export function ProductCard({
   product,
   showAddToCart = true,
   index = 0,
+  isLoading = false,
 }: ProductCardProps) {
   const dispatch = useAppDispatch();
   const [quantity, setQuantity] = useState(1);
   const [isHovered, setIsHovered] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
+
+  // Show skeleton if loading
+  if (isLoading) {
+    return <ProductCardSkeleton />;
+  }
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -77,6 +86,11 @@ export function ProductCard({
         <div className="bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100 relative">
           {/* Image Container */}
           <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
+            {/* Image Loading Skeleton */}
+            {imageLoading && (
+              <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-none" />
+            )}
+
             {product.images && product.images.length > 0 ? (
               <Image
                 src={product.images[0]}
@@ -84,8 +98,10 @@ export function ProductCard({
                 fill
                 className={`object-cover transition-all duration-700 ${
                   isHovered ? "scale-110" : "scale-100"
-                }`}
+                } ${imageLoading ? "opacity-0" : "opacity-100"}`}
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                onLoad={() => setImageLoading(false)}
+                onError={() => setImageLoading(false)}
               />
             ) : (
               <div className="flex items-center justify-center h-full text-gray-400">
@@ -103,20 +119,34 @@ export function ProductCard({
             {/* Badges */}
             <div className="absolute top-3 left-3 space-y-2">
               {isOutOfStock && (
-                <span className="inline-block bg-red-500 text-white px-3 py-1 text-xs font-bold rounded-full shadow-lg">
+                <motion.span
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="inline-block bg-red-500 text-white px-3 py-1 text-xs font-bold rounded-full shadow-lg"
+                >
                   Out of Stock
-                </span>
+                </motion.span>
               )}
               {product.isEligibleForFreeDelivery && !isOutOfStock && (
-                <span className="inline-block bg-gradient-to-r from-green-500 to-emerald-600 text-white px-3 py-1 text-xs font-bold rounded-full shadow-lg flex items-center">
+                <motion.span
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.1 }}
+                  className="inline-block bg-gradient-to-r from-green-500 to-emerald-600 text-white px-3 py-1 text-xs font-bold rounded-full shadow-lg flex items-center"
+                >
                   <Truck className="w-3 h-3 mr-1" />
                   Free Delivery
-                </span>
+                </motion.span>
               )}
               {product.stock < 10 && !isOutOfStock && (
-                <span className="inline-block bg-orange-500 text-white px-3 py-1 text-xs font-bold rounded-full shadow-lg">
+                <motion.span
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="inline-block bg-orange-500 text-white px-3 py-1 text-xs font-bold rounded-full shadow-lg"
+                >
                   Low Stock
-                </span>
+                </motion.span>
               )}
             </div>
 
@@ -128,7 +158,9 @@ export function ProductCard({
                   : "opacity-0 translate-x-4"
               }`}
             >
-              <button
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={toggleLike}
                 className={`w-10 h-10 rounded-full backdrop-blur-md border border-white/20 flex items-center justify-center transition-all duration-300 ${
                   isLiked
@@ -137,9 +169,11 @@ export function ProductCard({
                 }`}
               >
                 <Heart className={`w-4 h-4 ${isLiked ? "fill-current" : ""}`} />
-              </button>
+              </motion.button>
 
-              <button
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -148,32 +182,36 @@ export function ProductCard({
                 className="w-10 h-10 bg-white/80 backdrop-blur-md rounded-full border border-white/20 flex items-center justify-center text-gray-600 hover:bg-white hover:text-blue-600 transition-all duration-300"
               >
                 <Eye className="w-4 h-4" />
-              </button>
+              </motion.button>
             </div>
 
             {/* Quick Add to Cart (Hover) */}
             {showAddToCart && !isOutOfStock && (
-              <div
-                className={`absolute bottom-3 left-3 right-3 transition-all duration-300 ${
-                  isHovered
-                    ? "opacity-100 translate-y-0"
-                    : "opacity-0 translate-y-4"
-                }`}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{
+                  opacity: isHovered ? 1 : 0,
+                  y: isHovered ? 0 : 20,
+                }}
+                transition={{ duration: 0.3 }}
+                className="absolute bottom-3 left-3 right-3"
               >
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={handleAddToCart}
                   className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2 px-4 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 flex items-center justify-center shadow-lg backdrop-blur-md"
                 >
                   <ShoppingCart className="w-4 h-4 mr-2" />
                   Quick Add
-                </button>
-              </div>
+                </motion.button>
+              </motion.div>
             )}
           </div>
 
           {/* Content */}
           <div className="p-4">
-            {/* Category */}
+            {/* Category and Rating */}
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs text-blue-600 font-medium bg-blue-50 px-2 py-1 rounded-lg">
                 {product.category}
@@ -221,32 +259,38 @@ export function ProductCard({
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center bg-gray-100 rounded-lg">
-                    <button
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
                       onClick={(e) => handleQuantityChange(quantity - 1, e)}
                       disabled={quantity <= 1}
-                      className="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                     >
                       <Minus className="w-3 h-3" />
-                    </button>
+                    </motion.button>
                     <span className="px-3 py-1 text-sm font-semibold min-w-[40px] text-center">
                       {quantity}
                     </span>
-                    <button
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
                       onClick={(e) => handleQuantityChange(quantity + 1, e)}
                       disabled={quantity >= product.stock}
-                      className="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                     >
                       <Plus className="w-3 h-3" />
-                    </button>
+                    </motion.button>
                   </div>
 
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={handleAddToCart}
                     className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 flex items-center shadow-md"
                   >
                     <ShoppingCart className="w-4 h-4 mr-1" />
                     Add
-                  </button>
+                  </motion.button>
                 </div>
               </div>
             )}
@@ -264,9 +308,14 @@ export function ProductCard({
           {/* Premium Quality Badge */}
           {product.price > 200 && (
             <div className="absolute -top-2 -right-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.3 }}
+                className="w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg"
+              >
                 <Award className="w-4 h-4 text-white" />
-              </div>
+              </motion.div>
             </div>
           )}
 

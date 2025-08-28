@@ -11,7 +11,12 @@ import {
 import { FeaturedProducts } from "@/components/product/FeaturedProducts";
 import { CategoryGrid } from "@/components/product/CategoryGrid";
 import { HeroBanner } from "@/components/layout/HeroBanner";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import {
+  HeroBannerSkeleton,
+  CategoriesGridSkeleton,
+  FeaturedProductsSkeleton,
+} from "@/components/ui/SkeletonLoader";
+import Link from "next/link";
 import {
   ShoppingBag,
   Truck,
@@ -22,6 +27,7 @@ import {
   Zap,
   Award,
   Users,
+  Grid3X3,
 } from "lucide-react";
 
 export default function HomePage() {
@@ -58,10 +64,26 @@ export default function HomePage() {
     }
   }, [dispatch, dataLoaded]);
 
+  // Show only 6 random categories for homepage
+  const getDisplayCategories = () => {
+    if (categories.length <= 6) {
+      return categories;
+    }
+
+    // Shuffle categories and take first 6
+    const shuffled = [...categories].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, 6);
+  };
+
+  const displayCategories = getDisplayCategories();
+
   if (!isClient) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-blue-50">
-        <LoadingSpinner size="large" />
+        <div className="animate-pulse">
+          <div className="w-16 h-16 bg-blue-200 rounded-full mb-4 mx-auto"></div>
+          <div className="h-4 w-32 bg-gray-200 rounded mx-auto"></div>
+        </div>
       </div>
     );
   }
@@ -69,11 +91,21 @@ export default function HomePage() {
   if (isLoading && !dataLoaded) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
-        <HeroBanner />
-        <div className="flex items-center justify-center py-20">
-          <div className="text-center">
-            <LoadingSpinner size="large" />
-            <p className="mt-4 text-gray-600">Loading products...</p>
+        <HeroBannerSkeleton />
+        <div className="py-16">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <div className="animate-pulse space-y-4">
+                <div className="h-10 bg-gray-200 rounded w-64 mx-auto"></div>
+                <div className="h-6 bg-gray-200 rounded w-96 mx-auto"></div>
+              </div>
+            </div>
+            <CategoriesGridSkeleton />
+          </div>
+        </div>
+        <div className="py-20">
+          <div className="container mx-auto px-4">
+            <FeaturedProductsSkeleton />
           </div>
         </div>
       </div>
@@ -107,7 +139,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
-      {/* Hero Banner with Corrosion Effects */}
+      {/* Hero Banner */}
       <HeroBanner />
 
       {/* Categories Section */}
@@ -121,18 +153,47 @@ export default function HomePage() {
             <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-gray-800 via-blue-600 to-gray-800 bg-clip-text text-transparent mb-4">
               Shop by Category
             </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-6">
               Discover our premium collection of quality groceries and daily
               essentials
             </p>
           </div>
 
           <div className="transition-opacity duration-500 opacity-100">
-            {categories.length > 0 ? (
-              <CategoryGrid categories={categories} />
+            {displayCategories.length > 0 ? (
+              <>
+                <CategoryGrid categories={displayCategories} />
+
+                {/* Show More Button */}
+                {categories.length > 6 && (
+                  <div className="text-center mt-12">
+                    <Link
+                      href="/categories"
+                      className="inline-flex items-center bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-2xl group"
+                    >
+                      <Grid3X3 className="w-6 h-6 mr-3 group-hover:rotate-12 transition-transform duration-300" />
+                      <span>View All Categories</span>
+                      <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform duration-300" />
+                    </Link>
+
+                    <p className="text-sm text-gray-500 mt-3">
+                      Showing {displayCategories.length} of {categories.length}{" "}
+                      categories
+                    </p>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="text-center py-8">
-                <p className="text-gray-500">No categories available</p>
+                <div className="bg-white rounded-lg shadow-lg p-8 max-w-md mx-auto">
+                  <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">
+                    No categories available
+                  </h3>
+                  <p className="text-gray-600">
+                    Check back soon for amazing categories!
+                  </p>
+                </div>
               </div>
             )}
           </div>
@@ -223,10 +284,10 @@ export default function HomePage() {
             ].map((feature, index) => (
               <div
                 key={index}
-                className="text-center p-6 bg-gray-50 rounded-xl hover:shadow-lg transition-shadow duration-300"
+                className="text-center p-6 bg-gray-50 rounded-xl hover:shadow-lg transition-shadow duration-300 group"
               >
                 <div
-                  className={`inline-flex items-center justify-center w-16 h-16 ${feature.bg} ${feature.color} rounded-xl mb-4`}
+                  className={`inline-flex items-center justify-center w-16 h-16 ${feature.bg} ${feature.color} rounded-xl mb-4 group-hover:scale-110 transition-transform duration-300`}
                 >
                   {feature.icon}
                 </div>
