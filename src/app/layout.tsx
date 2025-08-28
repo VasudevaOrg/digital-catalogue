@@ -11,8 +11,15 @@ import { NotificationContainer } from "@/components/ui/NotificationContainer";
 import { CartSidebar } from "@/components/cart/CartSidebar";
 import { LoadingProvider } from "@/components/providers/LoadingProvider";
 import { AuthProvider } from "@/components/providers/AuthProvider";
+import { useCarouselPreloader } from "@/hooks/useCarouselPreloader";
 
 const inter = Inter({ subsets: ["latin"] });
+
+// Carousel preloader component
+function CarouselPreloader() {
+  useCarouselPreloader();
+  return null;
+}
 
 export default function RootLayout({
   children,
@@ -25,6 +32,9 @@ export default function RootLayout({
         <Provider store={store}>
           <AuthProvider>
             <LoadingProvider>
+              {/* Preload carousel data */}
+              <CarouselPreloader />
+
               <div className="min-h-screen flex flex-col">
                 <Header />
                 <main className="flex-1">{children}</main>

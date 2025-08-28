@@ -176,10 +176,10 @@ export default function HomePage() {
                       <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform duration-300" />
                     </Link>
 
-                    <p className="text-sm text-gray-500 mt-3">
+                    {/* <p className="text-sm text-gray-500 mt-3">
                       Showing {displayCategories.length} of {categories.length}{" "}
                       categories
-                    </p>
+                    </p> */}
                   </div>
                 )}
               </>

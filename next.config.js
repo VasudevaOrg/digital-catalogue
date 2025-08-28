@@ -27,7 +27,25 @@ const nextConfig = {
         port: "",
         pathname: "/**",
       },
+      // Vercel Blob Storage - Your specific instance
+      {
+        protocol: "https",
+        hostname: "o7ckvepmoupwate7.public.blob.vercel-storage.com",
+        port: "",
+        pathname: "/**",
+      },
+      // Common Vercel Blob Storage patterns (add your specific ones as needed)
+      {
+        protocol: "https",
+        hostname: "*.blob.vercel-storage.com",
+        port: "",
+        pathname: "/**",
+      },
     ],
+    // Allow optimization for blob storage
+    minimumCacheTTL: 60,
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   env: {
     WHATSAPP_API_KEY: process.env.WHATSAPP_API_KEY,

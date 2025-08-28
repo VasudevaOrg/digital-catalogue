@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { analyzeImageSource } from "@/lib/imageUtils";
 import {
   ShoppingBag,
   Truck,
@@ -14,68 +15,50 @@ import {
   ChevronRight,
   Play,
 } from "lucide-react";
-
-const heroSlides = [
-  {
-    id: 1,
-    title: "Premium Quality Groceries",
-    subtitle: "Farm Fresh • Hand Picked • Quality Assured",
-    description:
-      "Discover our premium collection of fresh groceries, spices, and daily essentials delivered straight to your doorstep.",
-    primaryCTA: "Shop Now",
-    primaryLink: "/products",
-    secondaryCTA: "Browse Categories",
-    secondaryLink: "/products",
-    bgGradient: "from-emerald-600 via-teal-600 to-cyan-600",
-    accentColor: "emerald",
-  },
-  {
-    id: 2,
-    title: "Free Delivery Available",
-    subtitle: "On Orders Above ₹1,000 • Same Day Delivery",
-    description:
-      "Get free home delivery on eligible products when you order above ₹1,000. Fast, reliable, and secure delivery to your location.",
-    primaryCTA: "Order Now",
-    primaryLink: "/products",
-    secondaryCTA: "Learn More",
-    secondaryLink: "/products",
-    bgGradient: "from-blue-600 via-indigo-600 to-purple-600",
-    accentColor: "blue",
-  },
-  {
-    id: 3,
-    title: "WhatsApp Ordering",
-    subtitle: "Quick • Easy • Instant Confirmation",
-    description:
-      "Browse our digital catalogue and place orders directly through WhatsApp for the most convenient shopping experience.",
-    primaryCTA: "Chat Now",
-    primaryLink: "https://wa.me/919876543210",
-    secondaryCTA: "View Products",
-    secondaryLink: "/products",
-    bgGradient: "from-orange-600 via-red-600 to-pink-600",
-    accentColor: "orange",
-  },
-];
+import { carouselService, CarouselSlide } from "@/lib/carouselService";
 
 export function HeroBanner() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [isClient, setIsClient] = useState(false);
+  const [slides, setSlides] = useState<CarouselSlide[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Set client-side flag after hydration
   useEffect(() => {
     setIsClient(true);
   }, []);
 
+  // Load carousel slides
   useEffect(() => {
-    if (!isAutoPlaying || !isClient) return;
+    const loadSlides = async () => {
+      if (!isClient) return;
+
+      try {
+        setIsLoading(true);
+        const carouselSlides = await carouselService.getCarouselSlides();
+        setSlides(carouselSlides);
+        console.log("🎠 Carousel loaded:", carouselSlides.length, "slides");
+      } catch (error) {
+        console.error("Failed to load carousel slides:", error);
+        // Fallback is handled in the service
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadSlides();
+  }, [isClient]);
+
+  useEffect(() => {
+    if (!isAutoPlaying || !isClient || slides.length === 0) return;
 
     const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 6000);
 
     return () => clearInterval(interval);
-  }, [isAutoPlaying, isClient]);
+  }, [isAutoPlaying, isClient, slides.length]);
 
   const goToSlide = (index: number) => {
     setCurrentSlide(index);
@@ -84,63 +67,135 @@ export function HeroBanner() {
   };
 
   const goToPrevious = () => {
-    setCurrentSlide(
-      (prev) => (prev - 1 + heroSlides.length) % heroSlides.length
-    );
+    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
     setIsAutoPlaying(false);
     setTimeout(() => setIsAutoPlaying(true), 15000);
   };
 
   const goToNext = () => {
-    setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+    setCurrentSlide((prev) => (prev + 1) % slides.length);
     setIsAutoPlaying(false);
     setTimeout(() => setIsAutoPlaying(true), 15000);
   };
 
-  const currentSlideData = heroSlides[currentSlide];
+  // Show loading state
+  if (!isClient || isLoading || slides.length === 0) {
+    return (
+      <section className="relative min-h-screen flex items-center overflow-hidden">
+        {/* Loading Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600">
+          <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20"></div>
+        </div>
+
+        {/* Loading Content */}
+        <div className="relative z-10 w-full">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto text-center">
+              <div className="space-y-8 animate-pulse">
+                <div className="inline-block h-12 w-64 bg-white/20 rounded-full"></div>
+                <div className="space-y-4">
+                  <div className="h-16 w-full max-w-2xl mx-auto bg-white/20 rounded"></div>
+                  <div className="h-16 w-3/4 mx-auto bg-white/20 rounded"></div>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-6 w-full max-w-3xl mx-auto bg-white/20 rounded"></div>
+                  <div className="h-6 w-2/3 mx-auto bg-white/20 rounded"></div>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+                  <div className="h-14 w-48 bg-white/20 rounded-2xl"></div>
+                  <div className="h-14 w-48 bg-white/20 rounded-2xl"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  const currentSlideData = slides[currentSlide];
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden">
-      {/* Animated Background with Corrosion Effects */}
-      <div
-        className={`absolute inset-0 bg-gradient-to-br ${currentSlideData.bgGradient} transition-all duration-1000`}
-      >
-        {/* Corrosion/Erosion Effect Overlay */}
-        <div className="absolute inset-0 opacity-30">
-          <div
-            className="w-full h-full"
+      {/* Background Image or Gradient */}
+      {currentSlideData.image ? (
+        <div className="absolute inset-0">
+          {/* Use regular img tag for blob storage to avoid Next.js hostname issues */}
+          <img
+            src={currentSlideData.image}
+            alt={currentSlideData.title}
+            className="w-full h-full object-cover absolute inset-0"
             style={{
-              background: `
-              radial-gradient(ellipse 100% 60% at 50% 120%, transparent 40%, rgba(255,255,255,0.1) 70%),
-              radial-gradient(ellipse 100% 80% at 80% 100%, rgba(255,255,255,0.05) 40%, transparent 70%),
-              radial-gradient(ellipse 120% 60% at 20% 120%, rgba(255,255,255,0.05) 40%, transparent 70%)
-            `,
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
             }}
-          ></div>
+            onLoad={() => {
+              console.log(
+                "✅ Carousel image loaded successfully:",
+                currentSlideData.image
+              );
+            }}
+            onError={(e) => {
+              console.warn(
+                "❌ Failed to load carousel image:",
+                currentSlideData.image
+              );
+              // Hide the image container if it fails to load
+              const target = e.target as HTMLImageElement;
+              if (target.parentElement) {
+                target.parentElement.style.display = "none";
+              }
+            }}
+          />
+          <div className="absolute inset-0 bg-black/50"></div>
         </div>
-
-        {/* Animated Particles - Only render on client */}
-        {isClient && (
-          <div className="absolute inset-0">
-            {[...Array(15)].map((_, i) => (
-              <div
-                key={i}
-                className="absolute w-1 h-1 bg-white rounded-full opacity-20 animate-pulse"
-                style={{
-                  left: `${(i * 7) % 100}%`,
-                  top: `${(i * 11) % 100}%`,
-                  animationDelay: `${i * 0.5}s`,
-                  animationDuration: `${3 + (i % 3)}s`,
-                }}
-              />
-            ))}
+      ) : (
+        <div
+          className={`absolute inset-0 bg-gradient-to-br ${currentSlideData.bgGradient} transition-all duration-1000`}
+        >
+          {/* Corrosion/Erosion Effect Overlay */}
+          <div className="absolute inset-0 opacity-30">
+            <div
+              className="w-full h-full"
+              style={{
+                background: `
+                radial-gradient(ellipse 100% 60% at 50% 120%, transparent 40%, rgba(255,255,255,0.1) 70%),
+                radial-gradient(ellipse 100% 80% at 80% 100%, rgba(255,255,255,0.05) 40%, transparent 70%),
+                radial-gradient(ellipse 120% 60% at 20% 120%, rgba(255,255,255,0.05) 40%, transparent 70%)
+              `,
+              }}
+            ></div>
           </div>
-        )}
 
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20"></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"></div>
-      </div>
+          {/* Animated Particles - Only render on client */}
+          {isClient && (
+            <div className="absolute inset-0">
+              {[...Array(15)].map((_, i) => (
+                <div
+                  key={i}
+                  className="absolute w-1 h-1 bg-white rounded-full opacity-20 animate-pulse"
+                  style={{
+                    left: `${(i * 7) % 100}%`,
+                    top: `${(i * 11) % 100}%`,
+                    animationDelay: `${i * 0.5}s`,
+                    animationDuration: `${3 + (i % 3)}s`,
+                  }}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"></div>
+        </div>
+      )}
 
       {/* Content */}
       <div className="relative z-10 w-full">
@@ -206,7 +261,7 @@ export function HeroBanner() {
       </div>
 
       {/* Navigation Controls - Only show on client */}
-      {isClient && (
+      {isClient && slides.length > 1 && (
         <div className="absolute left-4 right-4 top-1/2 transform -translate-y-1/2 flex justify-between pointer-events-none z-20">
           <button
             onClick={goToPrevious}
@@ -227,20 +282,22 @@ export function HeroBanner() {
       )}
 
       {/* Slide Indicators */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-4 z-20">
-        {heroSlides.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => goToSlide(index)}
-            className={`transition-all duration-300 ${
-              index === currentSlide
-                ? "w-12 h-3 bg-white rounded-full"
-                : "w-3 h-3 bg-white/50 hover:bg-white/75 rounded-full"
-            }`}
-            aria-label={`Go to slide ${index + 1}`}
-          />
-        ))}
-      </div>
+      {slides.length > 1 && (
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-4 z-20">
+          {slides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => goToSlide(index)}
+              className={`transition-all duration-300 ${
+                index === currentSlide
+                  ? "w-12 h-3 bg-white rounded-full"
+                  : "w-3 h-3 bg-white/50 hover:bg-white/75 rounded-full"
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Floating Elements - Only show on client */}
       {isClient && (
