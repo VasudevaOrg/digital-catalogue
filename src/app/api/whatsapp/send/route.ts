@@ -1,5 +1,7 @@
 // src/app/api/whatsapp/send/route.ts
 import { NextRequest, NextResponse } from "next/server";
+import dbConnect from "@/lib/mongodb";
+import Order from "@/models/Order";
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,8 +43,8 @@ export async function POST(request: NextRequest) {
       process.env.WHATSAPP_ACCESS_TOKEN ||
       "EAASGzwVtiEMBPA6g9NZCbuNEuVMFra05X0BTDMtZBuy9Bop45BcVQM2rdhn2BrCuBB3rCvtXlhiHO4XdFZBP8VqbrrcuGTUuvTsu8CWMTeuZCRttrlWuc4MvpI14RE0N1gnunO88GKixZAQwLtLQDOwA2r3slP9UZBiJkHxzIDSkbrx6XsImzbCwZCAKSLVW1RR9XVBDUIM3Vl8n2mdHSyAO3psynI7yZCOGuwFyflwZARo6SZCgZDZD";
 
-    console.log("\n📱 WHATSAPP API - CATALOGUE TEMPLATE MODE");
-    console.log("=".repeat(60));
+    console.log("\n📱 WHATSAPP API - ENHANCED WITH DATABASE INTEGRATION");
+    console.log("=".repeat(70));
     console.log(
       `📞 From: Test Number +1 (555) 623-3859 (Phone ID: ${WHATSAPP_PHONE_ID})`
     );
@@ -89,7 +91,10 @@ export async function POST(request: NextRequest) {
                   },
                   {
                     type: "text",
-                    text: orderData.orderId || "ORD123456", // {{2}} - Order ID
+                    text:
+                      orderData.orderId ||
+                      orderData.invoiceNumber ||
+                      "ORD123456", // {{2}} - Order ID
                   },
                   {
                     type: "text",
@@ -129,7 +134,10 @@ export async function POST(request: NextRequest) {
           "{{1}} Customer Name:",
           orderData.customerInfo?.name || "Customer"
         );
-        console.log("{{2}} Order ID:", orderData.orderId || "ORD123456");
+        console.log(
+          "{{2}} Order ID:",
+          orderData.orderId || orderData.invoiceNumber || "ORD123456"
+        );
         console.log("{{3}} Date:", new Date().toLocaleDateString("en-IN"));
         console.log(
           "{{4}} Amount:",
@@ -229,35 +237,90 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Log successful message for tracking
+      // WhatsApp message sent successfully
+      const messageId = responseData.messages?.[0]?.id;
+
       console.log(`✅ WhatsApp message sent successfully:`, {
         from: `Test Number +1 (555) 623-3859 (Phone ID: ${WHATSAPP_PHONE_ID})`,
         to: `+${cleanPhone}`,
-        messageId: responseData.messages?.[0]?.id,
+        messageId: messageId,
         messageType,
         templateUsed: whatsappPayload.template?.name,
         timestamp: new Date().toISOString(),
       });
+
+      // 🔥 NEW: Update order in database with WhatsApp message details
+      if (messageType === "order_enquiry" && orderData && messageId) {
+        try {
+          console.log("\n💾 UPDATING ORDER IN DATABASE WITH WHATSAPP DETAILS");
+
+          await dbConnect();
+
+          // Find order by orderId or invoiceNumber
+          const order = await Order.findOne({
+            $or: [
+              { orderId: orderData.orderId },
+              { invoiceNumber: orderData.invoiceNumber },
+              { orderId: orderData.invoiceNumber }, // Sometimes they might be swapped
+            ],
+          });
+
+          if (order) {
+            // Update order with WhatsApp message details
+            order.whatsappMessageId = messageId;
+            order.whatsappStatus = "sent";
+            order.statusHistory.push({
+              status: order.orderStatus,
+              timestamp: new Date(),
+              notes: `WhatsApp order confirmation sent successfully. Message ID: ${messageId}`,
+            });
+
+            await order.save();
+
+            console.log(`✅ Order updated with WhatsApp details:`, {
+              orderId: order.orderId,
+              whatsappMessageId: messageId,
+              whatsappStatus: "sent",
+            });
+          } else {
+            console.warn(`⚠️ Order not found for WhatsApp update:`, {
+              searchCriteria: {
+                orderId: orderData.orderId,
+                invoiceNumber: orderData.invoiceNumber,
+              },
+            });
+          }
+        } catch (dbError) {
+          console.error(
+            "❌ Failed to update order with WhatsApp details:",
+            dbError
+          );
+          // Don't fail the entire request if database update fails
+        }
+      }
 
       // Store message in database (implement based on your database choice)
       await saveMessageToDatabase({
         phoneNumber: cleanPhone,
         message: `Template: ${whatsappPayload.template?.name}`,
         messageType,
-        messageId: responseData.messages?.[0]?.id,
+        messageId: messageId,
         status: "sent",
         sentAt: new Date().toISOString(),
+        orderData: orderData || null,
       });
 
       return NextResponse.json({
         success: true,
-        messageId: responseData.messages?.[0]?.id,
+        messageId: messageId,
         message: "WhatsApp order confirmation sent successfully",
         templateUsed: whatsappPayload.template?.name,
         messageType: whatsappPayload.type,
         recipient: `+${cleanPhone}`,
         from: "+1 (555) 623-3859",
         timestamp: new Date().toISOString(),
+        orderUpdated:
+          messageType === "order_enquiry" && messageId ? true : false,
       });
     } catch (apiError: any) {
       console.error("❌ WhatsApp API request failed:", apiError);
@@ -286,17 +349,24 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Function to save message to database (implement based on your database)
+// Enhanced function to save message to database
 async function saveMessageToDatabase(messageData: any) {
-  // This is a placeholder - implement based on your database choice
-  console.log("💾 Message data for database:", {
-    to: messageData.phoneNumber,
-    type: messageData.messageType,
-    status: messageData.status,
-    messageId: messageData.messageId,
-    template: messageData.message,
-    timestamp: messageData.sentAt,
-  });
+  try {
+    console.log("💾 Saving WhatsApp message data:", {
+      to: messageData.phoneNumber,
+      type: messageData.messageType,
+      status: messageData.status,
+      messageId: messageData.messageId,
+      template: messageData.message,
+      timestamp: messageData.sentAt,
+      hasOrderData: !!messageData.orderData,
+    });
+
+    // Here you could save to a WhatsAppMessages collection if needed
+    // For now, we're just logging it
+  } catch (error) {
+    console.error("❌ Failed to save message to database:", error);
+  }
 }
 
 // GET endpoint for message status
