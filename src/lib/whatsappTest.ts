@@ -1,5 +1,4 @@
 // src/lib/whatsappTest.ts
-import { demoProducts } from "./demoData";
 
 // Complete WhatsApp Integration Service
 export class WhatsAppTestService {
@@ -357,45 +356,29 @@ export class WhatsAppTestService {
   }
 }
 
-// Sample order data for testing
-export const sampleOrderData = {
-  orderId: "ORD20250109001",
-  customerInfo: {
-    name: "Rajesh Kumar",
-    phoneNumber: "9876543210",
-    address: {
-      street: "123 MG Road, Jayanagar",
-      city: "Bangalore",
-      state: "Karnataka",
-      pincode: "573103",
-    },
-  },
-  items: [
-    {
-      product: demoProducts[0], // Basmati Rice Premium
-      quantity: 2,
-    },
-    {
-      product: demoProducts[6], // Toor Dal
-      quantity: 1,
-    },
-    {
-      product: demoProducts[9], // Turmeric Powder
-      quantity: 3,
-    },
-  ],
-  totalAmount: 895, // Calculated from items + delivery
-  totalWeight: 3.6, // Calculated from items
-  deliveryType: "delivery",
-  paymentMethod: "prepaid",
-  deliveryFee: 0, // Free delivery as order > 1000
-  isEligibleForFreeDelivery: true,
-  deliveryAddress: {
-    street: "123 MG Road, Jayanagar",
-    city: "Bangalore",
-    state: "Karnataka",
-    pincode: "573103",
-  },
+// Create a sample order data structure without specific product references
+export const createSampleOrderData = (items: any[], customerInfo: any) => {
+  const totalAmount = items.reduce(
+    (sum, item) => sum + item.product.price * item.quantity,
+    0
+  );
+  const totalWeight = items.reduce(
+    (sum, item) => sum + item.product.weight * item.quantity,
+    0
+  );
+
+  return {
+    orderId: `ORD${Date.now()}`,
+    customerInfo,
+    items,
+    totalAmount,
+    totalWeight,
+    deliveryType: "delivery",
+    paymentMethod: "prepaid",
+    deliveryFee: totalAmount >= 1000 ? 0 : 50,
+    isEligibleForFreeDelivery: totalAmount >= 1000,
+    deliveryAddress: customerInfo.address,
+  };
 };
 
 // Export instance for testing
