@@ -1,4 +1,4 @@
-// src/components/layout/MobileMenu.tsx
+// src/components/layout/MobileMenu.tsx (Updated)
 "use client";
 
 import { useEffect } from "react";
@@ -6,7 +6,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { closeMobileMenu, openCart } from "@/store/slices/uiSlice";
-import { ShoppingBag, Package, X, MessageCircle, Phone } from "lucide-react";
+import {
+  ShoppingBag,
+  Package,
+  X,
+  MessageCircle,
+  Phone,
+  Search,
+  Grid3X3,
+} from "lucide-react";
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -82,26 +90,53 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
           {/* Menu Items */}
           <div className="flex-1 py-4">
             <nav className="space-y-2 px-4">
-              {/* Products */}
+              {/* Home */}
               <button
                 onClick={() => handleLinkClick("/")}
-                className="flex items-center w-full px-3 py-3 text-left text-gray-800 hover:bg-gray-100 border-2 border-transparent hover:border-gray-300"
+                className="flex items-center w-full px-3 py-3 text-left text-gray-800 hover:bg-gray-100 border-2 border-transparent hover:border-gray-300 rounded-lg"
               >
                 <Package className="w-5 h-5 mr-3 text-blue-600" />
+                <span className="font-medium">Home</span>
+              </button>
+
+              {/* Products */}
+              <button
+                onClick={() => handleLinkClick("/products")}
+                className="flex items-center w-full px-3 py-3 text-left text-gray-800 hover:bg-gray-100 border-2 border-transparent hover:border-gray-300 rounded-lg"
+              >
+                <ShoppingBag className="w-5 h-5 mr-3 text-blue-600" />
                 <span className="font-medium">Products</span>
+              </button>
+
+              {/* Categories */}
+              <button
+                onClick={() => handleLinkClick("/categories")}
+                className="flex items-center w-full px-3 py-3 text-left text-gray-800 hover:bg-gray-100 border-2 border-transparent hover:border-gray-300 rounded-lg"
+              >
+                <Grid3X3 className="w-5 h-5 mr-3 text-blue-600" />
+                <span className="font-medium">Categories</span>
+              </button>
+
+              {/* Track Order */}
+              <button
+                onClick={() => handleLinkClick("/track-order")}
+                className="flex items-center w-full px-3 py-3 text-left text-gray-800 hover:bg-gray-100 border-2 border-transparent hover:border-gray-300 rounded-lg"
+              >
+                <Search className="w-5 h-5 mr-3 text-orange-600" />
+                <span className="font-medium">Track Order</span>
               </button>
 
               {/* Cart */}
               <button
                 onClick={handleCartClick}
-                className="flex items-center justify-between w-full px-3 py-3 text-left text-gray-800 hover:bg-gray-100 border-2 border-transparent hover:border-gray-300"
+                className="flex items-center justify-between w-full px-3 py-3 text-left text-gray-800 hover:bg-gray-100 border-2 border-transparent hover:border-gray-300 rounded-lg"
               >
                 <div className="flex items-center">
                   <ShoppingBag className="w-5 h-5 mr-3 text-blue-600" />
                   <span className="font-medium">Cart</span>
                 </div>
                 {cartItemsCount > 0 && (
-                  <span className="bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center font-semibold border border-red-600">
+                  <span className="bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center font-semibold border border-red-600 rounded-full">
                     {cartItemsCount}
                   </span>
                 )}
@@ -113,7 +148,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
 
             {/* Contact Info */}
             <div className="px-4 space-y-3">
-              <div className="bg-gray-50 p-3 border-2 border-gray-300">
+              <div className="bg-gray-50 p-3 border-2 border-gray-300 rounded-lg">
                 <h3 className="font-semibold text-gray-900 mb-2">Contact Us</h3>
                 <div className="space-y-2">
                   <div className="flex items-center text-sm text-gray-700">
@@ -133,7 +168,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                 onClick={() =>
                   window.open("https://wa.me/918297137702", "_blank")
                 }
-                className="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 font-medium border-2 border-green-600 flex items-center justify-center space-x-2"
+                className="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 font-medium border-2 border-green-600 rounded-lg flex items-center justify-center space-x-2"
               >
                 <MessageCircle className="w-4 h-4" />
                 <span>WhatsApp Support</span>

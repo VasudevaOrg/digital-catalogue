@@ -1,4 +1,4 @@
-// src/components/layout/Header.tsx
+// src/components/layout/Header.tsx (Updated section)
 "use client";
 
 import { useState, useEffect } from "react";
@@ -112,7 +112,7 @@ export function Header() {
             <nav className="hidden lg:flex items-center space-x-8">
               {[
                 { name: "Products", href: "/products" },
-                { name: "Categories", href: "/categories" }, // Updated to point to categories page
+                { name: "Categories", href: "/categories" },
                 { name: "About", href: "/about" },
                 { name: "Contact", href: "/contact" },
               ].map((item, index) => (
@@ -133,6 +133,15 @@ export function Header() {
 
             {/* Right Actions */}
             <div className="flex items-center space-x-4">
+              {/* Track Order Button - Prominent */}
+              <Link
+                href="/track-order"
+                className="hidden md:inline-flex items-center bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-lg"
+              >
+                <Search className="w-4 h-4 mr-2" />
+                Track Order
+              </Link>
+
               {/* Search */}
               <div className="hidden md:block">
                 <button
