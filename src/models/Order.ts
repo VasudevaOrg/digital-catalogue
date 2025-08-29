@@ -158,12 +158,12 @@ const OrderSchema = new Schema<IOrder>(
       index: true,
     },
 
-    // Delivery Information
+    // Delivery Information  - FIXED: Removed duplicate index
     deliveryAddress: {
       street: { type: String },
       city: { type: String },
       state: { type: String },
-      pincode: { type: String, index: true },
+      pincode: { type: String }, // Removed duplicate index: true
     },
 
     // Additional Details
@@ -192,12 +192,12 @@ const OrderSchema = new Schema<IOrder>(
   }
 );
 
-// Indexes for efficient querying
+// FIXED: Consolidated indexes - removed duplicate pincode index
 OrderSchema.index({ createdAt: -1 });
 OrderSchema.index({ "customerInfo.phoneNumber": 1, createdAt: -1 });
 OrderSchema.index({ orderStatus: 1, createdAt: -1 });
 OrderSchema.index({ deliveryType: 1, orderStatus: 1 });
-OrderSchema.index({ "deliveryAddress.pincode": 1 });
+OrderSchema.index({ "deliveryAddress.pincode": 1 }); // Keep only this one
 
 // Pre-save middleware to calculate totals and add status history
 OrderSchema.pre("save", function (next) {

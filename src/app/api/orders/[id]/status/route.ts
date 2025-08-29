@@ -12,10 +12,32 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     await dbConnect();
 
     const { id } = await params;
-    const { status, notes, whatsappMessageId, whatsappStatus } =
-      await request.json();
+    const body = await request.json();
+    const { status, notes, whatsappMessageId, whatsappStatus } = body;
 
     console.log(`📊 Updating order status: ${id} -> ${status}`);
+
+    // Validate status if provided
+    const validStatuses = [
+      "pending",
+      "confirmed",
+      "preparing",
+      "ready",
+      "delivered",
+      "cancelled",
+    ];
+
+    if (status && !validStatuses.includes(status)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: `Invalid status: ${status}. Valid statuses: ${validStatuses.join(
+            ", "
+          )}`,
+        },
+        { status: 400 }
+      );
+    }
 
     // Find the order
     const order = await Order.findById(id);
@@ -27,22 +49,28 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Update order status
-    if (status) {
+    let hasChanges = false;
+
+    // Update order status if provided
+    if (status && status !== order.orderStatus) {
+      console.log(`📊 Status change: ${order.orderStatus} -> ${status}`);
       order.orderStatus = status;
+      hasChanges = true;
     }
 
     // Update WhatsApp information if provided
-    if (whatsappMessageId) {
+    if (whatsappMessageId && whatsappMessageId !== order.whatsappMessageId) {
       order.whatsappMessageId = whatsappMessageId;
+      hasChanges = true;
     }
 
-    if (whatsappStatus) {
+    if (whatsappStatus && whatsappStatus !== order.whatsappStatus) {
       order.whatsappStatus = whatsappStatus;
+      hasChanges = true;
     }
 
-    // Add to status history
-    if (status) {
+    // Add to status history if status changed
+    if (status && status !== order.orderStatus) {
       order.statusHistory.push({
         status: status,
         timestamp: new Date(),
@@ -56,6 +84,28 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         order.deliveryType === "delivery"
           ? new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
           : new Date(Date.now() + 4 * 60 * 60 * 1000); // 4 hours
+      hasChanges = true;
+    }
+
+    // Only save if there are actual changes
+    if (!hasChanges) {
+      console.log(`ℹ️ No changes to save for order ${order.orderId}`);
+      return NextResponse.json({
+        success: true,
+        order: {
+          id: order._id.toString(),
+          orderId: order.orderId,
+          invoiceNumber: order.invoiceNumber,
+          orderStatus: order.orderStatus,
+          paymentStatus: order.paymentStatus,
+          whatsappMessageId: order.whatsappMessageId,
+          whatsappStatus: order.whatsappStatus,
+          estimatedDeliveryDate: order.estimatedDeliveryDate,
+          statusHistory: order.statusHistory,
+          updatedAt: order.updatedAt,
+        },
+        message: "No changes to update",
+      });
     }
 
     const updatedOrder = await order.save();
@@ -88,7 +138,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         message: "Failed to update order status",
         error:
           process.env.NODE_ENV === "development"
-            ? error
+            ? error instanceof Error
+              ? error.message
+              : "Unknown error"
             : "Internal server error",
       },
       { status: 500 }
@@ -157,7 +209,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         message: "Failed to fetch order",
         error:
           process.env.NODE_ENV === "development"
-            ? error
+            ? error instanceof Error
+              ? error.message
+              : "Unknown error"
             : "Internal server error",
       },
       { status: 500 }

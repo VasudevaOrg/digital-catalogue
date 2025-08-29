@@ -250,53 +250,59 @@ export async function POST(request: NextRequest) {
       });
 
       // 🔥 NEW: Update order in database with WhatsApp message details
+      // 🔥 NEW: Update order in database with WhatsApp message details
       if (messageType === "order_enquiry" && orderData && messageId) {
-        try {
-          console.log("\n💾 UPDATING ORDER IN DATABASE WITH WHATSAPP DETAILS");
+        // Run database update asynchronously to not block response
+        setImmediate(async () => {
+          try {
+            console.log(
+              "\n💾 UPDATING ORDER IN DATABASE WITH WHATSAPP DETAILS"
+            );
 
-          await dbConnect();
+            await dbConnect();
 
-          // Find order by orderId or invoiceNumber
-          const order = await Order.findOne({
-            $or: [
-              { orderId: orderData.orderId },
-              { invoiceNumber: orderData.invoiceNumber },
-              { orderId: orderData.invoiceNumber }, // Sometimes they might be swapped
-            ],
-          });
-
-          if (order) {
-            // Update order with WhatsApp message details
-            order.whatsappMessageId = messageId;
-            order.whatsappStatus = "sent";
-            order.statusHistory.push({
-              status: order.orderStatus,
-              timestamp: new Date(),
-              notes: `WhatsApp order confirmation sent successfully. Message ID: ${messageId}`,
+            // Find order by orderId or invoiceNumber
+            const order = await Order.findOne({
+              $or: [
+                { orderId: orderData.orderId },
+                { invoiceNumber: orderData.invoiceNumber },
+                { orderId: orderData.invoiceNumber }, // Sometimes they might be swapped
+              ],
             });
 
-            await order.save();
+            if (order) {
+              // Update order with WhatsApp message details
+              order.whatsappMessageId = messageId;
+              order.whatsappStatus = "sent";
+              order.statusHistory.push({
+                status: order.orderStatus,
+                timestamp: new Date(),
+                notes: `WhatsApp order confirmation sent successfully. Message ID: ${messageId}`,
+              });
 
-            console.log(`✅ Order updated with WhatsApp details:`, {
-              orderId: order.orderId,
-              whatsappMessageId: messageId,
-              whatsappStatus: "sent",
-            });
-          } else {
-            console.warn(`⚠️ Order not found for WhatsApp update:`, {
-              searchCriteria: {
-                orderId: orderData.orderId,
-                invoiceNumber: orderData.invoiceNumber,
-              },
-            });
+              await order.save();
+
+              console.log(`✅ Order updated with WhatsApp details:`, {
+                orderId: order.orderId,
+                whatsappMessageId: messageId,
+                whatsappStatus: "sent",
+              });
+            } else {
+              console.warn(`⚠️ Order not found for WhatsApp update:`, {
+                searchCriteria: {
+                  orderId: orderData.orderId,
+                  invoiceNumber: orderData.invoiceNumber,
+                },
+              });
+            }
+          } catch (dbError) {
+            console.error(
+              "❌ Failed to update order with WhatsApp details:",
+              dbError
+            );
+            // Don't fail the entire request if database update fails
           }
-        } catch (dbError) {
-          console.error(
-            "❌ Failed to update order with WhatsApp details:",
-            dbError
-          );
-          // Don't fail the entire request if database update fails
-        }
+        });
       }
 
       // Store message in database (implement based on your database choice)
