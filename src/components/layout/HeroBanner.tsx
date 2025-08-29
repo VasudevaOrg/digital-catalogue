@@ -41,7 +41,6 @@ export function HeroBanner() {
         console.log("🎠 Carousel loaded:", carouselSlides.length, "slides");
       } catch (error) {
         console.error("Failed to load carousel slides:", error);
-        // Fallback is handled in the service
       } finally {
         setIsLoading(false);
       }
@@ -81,7 +80,7 @@ export function HeroBanner() {
   // Show loading state
   if (!isClient || isLoading || slides.length === 0) {
     return (
-      <section className="relative min-h-screen flex items-center overflow-hidden">
+      <section className="relative min-h-[60vh] sm:min-h-[70vh] md:min-h-[80vh] lg:min-h-screen flex items-center overflow-hidden">
         {/* Loading Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600">
           <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20"></div>
@@ -89,21 +88,21 @@ export function HeroBanner() {
 
         {/* Loading Content */}
         <div className="relative z-10 w-full">
-          <div className="container mx-auto px-4">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-4xl mx-auto text-center">
-              <div className="space-y-8 animate-pulse">
-                <div className="inline-block h-12 w-64 bg-white/20 rounded-full"></div>
-                <div className="space-y-4">
-                  <div className="h-16 w-full max-w-2xl mx-auto bg-white/20 rounded"></div>
-                  <div className="h-16 w-3/4 mx-auto bg-white/20 rounded"></div>
+              <div className="space-y-4 sm:space-y-6 lg:space-y-8 animate-pulse">
+                <div className="inline-block h-8 sm:h-10 lg:h-12 w-48 sm:w-56 lg:w-64 bg-white/20 rounded-full"></div>
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="h-12 sm:h-14 lg:h-16 w-full max-w-2xl mx-auto bg-white/20 rounded"></div>
+                  <div className="h-12 sm:h-14 lg:h-16 w-3/4 mx-auto bg-white/20 rounded"></div>
                 </div>
                 <div className="space-y-2">
-                  <div className="h-6 w-full max-w-3xl mx-auto bg-white/20 rounded"></div>
-                  <div className="h-6 w-2/3 mx-auto bg-white/20 rounded"></div>
+                  <div className="h-4 sm:h-5 lg:h-6 w-full max-w-3xl mx-auto bg-white/20 rounded"></div>
+                  <div className="h-4 sm:h-5 lg:h-6 w-2/3 mx-auto bg-white/20 rounded"></div>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-                  <div className="h-14 w-48 bg-white/20 rounded-2xl"></div>
-                  <div className="h-14 w-48 bg-white/20 rounded-2xl"></div>
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center">
+                  <div className="h-12 sm:h-14 w-full sm:w-48 bg-white/20 rounded-2xl"></div>
+                  <div className="h-12 sm:h-14 w-full sm:w-48 bg-white/20 rounded-2xl"></div>
                 </div>
               </div>
             </div>
@@ -116,11 +115,10 @@ export function HeroBanner() {
   const currentSlideData = slides[currentSlide];
 
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden">
+    <section className="relative min-h-[60vh] sm:min-h-[70vh] md:min-h-[80vh] lg:min-h-screen flex items-center overflow-hidden">
       {/* Background Image or Gradient */}
       {currentSlideData.image ? (
         <div className="absolute inset-0">
-          {/* Use regular img tag for blob storage to avoid Next.js hostname issues */}
           <img
             src={currentSlideData.image}
             alt={currentSlideData.title}
@@ -146,7 +144,6 @@ export function HeroBanner() {
                 "❌ Failed to load carousel image:",
                 currentSlideData.image
               );
-              // Hide the image container if it fails to load
               const target = e.target as HTMLImageElement;
               if (target.parentElement) {
                 target.parentElement.style.display = "none";
@@ -199,17 +196,17 @@ export function HeroBanner() {
 
       {/* Content */}
       <div className="relative z-10 w-full">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
-            <div className="space-y-8">
+            <div className="space-y-4 sm:space-y-6 lg:space-y-8">
               {/* Badge */}
-              <div className="inline-flex items-center px-6 py-3 bg-white/20 backdrop-blur-lg text-white rounded-full text-sm font-semibold border border-white/30">
+              <div className="inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 bg-white/20 backdrop-blur-lg text-white rounded-full text-sm font-semibold border border-white/30">
                 <Sparkles className="w-4 h-4 mr-2" />
                 {currentSlideData.subtitle}
               </div>
 
-              {/* Main Title */}
-              <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white leading-tight">
+              {/* Main Title - Responsive Text Sizes */}
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl font-black text-white leading-tight">
                 <span className="block">
                   {currentSlideData.title.split(" ").slice(0, -1).join(" ")}
                 </span>
@@ -218,40 +215,40 @@ export function HeroBanner() {
                 </span>
               </h1>
 
-              {/* Description */}
-              <p className="text-xl md:text-2xl text-white/90 leading-relaxed max-w-3xl mx-auto">
+              {/* Description - Responsive Text and Spacing */}
+              <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/90 leading-relaxed max-w-3xl mx-auto px-4 sm:px-0">
                 {currentSlideData.description}
               </p>
 
-              {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+              {/* CTA Buttons - Responsive Layout */}
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center px-4 sm:px-0">
                 {currentSlideData.primaryLink.startsWith("http") ? (
                   <a
                     href={currentSlideData.primaryLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group bg-white text-gray-800 px-10 py-5 rounded-2xl font-bold text-lg hover:bg-gray-50 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl flex items-center min-w-[200px] justify-center"
+                    className="group bg-white text-gray-800 px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 rounded-xl lg:rounded-2xl font-bold text-sm sm:text-base lg:text-lg hover:bg-gray-50 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl flex items-center min-w-[200px] justify-center w-full sm:w-auto"
                   >
-                    <Phone className="w-6 h-6 mr-3 group-hover:scale-110 transition-transform duration-300" />
+                    <Phone className="w-5 sm:w-6 h-5 sm:h-6 mr-2 sm:mr-3 group-hover:scale-110 transition-transform duration-300" />
                     {currentSlideData.primaryCTA}
-                    <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform duration-300" />
+                    <ArrowRight className="w-4 sm:w-5 h-4 sm:h-5 ml-2 sm:ml-3 group-hover:translate-x-1 transition-transform duration-300" />
                   </a>
                 ) : (
                   <Link
                     href={currentSlideData.primaryLink}
-                    className="group bg-white text-gray-800 px-10 py-5 rounded-2xl font-bold text-lg hover:bg-gray-50 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl flex items-center min-w-[200px] justify-center"
+                    className="group bg-white text-gray-800 px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 rounded-xl lg:rounded-2xl font-bold text-sm sm:text-base lg:text-lg hover:bg-gray-50 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl flex items-center min-w-[200px] justify-center w-full sm:w-auto"
                   >
-                    <ShoppingBag className="w-6 h-6 mr-3 group-hover:scale-110 transition-transform duration-300" />
+                    <ShoppingBag className="w-5 sm:w-6 h-5 sm:h-6 mr-2 sm:mr-3 group-hover:scale-110 transition-transform duration-300" />
                     {currentSlideData.primaryCTA}
-                    <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform duration-300" />
+                    <ArrowRight className="w-4 sm:w-5 h-4 sm:h-5 ml-2 sm:ml-3 group-hover:translate-x-1 transition-transform duration-300" />
                   </Link>
                 )}
 
                 <Link
                   href={currentSlideData.secondaryLink}
-                  className="group bg-transparent border-2 border-white text-white px-10 py-5 rounded-2xl font-bold text-lg hover:bg-white hover:text-gray-800 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl flex items-center min-w-[200px] justify-center"
+                  className="group bg-transparent border-2 border-white text-white px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 rounded-xl lg:rounded-2xl font-bold text-sm sm:text-base lg:text-lg hover:bg-white hover:text-gray-800 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl flex items-center min-w-[200px] justify-center w-full sm:w-auto"
                 >
-                  <Play className="w-5 h-5 mr-3 group-hover:scale-110 transition-transform duration-300" />
+                  <Play className="w-4 sm:w-5 h-4 sm:h-5 mr-2 sm:mr-3 group-hover:scale-110 transition-transform duration-300" />
                   {currentSlideData.secondaryCTA}
                 </Link>
               </div>
@@ -260,38 +257,38 @@ export function HeroBanner() {
         </div>
       </div>
 
-      {/* Navigation Controls - Only show on client */}
+      {/* Navigation Controls - Only show on client and larger screens */}
       {isClient && slides.length > 1 && (
-        <div className="absolute left-4 right-4 top-1/2 transform -translate-y-1/2 flex justify-between pointer-events-none z-20">
+        <div className="absolute left-2 sm:left-4 right-2 sm:right-4 top-1/2 transform -translate-y-1/2 flex justify-between pointer-events-none z-20">
           <button
             onClick={goToPrevious}
-            className="w-14 h-14 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-all duration-300 backdrop-blur-lg border border-white/20 pointer-events-auto group"
+            className="w-10 sm:w-12 lg:w-14 h-10 sm:h-12 lg:h-14 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-all duration-300 backdrop-blur-lg border border-white/20 pointer-events-auto group"
             aria-label="Previous slide"
           >
-            <ChevronLeft className="w-6 h-6 group-hover:scale-110 transition-transform duration-300" />
+            <ChevronLeft className="w-4 sm:w-5 lg:w-6 h-4 sm:h-5 lg:h-6 group-hover:scale-110 transition-transform duration-300" />
           </button>
 
           <button
             onClick={goToNext}
-            className="w-14 h-14 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-all duration-300 backdrop-blur-lg border border-white/20 pointer-events-auto group"
+            className="w-10 sm:w-12 lg:w-14 h-10 sm:h-12 lg:h-14 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-all duration-300 backdrop-blur-lg border border-white/20 pointer-events-auto group"
             aria-label="Next slide"
           >
-            <ChevronRight className="w-6 h-6 group-hover:scale-110 transition-transform duration-300" />
+            <ChevronRight className="w-4 sm:w-5 lg:w-6 h-4 sm:h-5 lg:h-6 group-hover:scale-110 transition-transform duration-300" />
           </button>
         </div>
       )}
 
-      {/* Slide Indicators */}
+      {/* Slide Indicators - Responsive */}
       {slides.length > 1 && (
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-4 z-20">
+        <div className="absolute bottom-4 sm:bottom-6 lg:bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2 sm:space-x-3 lg:space-x-4 z-20">
           {slides.map((_, index) => (
             <button
               key={index}
               onClick={() => goToSlide(index)}
               className={`transition-all duration-300 ${
                 index === currentSlide
-                  ? "w-12 h-3 bg-white rounded-full"
-                  : "w-3 h-3 bg-white/50 hover:bg-white/75 rounded-full"
+                  ? "w-8 sm:w-10 lg:w-12 h-2 sm:h-2.5 lg:h-3 bg-white rounded-full"
+                  : "w-2 sm:w-2.5 lg:w-3 h-2 sm:h-2.5 lg:h-3 bg-white/50 hover:bg-white/75 rounded-full"
               }`}
               aria-label={`Go to slide ${index + 1}`}
             />
@@ -299,15 +296,15 @@ export function HeroBanner() {
         </div>
       )}
 
-      {/* Floating Elements - Only show on client */}
+      {/* Floating Elements - Only show on larger screens */}
       {isClient && (
         <>
-          <div className="absolute top-1/4 left-8 w-20 h-20 bg-white/10 rounded-full backdrop-blur-lg border border-white/20 hidden lg:flex items-center justify-center">
-            <Truck className="w-8 h-8 text-white" />
+          <div className="absolute top-1/4 left-4 sm:left-6 lg:left-8 w-12 sm:w-16 lg:w-20 h-12 sm:h-16 lg:h-20 bg-white/10 rounded-full backdrop-blur-lg border border-white/20 hidden md:flex items-center justify-center">
+            <Truck className="w-6 sm:w-7 lg:w-8 h-6 sm:h-7 lg:h-8 text-white" />
           </div>
 
-          <div className="absolute top-1/3 right-8 w-16 h-16 bg-white/10 rounded-full backdrop-blur-lg border border-white/20 hidden lg:flex items-center justify-center">
-            <Star className="w-6 h-6 text-white" />
+          <div className="absolute top-1/3 right-4 sm:right-6 lg:right-8 w-10 sm:w-12 lg:w-16 h-10 sm:h-12 lg:h-16 bg-white/10 rounded-full backdrop-blur-lg border border-white/20 hidden md:flex items-center justify-center">
+            <Star className="w-4 sm:w-5 lg:w-6 h-4 sm:h-5 lg:h-6 text-white" />
           </div>
         </>
       )}
@@ -315,7 +312,7 @@ export function HeroBanner() {
       {/* Bottom Wave Effect */}
       <div className="absolute bottom-0 left-0 right-0">
         <svg
-          className="w-full h-24 fill-current text-white"
+          className="w-full h-16 sm:h-20 lg:h-24 fill-current text-white"
           viewBox="0 0 1200 120"
           preserveAspectRatio="none"
         >
