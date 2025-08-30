@@ -1,4 +1,4 @@
-// src/types/index.ts
+// src/types/index.ts - Updated Order interface
 
 export interface Product {
   id: string;
@@ -43,6 +43,7 @@ export interface Address {
   isDefault: boolean;
 }
 
+// Updated Order interface with new status options
 export interface Order {
   id: string;
   customerId: string;
@@ -54,12 +55,9 @@ export interface Order {
   paymentMethod: "prepaid" | "cash_on_pickup";
   paymentStatus: "pending" | "completed" | "failed";
   orderStatus:
-    | "pending"
-    | "confirmed"
-    | "preparing"
-    | "ready"
-    | "delivered"
-    | "cancelled";
+    | "confirmed" // Order is confirmed and being processed
+    | "delivered" // Order has been delivered/completed
+    | "cancelled"; // Order was cancelled
   deliveryAddress?: Address;
   deliveryFee: number;
   invoiceNumber: string;

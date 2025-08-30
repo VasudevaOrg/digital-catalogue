@@ -190,10 +190,7 @@ export function isWithinDeliveryRadius(
 
 export function getOrderStatusColor(status: string): string {
   const colors = {
-    pending: "bg-yellow-100 text-yellow-800",
     confirmed: "bg-blue-100 text-blue-800",
-    preparing: "bg-orange-100 text-orange-800",
-    ready: "bg-purple-100 text-purple-800",
     delivered: "bg-green-100 text-green-800",
     cancelled: "bg-red-100 text-red-800",
   };
@@ -209,6 +206,49 @@ export function getPaymentStatusColor(status: string): string {
   };
 
   return colors[status as keyof typeof colors] || "bg-gray-100 text-gray-800";
+}
+
+export function getOrderStatusMessage(
+  status: string,
+  deliveryType: "delivery" | "pickup"
+): string {
+  const messages = {
+    confirmed:
+      "Your order has been confirmed and is being processed by our team.",
+    delivered:
+      deliveryType === "pickup"
+        ? "Your order has been completed. Thank you for shopping with us!"
+        : "Your order has been delivered successfully. Thank you for shopping with us!",
+    cancelled:
+      "This order has been cancelled. Please contact us if you have any questions.",
+  };
+
+  return (
+    messages[status as keyof typeof messages] || "Processing your order..."
+  );
+}
+
+// Helper function to get next possible status transitions
+export function getValidStatusTransitions(currentStatus: string): string[] {
+  switch (currentStatus) {
+    case "confirmed":
+      return ["delivered", "cancelled"];
+    case "delivered":
+      return []; // Terminal state
+    case "cancelled":
+      return []; // Terminal state
+    default:
+      return ["confirmed"];
+  }
+}
+
+// Helper function to check if status can be updated
+export function canUpdateOrderStatus(
+  currentStatus: string,
+  newStatus: string
+): boolean {
+  const validTransitions = getValidStatusTransitions(currentStatus);
+  return validTransitions.includes(newStatus);
 }
 
 export function exportToCSV(data: any[], filename: string): void {

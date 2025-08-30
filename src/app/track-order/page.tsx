@@ -154,10 +154,7 @@ export default function TrackOrderPage() {
 
   const getStatusColor = (status: string) => {
     const colors = {
-      pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
       confirmed: "bg-blue-100 text-blue-800 border-blue-200",
-      preparing: "bg-orange-100 text-orange-800 border-orange-200",
-      ready: "bg-purple-100 text-purple-800 border-purple-200",
       delivered: "bg-green-100 text-green-800 border-green-200",
       cancelled: "bg-red-100 text-red-800 border-red-200",
     };
@@ -169,14 +166,8 @@ export default function TrackOrderPage() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "pending":
-        return <Clock className="w-5 h-5" />;
       case "confirmed":
         return <CheckCircle className="w-5 h-5" />;
-      case "preparing":
-        return <Package className="w-5 h-5" />;
-      case "ready":
-        return <Star className="w-5 h-5" />;
       case "delivered":
         return <CheckCircle className="w-5 h-5" />;
       case "cancelled":
@@ -188,16 +179,12 @@ export default function TrackOrderPage() {
 
   const getStatusMessage = (status: string, deliveryType: string) => {
     const messages = {
-      pending: "Your order is being reviewed and will be confirmed shortly.",
-      confirmed: "Great! Your order has been confirmed and is being processed.",
-      preparing:
-        "Our team is carefully preparing your order with fresh quality products.",
-      ready:
-        deliveryType === "pickup"
-          ? "Your order is ready for pickup at our store!"
-          : "Your order is ready and will be delivered soon!",
+      confirmed:
+        "Your order has been confirmed and is being processed by our team.",
       delivered:
-        "Your order has been delivered successfully. Thank you for shopping with us!",
+        deliveryType === "pickup"
+          ? "Your order has been completed. Thank you for shopping with us!"
+          : "Your order has been delivered successfully. Thank you for shopping with us!",
       cancelled:
         "This order has been cancelled. Please contact us if you have any questions.",
     };
@@ -235,13 +222,13 @@ export default function TrackOrderPage() {
     });
   };
 
+  // Updated steps - only 2 steps now: Confirmed -> Delivered
   const steps = [
-    { status: "pending", label: "Order Placed", icon: Package },
-    { status: "confirmed", label: "Confirmed", icon: CheckCircle },
+    { status: "confirmed", label: "Order Confirmed", icon: CheckCircle },
     {
-      status: orderData?.deliveryType === "pickup" ? "ready" : "delivered",
+      status: "delivered",
       label:
-        orderData?.deliveryType === "pickup" ? "Ready for Pickup" : "Delivered",
+        orderData?.deliveryType === "pickup" ? "Order Completed" : "Delivered",
       icon: orderData?.deliveryType === "pickup" ? Star : CheckCircle,
     },
   ];
@@ -250,15 +237,10 @@ export default function TrackOrderPage() {
     if (!orderData) return 0;
 
     switch (orderData.orderStatus) {
-      case "pending":
-        return 0;
       case "confirmed":
-      case "preparing": // Treat preparing same as confirmed
-        return 1;
-      case "ready":
-        return orderData.deliveryType === "pickup" ? 2 : 1;
+        return 0;
       case "delivered":
-        return 2;
+        return 1;
       case "cancelled":
         return 0; // Show as first step for cancelled orders
       default:
@@ -436,15 +418,36 @@ export default function TrackOrderPage() {
                 </p>
               </div>
 
-              {/* Progress Steps */}
+              {/* Progress Steps - Updated to show only 2 steps */}
               <div className="mb-8">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   Order Progress
                 </h3>
                 <div className="flex items-center justify-between relative">
+                  {/* Progress line */}
+                  <div className="absolute top-6 left-6 right-6 h-0.5 bg-gray-200">
+                    <div
+                      className={`h-full transition-all duration-500 ${
+                        currentStepIndex >= 1 ? "bg-blue-600" : "bg-gray-300"
+                      }`}
+                      style={{
+                        width:
+                          orderData.orderStatus === "cancelled"
+                            ? "0%"
+                            : `${
+                                (currentStepIndex / (steps.length - 1)) * 100
+                              }%`,
+                      }}
+                    />
+                  </div>
+
                   {steps.map((step, index) => {
-                    const isActive = index <= currentStepIndex;
-                    const isCurrent = index === currentStepIndex;
+                    const isActive =
+                      index <= currentStepIndex &&
+                      orderData.orderStatus !== "cancelled";
+                    const isCurrent =
+                      index === currentStepIndex &&
+                      orderData.orderStatus !== "cancelled";
                     const Icon = step.icon;
 
                     return (
@@ -457,32 +460,83 @@ export default function TrackOrderPage() {
                             isActive
                               ? "bg-blue-600 border-blue-600 text-white"
                               : "bg-white border-gray-300 text-gray-400"
-                          } ${isCurrent ? "ring-4 ring-blue-100" : ""}`}
+                          } ${isCurrent ? "ring-4 ring-blue-100" : ""} ${
+                            orderData.orderStatus === "cancelled" && index === 0
+                              ? "bg-red-600 border-red-600 text-white"
+                              : ""
+                          }`}
                         >
                           <Icon className="w-5 h-5" />
                         </div>
                         <span
-                          className={`text-xs mt-2 font-medium text-center max-w-20 ${
-                            isActive ? "text-blue-600" : "text-gray-500"
+                          className={`text-xs mt-2 font-medium text-center max-w-24 ${
+                            isActive ||
+                            (orderData.orderStatus === "cancelled" &&
+                              index === 0)
+                              ? "text-blue-600"
+                              : "text-gray-500"
+                          } ${
+                            orderData.orderStatus === "cancelled" && index === 0
+                              ? "text-red-600"
+                              : ""
                           }`}
                         >
-                          {step.label}
+                          {orderData.orderStatus === "cancelled" && index === 0
+                            ? "Cancelled"
+                            : step.label}
                         </span>
-                        {index < steps.length - 1 && (
-                          <div
-                            className={`absolute top-6 left-12 w-full h-0.5 transition-colors duration-300 ${
-                              index < currentStepIndex
-                                ? "bg-blue-600"
-                                : "bg-gray-300"
-                            }`}
-                            style={{ width: "calc(100vw / 5 - 48px)" }}
-                          />
-                        )}
                       </div>
                     );
                   })}
                 </div>
               </div>
+
+              {/* Order Info Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <User className="w-5 h-5 text-gray-600" />
+                    <h4 className="font-semibold text-gray-900">Customer</h4>
+                  </div>
+                  <p className="text-gray-700">{orderData.customerInfo.name}</p>
+                  <p className="text-gray-600 text-sm">
+                    +91{orderData.customerInfo.phoneNumber}
+                  </p>
+                </div>
+
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <CreditCard className="w-5 h-5 text-gray-600" />
+                    <h4 className="font-semibold text-gray-900">Payment</h4>
+                  </div>
+                  <p className="text-gray-700 capitalize">
+                    {orderData.paymentMethod === "prepaid"
+                      ? "Prepaid (Online)"
+                      : "Cash on Pickup"}
+                  </p>
+                  <p
+                    className={`text-sm capitalize ${
+                      orderData.paymentStatus === "completed"
+                        ? "text-green-600"
+                        : "text-yellow-600"
+                    }`}
+                  >
+                    {orderData.paymentStatus}
+                  </p>
+                </div>
+              </div>
+
+              {/* Status Message */}
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+                <p className="text-blue-800 font-medium">
+                  {getStatusMessage(
+                    orderData.orderStatus,
+                    orderData.deliveryType
+                  )}
+                </p>
+              </div>
+
+              {/* Progress Steps */}
 
               {/* Order Info Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

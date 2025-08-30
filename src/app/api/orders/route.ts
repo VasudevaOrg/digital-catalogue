@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
       0
     );
 
-    // Create the order document
+    // Create the order document - CONFIRMED by default
     const newOrder = new Order({
       orderId,
       invoiceNumber,
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
       paymentMethod: orderData.paymentMethod,
       paymentStatus:
         orderData.paymentMethod === "prepaid" ? "pending" : "pending",
-      orderStatus: "pending",
+      orderStatus: "confirmed", // CHANGED: Start with confirmed status
 
       // Delivery Information
       deliveryAddress: orderData.deliveryAddress || null,
@@ -97,7 +97,10 @@ export async function POST(request: NextRequest) {
     // Save the order to database
     const savedOrder = await newOrder.save();
 
-    console.log("✅ Order saved to database:", savedOrder._id);
+    console.log(
+      "✅ Order saved to database with CONFIRMED status:",
+      savedOrder._id
+    );
 
     // Format response
     const response = {
@@ -115,14 +118,14 @@ export async function POST(request: NextRequest) {
         deliveryType: savedOrder.deliveryType,
         paymentMethod: savedOrder.paymentMethod,
         paymentStatus: savedOrder.paymentStatus,
-        orderStatus: savedOrder.orderStatus,
+        orderStatus: savedOrder.orderStatus, // Will be "confirmed"
         deliveryAddress: savedOrder.deliveryAddress,
         isEligibleForFreeDelivery: savedOrder.isEligibleForFreeDelivery,
         estimatedDeliveryDate: savedOrder.estimatedDeliveryDate,
         createdAt: savedOrder.createdAt,
         statusHistory: savedOrder.statusHistory,
       },
-      message: "Order created successfully",
+      message: "Order confirmed successfully",
     };
 
     return NextResponse.json(response, { status: 201 });

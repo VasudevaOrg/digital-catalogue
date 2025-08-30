@@ -17,15 +17,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     console.log(`📊 Updating order status: ${id} -> ${status}`);
 
-    // Validate status if provided
-    const validStatuses = [
-      "pending",
-      "confirmed",
-      "preparing",
-      "ready",
-      "delivered",
-      "cancelled",
-    ];
+    // Validate status if provided - Updated valid statuses
+    const validStatuses = ["confirmed", "delivered", "cancelled"];
 
     if (status && !validStatuses.includes(status)) {
       return NextResponse.json(
@@ -56,6 +49,13 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       console.log(`📊 Status change: ${order.orderStatus} -> ${status}`);
       order.orderStatus = status;
       hasChanges = true;
+
+      // Add to status history
+      order.statusHistory.push({
+        status: status,
+        timestamp: new Date(),
+        notes: notes || `Status updated to ${status}`,
+      });
     }
 
     // Update WhatsApp information if provided
@@ -69,16 +69,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       hasChanges = true;
     }
 
-    // Add to status history if status changed
-    if (status && status !== order.orderStatus) {
-      order.statusHistory.push({
-        status: status,
-        timestamp: new Date(),
-        notes: notes || `Status updated to ${status}`,
-      });
-    }
-
-    // Set estimated delivery date based on new status
+    // Set estimated delivery date if moving to confirmed and not already set
     if (status === "confirmed" && !order.estimatedDeliveryDate) {
       order.estimatedDeliveryDate =
         order.deliveryType === "delivery"

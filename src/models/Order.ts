@@ -43,10 +43,7 @@ export interface IOrder extends Document {
   paymentMethod: "prepaid" | "cash_on_pickup";
   paymentStatus: "pending" | "paid" | "failed" | "refunded";
   orderStatus:
-    | "pending"
-    | "confirmed"
-    | "preparing"
-    | "ready"
+    | "confirmed" // Changed: Start with confirmed, removed pending
     | "delivered"
     | "cancelled";
 
@@ -147,23 +144,20 @@ const OrderSchema = new Schema<IOrder>(
     orderStatus: {
       type: String,
       enum: [
-        "pending",
-        "confirmed",
-        "preparing",
-        "ready",
-        "delivered",
-        "cancelled",
+        "confirmed", // Default status - order is confirmed
+        "delivered", // Order has been delivered/picked up
+        "cancelled", // Order was cancelled
       ],
-      default: "pending",
+      default: "confirmed", // Changed: Default to confirmed
       index: true,
     },
 
-    // Delivery Information  - FIXED: Removed duplicate index
+    // Delivery Information
     deliveryAddress: {
       street: { type: String },
       city: { type: String },
       state: { type: String },
-      pincode: { type: String }, // Removed duplicate index: true
+      pincode: { type: String },
     },
 
     // Additional Details
@@ -192,21 +186,21 @@ const OrderSchema = new Schema<IOrder>(
   }
 );
 
-// FIXED: Consolidated indexes - removed duplicate pincode index
+// Indexes
 OrderSchema.index({ createdAt: -1 });
 OrderSchema.index({ "customerInfo.phoneNumber": 1, createdAt: -1 });
 OrderSchema.index({ orderStatus: 1, createdAt: -1 });
 OrderSchema.index({ deliveryType: 1, orderStatus: 1 });
-OrderSchema.index({ "deliveryAddress.pincode": 1 }); // Keep only this one
+OrderSchema.index({ "deliveryAddress.pincode": 1 });
 
-// Pre-save middleware to calculate totals and add status history
+// Pre-save middleware to add initial status to history
 OrderSchema.pre("save", function (next) {
   if (this.isNew) {
-    // Add initial status to history
+    // Add initial status to history (confirmed)
     this.statusHistory.push({
       status: this.orderStatus,
       timestamp: new Date(),
-      notes: "Order created",
+      notes: "Order confirmed automatically upon placement",
     });
   } else if (this.isModified("orderStatus")) {
     // Add status change to history
