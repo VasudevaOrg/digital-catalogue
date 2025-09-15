@@ -1,4 +1,4 @@
-// src/app/page.tsx - Responsive Homepage
+// src/app/page.tsx - Updated Homepage with Recommended Products Filter
 "use client";
 
 import { useEffect, useState } from "react";
@@ -32,6 +32,7 @@ import {
   Phone,
   MessageCircle,
   Sparkles,
+  Trophy,
 } from "lucide-react";
 
 export default function HomePage() {
@@ -41,6 +42,7 @@ export default function HomePage() {
   );
   const [isClient, setIsClient] = useState(false);
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [recommendedProducts, setRecommendedProducts] = useState<any[]>([]);
 
   // Set client-side flag after hydration
   useEffect(() => {
@@ -54,8 +56,25 @@ export default function HomePage() {
         // Fetch categories first
         await dispatch(fetchCategories());
 
-        // Fetch featured products (limited to 12)
-        await dispatch(fetchFeaturedProducts(12));
+        // Fetch all products to filter recommended ones
+        const result = await dispatch(
+          fetchProducts({
+            page: 1,
+            limit: 50, // Get more products to filter recommended ones
+            filters: {
+              sortBy: "newest",
+              sortOrder: "desc",
+            },
+          })
+        );
+
+        // Filter recommended products from the fetched products
+        if (result.payload && result.payload.data) {
+          const recommended = result.payload.data.filter(
+            (product: any) => product.isRecommended === true
+          );
+          setRecommendedProducts(recommended.slice(0, 12)); // Show top 12 recommended
+        }
 
         setDataLoaded(true);
       } catch (error) {
@@ -199,7 +218,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Featured Products Section */}
+      {/* Recommended Products Section */}
       <section className="relative py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-gray-50 to-blue-50">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-40">
@@ -215,37 +234,82 @@ export default function HomePage() {
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-12 sm:mb-16">
-            <div className="inline-flex items-center px-3 sm:px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-xs sm:text-sm font-medium mb-3 sm:mb-4">
-              <Star className="w-3 sm:w-4 h-3 sm:h-4 mr-2" />
-              Premium Quality Products
+            <div className="inline-flex items-center px-3 sm:px-4 py-2 bg-yellow-100 text-yellow-800 rounded-full text-xs sm:text-sm font-medium mb-3 sm:mb-4">
+              <Trophy className="w-3 sm:w-4 h-3 sm:h-4 mr-2" />
+              Specially Recommended for You
             </div>
             <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-gray-800 via-blue-600 to-gray-800 bg-clip-text text-transparent mb-3 sm:mb-4">
-              Featured Products
+              Recommended Products
             </h2>
             <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-4 sm:px-0">
-              Handpicked quality items for your daily needs
+              Handpicked quality items specially recommended by our team
             </p>
           </div>
 
           <div className="transition-opacity duration-500 opacity-100">
-            {products.length > 0 ? (
-              <FeaturedProducts products={products} />
+            {recommendedProducts.length > 0 ? (
+              <>
+                <FeaturedProducts products={recommendedProducts} />
+
+                {/* View More Recommended Button */}
+                <div className="text-center mt-12">
+                  <Link
+                    href="/products?recommended=true"
+                    className="inline-flex items-center bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg hover:from-yellow-600 hover:to-orange-600 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-2xl group"
+                  >
+                    <Trophy className="w-5 sm:w-6 h-5 sm:h-6 mr-2 sm:mr-3 group-hover:scale-110 transition-transform duration-300" />
+                    <span>View All Recommended</span>
+                    <ArrowRight className="w-4 sm:w-5 h-4 sm:h-5 ml-2 sm:ml-3 group-hover:translate-x-1 transition-transform duration-300" />
+                  </Link>
+                </div>
+              </>
             ) : (
               <div className="text-center py-8 sm:py-12">
                 <div className="bg-white rounded-lg shadow-lg p-6 sm:p-8 max-w-md mx-auto">
-                  <ShoppingBag className="w-12 sm:w-16 h-12 sm:h-16 text-gray-400 mx-auto mb-4" />
+                  <Trophy className="w-12 sm:w-16 h-12 sm:h-16 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2">
-                    No products available
+                    No recommended products yet
                   </h3>
                   <p className="text-gray-600 text-sm sm:text-base">
-                    Check back soon for amazing products!
+                    Our team is working on curating the best products for you!
                   </p>
+                  <Link
+                    href="/products"
+                    className="inline-flex items-center mt-4 text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    Browse All Products
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Link>
                 </div>
               </div>
             )}
           </div>
         </div>
       </section>
+
+      {/* All Products Section (Fallback if no recommended) */}
+      {recommendedProducts.length === 0 && products.length > 0 && (
+        <section className="relative py-12 sm:py-16 lg:py-20 bg-white">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12 sm:mb-16">
+              <div className="inline-flex items-center px-3 sm:px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-xs sm:text-sm font-medium mb-3 sm:mb-4">
+                <Star className="w-3 sm:w-4 h-3 sm:h-4 mr-2" />
+                Premium Quality Products
+              </div>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-gray-800 via-blue-600 to-gray-800 bg-clip-text text-transparent mb-3 sm:mb-4">
+                Featured Products
+              </h2>
+              <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-4 sm:px-0">
+                Discover our quality selection of products for your daily needs
+              </p>
+            </div>
+
+            <div className="transition-opacity duration-500 opacity-100">
+              <FeaturedProducts products={products.slice(0, 12)} />
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Features Section */}
       <section className="py-12 sm:py-16 bg-white">
@@ -257,28 +321,28 @@ export default function HomePage() {
                 title: "Free Delivery",
                 subtitle: "On orders ₹1000+",
                 color: "text-green-600",
-                bg: "bg-green-100",
+                bgColor: "bg-green-100",
               },
               {
-                icon: <Shield className="w-6 sm:w-8 h-6 sm:h-8" />,
-                title: "Quality Assured",
-                subtitle: "Premium products",
-                color: "text-blue-600",
-                bg: "bg-blue-100",
+                icon: <Trophy className="w-6 sm:w-8 h-6 sm:h-8" />,
+                title: "Recommended",
+                subtitle: "Curated selection",
+                color: "text-yellow-600",
+                bgColor: "bg-yellow-100",
               },
               {
                 icon: <Clock className="w-6 sm:w-8 h-6 sm:h-8" />,
                 title: "Same Day Delivery",
                 subtitle: "Order before 2 PM",
                 color: "text-purple-600",
-                bg: "bg-purple-100",
+                bgColor: "bg-purple-100",
               },
               {
                 icon: <Users className="w-6 sm:w-8 h-6 sm:h-8" />,
                 title: "24/7 Support",
                 subtitle: "Always here to help",
                 color: "text-orange-600",
-                bg: "bg-orange-100",
+                bgColor: "bg-orange-100",
               },
             ].map((feature, index) => (
               <div
@@ -286,7 +350,7 @@ export default function HomePage() {
                 className="text-center p-4 sm:p-6 bg-gray-50 rounded-lg sm:rounded-xl hover:shadow-lg transition-shadow duration-300 group"
               >
                 <div
-                  className={`inline-flex items-center justify-center w-12 sm:w-16 h-12 sm:h-16 ${feature.bg} ${feature.color} rounded-lg sm:rounded-xl mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-300`}
+                  className={`inline-flex items-center justify-center w-12 sm:w-16 h-12 sm:h-16 ${feature.bgColor} ${feature.color} rounded-lg sm:rounded-xl mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-300`}
                 >
                   {feature.icon}
                 </div>

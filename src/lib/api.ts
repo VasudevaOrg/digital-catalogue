@@ -1,4 +1,4 @@
-// src/lib/api.ts
+// src/lib/api.ts - Updated API functions with new filters
 import axios, { AxiosResponse, AxiosError, AxiosRequestConfig } from "axios";
 
 // Create axios instance
@@ -107,9 +107,27 @@ export const productAPI = {
     search?: string;
     sortBy?: string;
     sortOrder?: string;
+    isRecommended?: boolean;
+    tags?: string[];
   }) => {
     try {
-      const response = await apiUtils.get("/api/products", params);
+      // Clean params to remove undefined values
+      const cleanParams = Object.fromEntries(
+        Object.entries(params || {}).filter(([key, value]) => {
+          if (key === "page" || key === "limit") return true;
+          if (Array.isArray(value)) return value.length > 0;
+          return value !== undefined && value !== "" && value !== null;
+        })
+      );
+
+      // Convert tags array to comma-separated string if needed
+      if (cleanParams.tags && Array.isArray(cleanParams.tags)) {
+        cleanParams.tags = cleanParams.tags.join(",");
+      }
+
+      console.log("API request params:", cleanParams);
+
+      const response = await apiUtils.get("/api/products", cleanParams);
       return response;
     } catch (error: any) {
       console.error("Error fetching products:", error);
@@ -164,6 +182,21 @@ export const productAPI = {
     }
   },
 
+  getRecommended: async (limit: number = 12) => {
+    try {
+      const response = await apiUtils.get("/api/products", {
+        limit,
+        isRecommended: true,
+        sortBy: "newest",
+        sortOrder: "desc",
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error("Error fetching recommended products:", error);
+      throw error;
+    }
+  },
+
   getByCategory: async (category: string, params?: any) => {
     try {
       const response = await apiUtils.get("/api/products", {
@@ -173,6 +206,30 @@ export const productAPI = {
       return response.data;
     } catch (error: any) {
       console.error("Error fetching products by category:", error);
+      throw error;
+    }
+  },
+
+  getByTags: async (tags: string[], params?: any) => {
+    try {
+      const response = await apiUtils.get("/api/products", {
+        tags: tags.join(","),
+        ...params,
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error("Error fetching products by tags:", error);
+      throw error;
+    }
+  },
+
+  // Get all available product tags
+  getTags: async () => {
+    try {
+      const response = await apiUtils.get("/api/products/tags");
+      return response.data;
+    } catch (error: any) {
+      console.error("Error fetching product tags:", error);
       throw error;
     }
   },

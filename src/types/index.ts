@@ -1,15 +1,26 @@
-// src/types/index.ts - Updated Order interface
+// src/types/index.ts - Updated Product interface with new fields
 
 export interface Product {
   id: string;
   name: string;
   description: string;
   price: number;
-  weight: number; // in kg
+  weight: number;
+  weightUnit:
+    | "kg"
+    | "grams"
+    | "ltr"
+    | "ml"
+    | "box"
+    | "bags"
+    | "pieces"
+    | "other"; // New field
   category: string;
   images: string[];
   stock: number;
   isEligibleForFreeDelivery: boolean;
+  isRecommended: boolean; // New field for recommended products
+  tags: string[]; // New field for product tags
   createdAt: string;
   updatedAt: string;
 }
@@ -157,6 +168,8 @@ export interface ProductFilters {
   searchQuery: string;
   sortBy: "name" | "price" | "newest";
   sortOrder: "asc" | "desc";
+  tags?: string[]; // New filter for tags
+  isRecommended?: boolean; // New filter for recommended products
 }
 
 export interface CartState {
@@ -217,3 +230,51 @@ export interface CheckoutData {
   deliveryAddress?: Address;
   customerNotes?: string;
 }
+
+// New interfaces for product tags and recommendations
+export interface ProductTag {
+  id: string;
+  name: string;
+  color: string;
+  description?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Weight unit utility type
+export type WeightUnit =
+  | "kg"
+  | "grams"
+  | "ltr"
+  | "ml"
+  | "box"
+  | "bags"
+  | "pieces"
+  | "other";
+
+// Weight unit display names
+export const WEIGHT_UNIT_LABELS: Record<WeightUnit, string> = {
+  kg: "Kilogram (kg)",
+  grams: "Grams (g)",
+  ltr: "Litre (L)",
+  ml: "Millilitre (ml)",
+  box: "Box",
+  bags: "Bags",
+  pieces: "Pieces",
+  other: "Other",
+};
+
+// Common product tags
+export const COMMON_TAGS = [
+  "recommended",
+  "best-selling",
+  "fresh",
+  "organic",
+  "local",
+  "premium",
+  "seasonal",
+  "new-arrival",
+  "discounted",
+  "limited-offer",
+];

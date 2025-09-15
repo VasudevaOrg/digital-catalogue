@@ -1,4 +1,4 @@
-// src/app/products/page.tsx - Responsive Layout
+// src/app/products/page.tsx - Updated with new filters and URL handling
 "use client";
 
 import { useState, useEffect } from "react";
@@ -11,6 +11,7 @@ import {
   clearFilters,
 } from "@/store/slices/productSlice";
 import { ProductCard } from "@/components/product/ProductCard";
+import { ProductFilters } from "@/components/product/ProductFilters";
 import { ProductsPageSkeleton } from "@/components/ui/SkeletonLoader";
 import { Pagination } from "@/components/ui/Pagination";
 import {
@@ -20,6 +21,8 @@ import {
   Grid,
   List,
   SlidersHorizontal,
+  Trophy,
+  Tag,
 } from "lucide-react";
 
 export default function ProductsPage() {
@@ -51,6 +54,9 @@ export default function ProductsPage() {
         const category = searchParams.get("category") || "";
         const search = searchParams.get("search") || "";
         const page = parseInt(searchParams.get("page") || "1");
+        const isRecommended = searchParams.get("recommended") === "true";
+        const tagsParam = searchParams.get("tags");
+        const tags = tagsParam ? tagsParam.split(",") : [];
 
         const urlFilters = {
           category,
@@ -58,6 +64,8 @@ export default function ProductsPage() {
           sortBy: "name" as const,
           sortOrder: "asc" as const,
           priceRange: [0, 10000] as [number, number],
+          isRecommended,
+          tags,
         };
 
         dispatch(setFilters(urlFilters));
@@ -102,6 +110,12 @@ export default function ProductsPage() {
     }
     if (updatedFilters.searchQuery) {
       params.set("search", updatedFilters.searchQuery);
+    }
+    if (updatedFilters.isRecommended) {
+      params.set("recommended", "true");
+    }
+    if (updatedFilters.tags && updatedFilters.tags.length > 0) {
+      params.set("tags", updatedFilters.tags.join(","));
     }
     params.set("page", "1");
 
@@ -153,6 +167,8 @@ export default function ProductsPage() {
       sortBy: "name" as const,
       sortOrder: "asc" as const,
       priceRange: [0, 10000] as [number, number],
+      isRecommended: false,
+      tags: [],
     };
 
     setLocalFilters(clearedFilters);
@@ -175,7 +191,7 @@ export default function ProductsPage() {
 
   const handleSortChange = async (value: string) => {
     const [sortBy, sortOrder] = value.split("-") as [
-      "name" | "price" | "newest",
+      "name" | "price" | "newest" | "recommended",
       "asc" | "desc"
     ];
     await handleFilterChange({ sortBy, sortOrder });
@@ -214,16 +230,45 @@ export default function ProductsPage() {
         {/* Page Header */}
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-light text-gray-800 mb-2 sm:mb-4">
-            All Products
+            {localFilters.isRecommended
+              ? "Recommended Products"
+              : "All Products"}
           </h1>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <p className="text-gray-600 text-sm sm:text-base">
-              {localFilters.category
-                ? `Category: ${localFilters.category}`
-                : localFilters.searchQuery
-                ? `Search results for: "${localFilters.searchQuery}"`
-                : "Browse our complete collection"}
-            </p>
+            <div className="space-y-2">
+              <p className="text-gray-600 text-sm sm:text-base">
+                {localFilters.category
+                  ? `Category: ${localFilters.category}`
+                  : localFilters.searchQuery
+                  ? `Search results for: "${localFilters.searchQuery}"`
+                  : localFilters.isRecommended
+                  ? "Specially recommended products for you"
+                  : "Browse our complete collection"}
+              </p>
+
+              {/* Active filters display */}
+              {(localFilters.isRecommended ||
+                (localFilters.tags && localFilters.tags.length > 0)) && (
+                <div className="flex flex-wrap gap-2">
+                  {localFilters.isRecommended && (
+                    <span className="inline-flex items-center bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">
+                      <Trophy className="w-3 h-3 mr-1" />
+                      Recommended
+                    </span>
+                  )}
+                  {localFilters.tags &&
+                    localFilters.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="inline-flex items-center bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium"
+                      >
+                        <Tag className="w-3 h-3 mr-1" />
+                        {tag.replace("-", " ")}
+                      </span>
+                    ))}
+                </div>
+              )}
+            </div>
 
             {/* View Mode Toggle - Desktop */}
             <div className="hidden md:flex items-center space-x-2 bg-white rounded-lg p-1 border">
@@ -255,66 +300,12 @@ export default function ProductsPage() {
           {/* Filters Sidebar - Desktop */}
           <aside className="hidden lg:block w-64 flex-shrink-0">
             <div className="bg-white rounded-lg p-6 sticky top-24">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-medium text-gray-800">Filters</h2>
-                <button
-                  onClick={handleClearFilters}
-                  className="text-sm text-gray-600 hover:text-gray-800"
-                >
-                  Clear all
-                </button>
-              </div>
-
-              {/* Categories */}
-              <div className="mb-6">
-                <h3 className="font-medium text-gray-700 mb-3">Categories</h3>
-                <div className="space-y-2 max-h-64 overflow-y-auto">
-                  <label className="flex items-center cursor-pointer hover:text-gray-900">
-                    <input
-                      type="radio"
-                      name="category"
-                      value=""
-                      checked={localFilters.category === ""}
-                      onChange={() => handleFilterChange({ category: "" })}
-                      className="mr-2"
-                    />
-                    <span className="text-sm text-gray-600">
-                      All Categories
-                    </span>
-                  </label>
-                  {categories.map((category) => (
-                    <label
-                      key={category}
-                      className="flex items-center cursor-pointer hover:text-gray-900"
-                    >
-                      <input
-                        type="radio"
-                        name="category"
-                        value={category}
-                        checked={localFilters.category === category}
-                        onChange={() => handleFilterChange({ category })}
-                        className="mr-2"
-                      />
-                      <span className="text-sm text-gray-600">{category}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* Sort */}
-              <div>
-                <h3 className="font-medium text-gray-700 mb-3">Sort By</h3>
-                <select
-                  value={`${localFilters.sortBy}-${localFilters.sortOrder}`}
-                  onChange={(e) => handleSortChange(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-gray-400"
-                >
-                  <option value="name-asc">Name (A-Z)</option>
-                  <option value="name-desc">Name (Z-A)</option>
-                  <option value="price-asc">Price (Low to High)</option>
-                  <option value="price-desc">Price (High to Low)</option>
-                </select>
-              </div>
+              <ProductFilters
+                categories={categories}
+                onFilterChange={handleFilterChange}
+                currentFilters={localFilters}
+                onClearFilters={handleClearFilters}
+              />
             </div>
           </aside>
 
@@ -330,7 +321,10 @@ export default function ProductsPage() {
                 >
                   <SlidersHorizontal className="w-4 h-4 mr-2" />
                   Filters
-                  {(localFilters.category || localFilters.searchQuery) && (
+                  {(localFilters.category ||
+                    localFilters.searchQuery ||
+                    localFilters.isRecommended ||
+                    (localFilters.tags && localFilters.tags.length > 0)) && (
                     <span className="ml-2 w-2 h-2 bg-blue-600 rounded-full"></span>
                   )}
                 </button>
@@ -346,6 +340,8 @@ export default function ProductsPage() {
                     <option value="name-desc">Name (Z-A)</option>
                     <option value="price-asc">Price (Low to High)</option>
                     <option value="price-desc">Price (High to Low)</option>
+                    <option value="recommended-desc">Recommended First</option>
+                    <option value="newest-desc">Newest First</option>
                   </select>
                 </div>
 
@@ -373,34 +369,6 @@ export default function ProductsPage() {
                   </button>
                 </div>
               </div>
-
-              {/* Active Filters Display */}
-              {(localFilters.category || localFilters.searchQuery) && (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {localFilters.category && (
-                    <span className="inline-flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium">
-                      Category: {localFilters.category}
-                      <button
-                        onClick={() => handleFilterChange({ category: "" })}
-                        className="ml-2 text-blue-600 hover:text-blue-800"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  )}
-                  {localFilters.searchQuery && (
-                    <span className="inline-flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium">
-                      Search: {localFilters.searchQuery}
-                      <button
-                        onClick={() => handleFilterChange({ searchQuery: "" })}
-                        className="ml-2 text-green-600 hover:text-green-800"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  )}
-                </div>
-              )}
             </div>
 
             {/* Results count and loading indicator */}
@@ -471,7 +439,10 @@ export default function ProductsPage() {
                     <p className="text-gray-600 mb-4 text-sm sm:text-base">
                       Try adjusting your filters or search terms
                     </p>
-                    {(localFilters.category || localFilters.searchQuery) && (
+                    {(localFilters.category ||
+                      localFilters.searchQuery ||
+                      localFilters.isRecommended ||
+                      (localFilters.tags && localFilters.tags.length > 0)) && (
                       <button
                         onClick={handleClearFilters}
                         className="text-blue-600 hover:text-blue-700 underline font-medium"
@@ -502,62 +473,18 @@ export default function ProductsPage() {
                 </button>
               </div>
 
-              {/* Clear All Filters */}
-              {(localFilters.category || localFilters.searchQuery) && (
-                <button
-                  onClick={() => {
-                    handleClearFilters();
-                    setShowFilters(false);
-                  }}
-                  className="w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors mb-6"
-                >
-                  Clear All Filters
-                </button>
-              )}
-
-              {/* Mobile Categories */}
-              <div className="space-y-6">
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-4">
-                    Categories
-                  </h3>
-                  <div className="space-y-3 max-h-64 overflow-y-auto">
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="radio"
-                        name="mobile-category"
-                        value=""
-                        checked={localFilters.category === ""}
-                        onChange={() => {
-                          handleFilterChange({ category: "" });
-                          setShowFilters(false);
-                        }}
-                        className="mr-3"
-                      />
-                      <span className="text-gray-700">All Categories</span>
-                    </label>
-                    {categories.map((category) => (
-                      <label
-                        key={category}
-                        className="flex items-center cursor-pointer"
-                      >
-                        <input
-                          type="radio"
-                          name="mobile-category"
-                          value={category}
-                          checked={localFilters.category === category}
-                          onChange={() => {
-                            handleFilterChange({ category });
-                            setShowFilters(false);
-                          }}
-                          className="mr-3"
-                        />
-                        <span className="text-gray-700">{category}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              </div>
+              <ProductFilters
+                categories={categories}
+                onFilterChange={(filters) => {
+                  handleFilterChange(filters);
+                  setShowFilters(false);
+                }}
+                currentFilters={localFilters}
+                onClearFilters={() => {
+                  handleClearFilters();
+                  setShowFilters(false);
+                }}
+              />
 
               {/* Apply Button */}
               <div className="mt-8 pt-6 border-t border-gray-200">
