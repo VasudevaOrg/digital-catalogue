@@ -1,4 +1,4 @@
-// src/app/products/page.tsx - Updated with new filters and URL handling
+// src/app/products/page.tsx - Fixed with proper filter handling
 "use client";
 
 import { useState, useEffect } from "react";
@@ -57,16 +57,20 @@ export default function ProductsPage() {
         const isRecommended = searchParams.get("recommended") === "true";
         const tagsParam = searchParams.get("tags");
         const tags = tagsParam ? tagsParam.split(",") : [];
+        const minPrice = parseInt(searchParams.get("minPrice") || "0");
+        const maxPrice = parseInt(searchParams.get("maxPrice") || "10000");
 
         const urlFilters = {
           category,
           searchQuery: search,
           sortBy: "name" as const,
           sortOrder: "asc" as const,
-          priceRange: [0, 10000] as [number, number],
+          priceRange: [minPrice, maxPrice] as [number, number],
           isRecommended,
           tags,
         };
+
+        console.log("Initial URL filters:", urlFilters);
 
         dispatch(setFilters(urlFilters));
         setLocalFilters(urlFilters);
@@ -99,11 +103,16 @@ export default function ProductsPage() {
 
   // Handle filter changes
   const handleFilterChange = async (newFilters: any) => {
+    console.log("Filter change requested:", newFilters);
+
     const updatedFilters = { ...localFilters, ...newFilters };
+    console.log("Updated filters:", updatedFilters);
+
     setLocalFilters(updatedFilters);
     dispatch(setFilters(updatedFilters));
     setCurrentPage(1);
 
+    // Update URL parameters
     const params = new URLSearchParams();
     if (updatedFilters.category) {
       params.set("category", updatedFilters.category);
@@ -117,22 +126,32 @@ export default function ProductsPage() {
     if (updatedFilters.tags && updatedFilters.tags.length > 0) {
       params.set("tags", updatedFilters.tags.join(","));
     }
+    if (updatedFilters.priceRange[0] > 0) {
+      params.set("minPrice", updatedFilters.priceRange[0].toString());
+    }
+    if (updatedFilters.priceRange[1] < 10000) {
+      params.set("maxPrice", updatedFilters.priceRange[1].toString());
+    }
     params.set("page", "1");
 
     const queryString = params.toString();
     router.push(`/products${queryString ? `?${queryString}` : ""}`);
 
-    const result = await dispatch(
-      fetchProducts({
-        page: 1,
-        limit: productsPerPage,
-        filters: updatedFilters,
-      })
-    );
+    try {
+      const result = await dispatch(
+        fetchProducts({
+          page: 1,
+          limit: productsPerPage,
+          filters: updatedFilters,
+        })
+      );
 
-    if (result.payload && result.payload.pagination) {
-      setTotalProducts(result.payload.pagination.total);
-      setTotalPages(result.payload.pagination.totalPages);
+      if (result.payload && result.payload.pagination) {
+        setTotalProducts(result.payload.pagination.total);
+        setTotalPages(result.payload.pagination.totalPages);
+      }
+    } catch (error) {
+      console.error("Error applying filters:", error);
     }
   };
 
@@ -171,6 +190,7 @@ export default function ProductsPage() {
       tags: [],
     };
 
+    console.log("Clearing filters");
     setLocalFilters(clearedFilters);
     dispatch(clearFilters());
     setCurrentPage(1);
@@ -180,6 +200,7 @@ export default function ProductsPage() {
       fetchProducts({
         page: 1,
         limit: productsPerPage,
+        filters: clearedFilters,
       })
     );
 
@@ -194,6 +215,7 @@ export default function ProductsPage() {
       "name" | "price" | "newest" | "recommended",
       "asc" | "desc"
     ];
+    console.log("Sort change:", sortBy, sortOrder);
     await handleFilterChange({ sortBy, sortOrder });
   };
 
@@ -248,7 +270,9 @@ export default function ProductsPage() {
 
               {/* Active filters display */}
               {(localFilters.isRecommended ||
-                (localFilters.tags && localFilters.tags.length > 0)) && (
+                (localFilters.tags && localFilters.tags.length > 0) ||
+                localFilters.priceRange[0] > 0 ||
+                localFilters.priceRange[1] < 10000) && (
                 <div className="flex flex-wrap gap-2">
                   {localFilters.isRecommended && (
                     <span className="inline-flex items-center bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">
@@ -266,6 +290,13 @@ export default function ProductsPage() {
                         {tag.replace("-", " ")}
                       </span>
                     ))}
+                  {(localFilters.priceRange[0] > 0 ||
+                    localFilters.priceRange[1] < 10000) && (
+                    <span className="inline-flex items-center bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">
+                      ₹{localFilters.priceRange[0]} - ₹
+                      {localFilters.priceRange[1]}
+                    </span>
+                  )}
                 </div>
               )}
             </div>
@@ -324,7 +355,9 @@ export default function ProductsPage() {
                   {(localFilters.category ||
                     localFilters.searchQuery ||
                     localFilters.isRecommended ||
-                    (localFilters.tags && localFilters.tags.length > 0)) && (
+                    (localFilters.tags && localFilters.tags.length > 0) ||
+                    localFilters.priceRange[0] > 0 ||
+                    localFilters.priceRange[1] < 10000) && (
                     <span className="ml-2 w-2 h-2 bg-blue-600 rounded-full"></span>
                   )}
                 </button>
@@ -442,7 +475,9 @@ export default function ProductsPage() {
                     {(localFilters.category ||
                       localFilters.searchQuery ||
                       localFilters.isRecommended ||
-                      (localFilters.tags && localFilters.tags.length > 0)) && (
+                      (localFilters.tags && localFilters.tags.length > 0) ||
+                      localFilters.priceRange[0] > 0 ||
+                      localFilters.priceRange[1] < 10000) && (
                       <button
                         onClick={handleClearFilters}
                         className="text-blue-600 hover:text-blue-700 underline font-medium"

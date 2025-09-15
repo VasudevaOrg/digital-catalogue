@@ -1,4 +1,4 @@
-// src/lib/api.ts - Updated API functions with new filters
+// src/lib/api.ts - Updated with proper parameter handling
 import axios, { AxiosResponse, AxiosError, AxiosRequestConfig } from "axios";
 
 // Create axios instance
@@ -109,13 +109,19 @@ export const productAPI = {
     sortOrder?: string;
     isRecommended?: boolean;
     tags?: string[];
+    minPrice?: number;
+    maxPrice?: number;
   }) => {
     try {
       // Clean params to remove undefined values
       const cleanParams = Object.fromEntries(
         Object.entries(params || {}).filter(([key, value]) => {
           if (key === "page" || key === "limit") return true;
+          if (key === "minPrice" || key === "maxPrice") {
+            return value !== undefined && value !== null;
+          }
           if (Array.isArray(value)) return value.length > 0;
+          if (typeof value === "boolean") return value === true; // Only include if true
           return value !== undefined && value !== "" && value !== null;
         })
       );
@@ -123,6 +129,14 @@ export const productAPI = {
       // Convert tags array to comma-separated string if needed
       if (cleanParams.tags && Array.isArray(cleanParams.tags)) {
         cleanParams.tags = cleanParams.tags.join(",");
+      }
+
+      // Handle price range
+      if (params?.priceRange) {
+        const [minPrice, maxPrice] = params.priceRange;
+        if (minPrice > 0) cleanParams.minPrice = minPrice;
+        if (maxPrice < 10000) cleanParams.maxPrice = maxPrice;
+        delete cleanParams.priceRange; // Remove priceRange as it's not a backend param
       }
 
       console.log("API request params:", cleanParams);
@@ -157,10 +171,22 @@ export const productAPI = {
 
   search: async (query: string, params?: any) => {
     try {
-      const response = await apiUtils.get("/api/products", {
-        search: query,
-        ...params,
-      });
+      const searchParams = { search: query, ...params };
+
+      // Handle price range in search
+      if (params?.priceRange) {
+        const [minPrice, maxPrice] = params.priceRange;
+        if (minPrice > 0) searchParams.minPrice = minPrice;
+        if (maxPrice < 10000) searchParams.maxPrice = maxPrice;
+        delete searchParams.priceRange;
+      }
+
+      // Convert tags to string
+      if (searchParams.tags && Array.isArray(searchParams.tags)) {
+        searchParams.tags = searchParams.tags.join(",");
+      }
+
+      const response = await apiUtils.get("/api/products", searchParams);
       return response;
     } catch (error: any) {
       console.error("Error searching products:", error);
@@ -199,10 +225,22 @@ export const productAPI = {
 
   getByCategory: async (category: string, params?: any) => {
     try {
-      const response = await apiUtils.get("/api/products", {
-        category,
-        ...params,
-      });
+      const categoryParams = { category, ...params };
+
+      // Handle price range
+      if (categoryParams.priceRange) {
+        const [minPrice, maxPrice] = categoryParams.priceRange;
+        if (minPrice > 0) categoryParams.minPrice = minPrice;
+        if (maxPrice < 10000) categoryParams.maxPrice = maxPrice;
+        delete categoryParams.priceRange;
+      }
+
+      // Convert tags to string
+      if (categoryParams.tags && Array.isArray(categoryParams.tags)) {
+        categoryParams.tags = categoryParams.tags.join(",");
+      }
+
+      const response = await apiUtils.get("/api/products", categoryParams);
       return response.data;
     } catch (error: any) {
       console.error("Error fetching products by category:", error);
@@ -212,10 +250,20 @@ export const productAPI = {
 
   getByTags: async (tags: string[], params?: any) => {
     try {
-      const response = await apiUtils.get("/api/products", {
+      const tagParams = {
         tags: tags.join(","),
         ...params,
-      });
+      };
+
+      // Handle price range
+      if (tagParams.priceRange) {
+        const [minPrice, maxPrice] = tagParams.priceRange;
+        if (minPrice > 0) tagParams.minPrice = minPrice;
+        if (maxPrice < 10000) tagParams.maxPrice = maxPrice;
+        delete tagParams.priceRange;
+      }
+
+      const response = await apiUtils.get("/api/products", tagParams);
       return response.data;
     } catch (error: any) {
       console.error("Error fetching products by tags:", error);

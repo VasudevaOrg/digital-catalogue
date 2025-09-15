@@ -1,4 +1,4 @@
-// src/components/product/ProductFilters.tsx - Updated with proper props handling
+// src/components/product/ProductFilters.tsx - Fixed with proper filter handling
 "use client";
 
 import { useState, useEffect } from "react";
@@ -28,6 +28,15 @@ export function ProductFilters({
     sort: true,
   });
 
+  const [localPriceRange, setLocalPriceRange] = useState<[number, number]>(
+    currentFilters.priceRange
+  );
+
+  // Update local price range when currentFilters changes
+  useEffect(() => {
+    setLocalPriceRange(currentFilters.priceRange);
+  }, [currentFilters.priceRange]);
+
   const toggleSection = (section: keyof typeof expandedSections) => {
     setExpandedSections((prev) => ({
       ...prev,
@@ -46,18 +55,24 @@ export function ProductFilters({
       ? currentTags.filter((t) => t !== tag)
       : [...currentTags, tag];
 
+    console.log("Tag toggled:", tag, "New tags:", newTags);
     onFilterChange({ tags: newTags });
   };
 
   const handleRecommendedToggle = () => {
+    console.log("Recommended toggled:", !currentFilters.isRecommended);
     onFilterChange({ isRecommended: !currentFilters.isRecommended });
   };
 
   const handlePriceRangeChange = (min: number, max: number) => {
-    onFilterChange({ priceRange: [min, max] });
+    const newRange: [number, number] = [min, max];
+    setLocalPriceRange(newRange);
+    console.log("Price range changed:", newRange);
+    onFilterChange({ priceRange: newRange });
   };
 
   const handleSortChange = (sortBy: string, sortOrder: "asc" | "desc") => {
+    console.log("Sort changed:", sortBy, sortOrder);
     onFilterChange({ sortBy: sortBy as any, sortOrder });
   };
 
@@ -133,6 +148,20 @@ export function ProductFilters({
                 </button>
               </span>
             ))}
+
+          {(currentFilters.priceRange[0] > 0 ||
+            currentFilters.priceRange[1] < 10000) && (
+            <span className="inline-flex items-center bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-xs font-medium">
+              Price: ₹{currentFilters.priceRange[0]} - ₹
+              {currentFilters.priceRange[1]}
+              <button
+                onClick={() => handlePriceRangeChange(0, 10000)}
+                className="ml-2 text-purple-600 hover:text-purple-800"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          )}
         </div>
       )}
 
@@ -279,23 +308,47 @@ export function ProductFilters({
           <div className="p-4 space-y-4">
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm text-gray-600">
-                <span>₹{currentFilters.priceRange[0]}</span>
-                <span>₹{currentFilters.priceRange[1]}</span>
+                <span>₹{localPriceRange[0]}</span>
+                <span>₹{localPriceRange[1]}</span>
               </div>
-              <input
-                type="range"
-                min="0"
-                max="10000"
-                step="100"
-                value={currentFilters.priceRange[1]}
-                onChange={(e) =>
-                  handlePriceRangeChange(
-                    currentFilters.priceRange[0],
-                    parseInt(e.target.value)
-                  )
-                }
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-              />
+
+              {/* Min Range Slider */}
+              <div className="relative">
+                <input
+                  type="range"
+                  min="0"
+                  max="10000"
+                  step="50"
+                  value={localPriceRange[0]}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value);
+                    if (value <= localPriceRange[1]) {
+                      handlePriceRangeChange(value, localPriceRange[1]);
+                    }
+                  }}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                />
+                <label className="text-xs text-gray-500">Min Price</label>
+              </div>
+
+              {/* Max Range Slider */}
+              <div className="relative">
+                <input
+                  type="range"
+                  min="0"
+                  max="10000"
+                  step="50"
+                  value={localPriceRange[1]}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value);
+                    if (value >= localPriceRange[0]) {
+                      handlePriceRangeChange(localPriceRange[0], value);
+                    }
+                  }}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                />
+                <label className="text-xs text-gray-500">Max Price</label>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-2">
@@ -306,13 +359,13 @@ export function ProductFilters({
                 <input
                   type="number"
                   placeholder="Min"
-                  value={currentFilters.priceRange[0]}
-                  onChange={(e) =>
-                    handlePriceRangeChange(
-                      parseInt(e.target.value) || 0,
-                      currentFilters.priceRange[1]
-                    )
-                  }
+                  value={localPriceRange[0]}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value) || 0;
+                    if (value <= localPriceRange[1]) {
+                      handlePriceRangeChange(value, localPriceRange[1]);
+                    }
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -323,16 +376,39 @@ export function ProductFilters({
                 <input
                   type="number"
                   placeholder="Max"
-                  value={currentFilters.priceRange[1]}
-                  onChange={(e) =>
-                    handlePriceRangeChange(
-                      currentFilters.priceRange[0],
-                      parseInt(e.target.value) || 10000
-                    )
-                  }
+                  value={localPriceRange[1]}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value) || 10000;
+                    if (value >= localPriceRange[0]) {
+                      handlePriceRangeChange(localPriceRange[0], value);
+                    }
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
+            </div>
+
+            {/* Quick Price Filters */}
+            <div className="flex flex-wrap gap-2">
+              {[
+                [0, 100],
+                [100, 500],
+                [500, 1000],
+                [1000, 2000],
+                [2000, 10000],
+              ].map(([min, max]) => (
+                <button
+                  key={`${min}-${max}`}
+                  onClick={() => handlePriceRangeChange(min, max)}
+                  className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                    localPriceRange[0] === min && localPriceRange[1] === max
+                      ? "bg-blue-500 text-white border-blue-500"
+                      : "bg-white text-gray-600 border-gray-300 hover:border-blue-300"
+                  }`}
+                >
+                  ₹{min} - ₹{max === 10000 ? "10k+" : max}
+                </button>
+              ))}
             </div>
           </div>
         )}

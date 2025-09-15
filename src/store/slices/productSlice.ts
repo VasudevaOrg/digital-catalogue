@@ -1,4 +1,4 @@
-// src/store/slices/productSlice.ts - Updated with new filters
+// src/store/slices/productSlice.ts - Fixed with proper filter handling
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import {
   ProductState,
@@ -36,7 +36,7 @@ export const fetchProducts = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const apiParams = {
+      const apiParams: any = {
         page: params?.page || 1,
         limit: params?.limit || 50,
         category: params?.filters?.category || "",
@@ -47,10 +47,23 @@ export const fetchProducts = createAsyncThunk(
         tags: params?.filters?.tags || [],
       };
 
+      // Handle price range
+      if (params?.filters?.priceRange) {
+        const [minPrice, maxPrice] = params.filters.priceRange;
+        if (minPrice > 0) {
+          apiParams.minPrice = minPrice;
+        }
+        if (maxPrice < 10000) {
+          apiParams.maxPrice = maxPrice;
+        }
+      }
+
       // Remove empty parameters
       const cleanParams = Object.fromEntries(
         Object.entries(apiParams).filter(([key, value]) => {
           if (key === "page" || key === "limit") return true; // Always include page and limit
+          if (key === "minPrice" || key === "maxPrice")
+            return value !== undefined; // Include price filters
           if (key === "isRecommended") return value === true; // Only include if true
           if (Array.isArray(value)) return value.length > 0; // Only include non-empty arrays
           return value !== "";
@@ -127,7 +140,7 @@ export const searchProducts = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const response = await productAPI.search(query, {
+      const searchParams: any = {
         category: filters?.category || "",
         isRecommended: filters?.isRecommended,
         tags: filters?.tags,
@@ -135,7 +148,20 @@ export const searchProducts = createAsyncThunk(
         sortOrder: filters?.sortOrder || "asc",
         page,
         limit,
-      });
+      };
+
+      // Handle price range
+      if (filters?.priceRange) {
+        const [minPrice, maxPrice] = filters.priceRange;
+        if (minPrice > 0) {
+          searchParams.minPrice = minPrice;
+        }
+        if (maxPrice < 10000) {
+          searchParams.maxPrice = maxPrice;
+        }
+      }
+
+      const response = await productAPI.search(query, searchParams);
 
       return {
         data: response.data || [],
@@ -199,11 +225,24 @@ export const fetchProductsByCategory = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const response = await productAPI.getByCategory(category, {
+      const categoryParams = {
         page,
         limit,
         ...params,
-      });
+      };
+
+      // Handle price range
+      if (params?.priceRange) {
+        const [minPrice, maxPrice] = params.priceRange;
+        if (minPrice > 0) {
+          categoryParams.minPrice = minPrice;
+        }
+        if (maxPrice < 10000) {
+          categoryParams.maxPrice = maxPrice;
+        }
+      }
+
+      const response = await productAPI.getByCategory(category, categoryParams);
 
       return {
         data: response.data || [],
@@ -239,11 +278,24 @@ export const fetchProductsByTags = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const response = await productAPI.getByTags(tags, {
+      const tagParams = {
         page,
         limit,
         ...params,
-      });
+      };
+
+      // Handle price range
+      if (params?.priceRange) {
+        const [minPrice, maxPrice] = params.priceRange;
+        if (minPrice > 0) {
+          tagParams.minPrice = minPrice;
+        }
+        if (maxPrice < 10000) {
+          tagParams.maxPrice = maxPrice;
+        }
+      }
+
+      const response = await productAPI.getByTags(tags, tagParams);
 
       return {
         data: response.data || [],
