@@ -5,7 +5,7 @@ import { whatsappFlowService } from "@/lib/whatsappFlowService";
 
 const VERIFY_TOKEN = "digital_catalogue_webhook_2025_secure";
 const WHATSAPP_ACCESS_TOKEN =
-  "EAASGzwVtiEMBPcW3otTylVeAB8yF5uiq697ZAdiA7qx9ErLCTCWaCKSjt2M4tYjx5gF6lN3OUArSFKDmK3gfOmpZAuptZBG3r9bm8ZBtKd9uPXIufLw7ZCsjdmhsxZA8A7KcrVqFolFqZAzgPQTLolkPO4EEZABGHmve8sXTxtb3SygW29juxbqZAWhYwGrJBqoaGqDtVJZC7JWsGKDJpMJtC3xTytjJ91vEv5GkRZAKZCXUW9cZD";
+  "EAASGzwVtiEMBPt4e2LEZAdCIZBWzvwwzqKQo8hzBnuRbObShSjTBEXv1ZBkPBtHdoBBxJmCHSScdzXphTsRZBkL6qKBklQV0DEPx2mz5dZAJjEIdgjxLv3S7rfdqx48u8QYwDDW8MYB6I5AI4ZCZBoOoWpBXicAx59iG5O7VzFTLyeB2K4DcZAjU9VQEgNNnCJd9JsMoIcIkaDKw9RZBx2iu4weCTNyZAGABLFJcf66v9HzpgZD";
 const WHATSAPP_API_URL = "https://graph.facebook.com/v22.0";
 const WHATSAPP_PHONE_ID = "802685189585173";
 
