@@ -1,4 +1,28 @@
-// src/types/index.ts - Updated Product interface with new fields
+// src/types/index.ts - Updated Product interface with Discount support
+
+// Discount interfaces
+export interface QuantityDiscount {
+  minQuantity: number;
+  maxQuantity: number;
+  discountType: "percentage" | "fixed";
+  discountValue: number;
+  label?: string;
+}
+
+export interface SimpleDiscount {
+  discountType: "percentage" | "fixed";
+  discountValue: number;
+}
+
+export interface ProductDiscount {
+  isActive: boolean;
+  type: "simple" | "quantity-based" | "both";
+  simpleDiscount?: SimpleDiscount;
+  quantityDiscounts?: QuantityDiscount[];
+  startDate?: Date | string;
+  endDate?: Date | string;
+  maxDiscountAmount?: number;
+}
 
 export interface Product {
   id: string;
@@ -14,13 +38,14 @@ export interface Product {
     | "box"
     | "bags"
     | "pieces"
-    | "other"; // New field
+    | "other";
   category: string;
   images: string[];
   stock: number;
   isEligibleForFreeDelivery: boolean;
-  isRecommended: boolean; // New field for recommended products
-  tags: string[]; // New field for product tags
+  isRecommended: boolean;
+  tags: string[];
+  discount?: ProductDiscount; // NEW: Discount field
   createdAt: string;
   updatedAt: string;
 }
@@ -166,10 +191,10 @@ export interface ProductFilters {
   category: string;
   priceRange: [number, number];
   searchQuery: string;
-  sortBy: "name" | "price" | "newest";
+  sortBy: "name" | "price" | "newest" | "recommended";
   sortOrder: "asc" | "desc";
-  tags?: string[]; // New filter for tags
-  isRecommended?: boolean; // New filter for recommended products
+  tags?: string[];
+  isRecommended?: boolean;
 }
 
 export interface CartState {

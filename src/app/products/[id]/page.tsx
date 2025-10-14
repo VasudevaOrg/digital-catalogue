@@ -1,4 +1,4 @@
-// src/app/products/[id]/page.tsx - Updated Product Detail Page
+// src/app/products/[id]/page.tsx - Product Detail with Discount Support
 "use client";
 
 import { useEffect, useState } from "react";
@@ -10,6 +10,14 @@ import { addToCart } from "@/store/slices/cartSlice";
 import { showSuccessNotification } from "@/store/slices/uiSlice";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { WEIGHT_UNIT_LABELS } from "@/types";
+import {
+  calculateProductDiscount,
+  isDiscountActive,
+  getSavingsMessage,
+} from "@/lib/discountUtils";
+import { DiscountBadge } from "@/components/product/DiscountBadge";
+import { DiscountPriceDisplay } from "@/components/product/DiscountPriceDisplay";
+import { QuantityDiscountTiers } from "@/components/product/QuantityDiscountTiers";
 import {
   ShoppingCart,
   Plus,
@@ -26,6 +34,8 @@ import {
   Zap,
   Weight,
   Info,
+  Clock,
+  Percent,
 } from "lucide-react";
 
 export default function ProductDetailPage() {
@@ -54,61 +64,8 @@ export default function ProductDetailPage() {
     }
   };
 
-  // Get tag icon based on tag name
-  const getTagIcon = (tag: string) => {
-    switch (tag.toLowerCase()) {
-      case "recommended":
-        return <Trophy className="w-4 h-4" />;
-      case "best-selling":
-        return <Star className="w-4 h-4" />;
-      case "fresh":
-        return <Leaf className="w-4 h-4" />;
-      case "organic":
-        return <Leaf className="w-4 h-4" />;
-      case "premium":
-        return <Award className="w-4 h-4" />;
-      case "new-arrival":
-        return <Zap className="w-4 h-4" />;
-      default:
-        return <Tag className="w-4 h-4" />;
-    }
-  };
-
-  // Get tag color based on tag name
-  const getTagColor = (tag: string) => {
-    switch (tag.toLowerCase()) {
-      case "recommended":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "best-selling":
-        return "bg-purple-100 text-purple-800 border-purple-200";
-      case "fresh":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "organic":
-        return "bg-emerald-100 text-emerald-800 border-emerald-200";
-      case "premium":
-        return "bg-indigo-100 text-indigo-800 border-indigo-200";
-      case "new-arrival":
-        return "bg-blue-100 text-blue-800 border-blue-200";
-      case "discounted":
-        return "bg-red-100 text-red-800 border-red-200";
-      case "limited-offer":
-        return "bg-orange-100 text-orange-800 border-orange-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
-
-  // Format weight display
-  const formatWeight = () => {
-    if (!product) return "";
-    const unit = WEIGHT_UNIT_LABELS[product.weightUnit] || product.weightUnit;
-    if (product.weightUnit === "grams" && product.weight >= 1000) {
-      return `${(product.weight / 1000).toFixed(1)} kg`;
-    }
-    if (product.weightUnit === "ml" && product.weight >= 1000) {
-      return `${(product.weight / 1000).toFixed(1)} L`;
-    }
-    return `${product.weight} ${unit.split(" ")[1] || unit}`;
+  const handleQuantityClick = (newQuantity: number) => {
+    setQuantity(Math.min(product?.stock || 1, newQuantity));
   };
 
   if (isLoading || !product) {
@@ -120,6 +77,22 @@ export default function ProductDetailPage() {
   }
 
   const isOutOfStock = product.stock === 0;
+  const hasDiscount = product.discount && isDiscountActive(product.discount);
+  const discountCalc = hasDiscount
+    ? calculateProductDiscount(product, quantity)
+    : null;
+
+  // Format weight display
+  const formatWeight = () => {
+    const unit = WEIGHT_UNIT_LABELS[product.weightUnit] || product.weightUnit;
+    if (product.weightUnit === "grams" && product.weight >= 1000) {
+      return `${(product.weight / 1000).toFixed(1)} kg`;
+    }
+    if (product.weightUnit === "ml" && product.weight >= 1000) {
+      return `${(product.weight / 1000).toFixed(1)} L`;
+    }
+    return `${product.weight} ${unit.split(" ")[1] || unit}`;
+  };
 
   return (
     <div className="bg-gray-50 min-h-screen py-4 sm:py-8">
@@ -147,8 +120,19 @@ export default function ProductDetailPage() {
                       className="object-cover"
                     />
 
+                    {/* Discount Badge on Image */}
+                    {hasDiscount && (
+                      <div className="absolute top-4 right-4">
+                        <DiscountBadge
+                          product={product}
+                          quantity={quantity}
+                          showSavings={true}
+                        />
+                      </div>
+                    )}
+
                     {/* Recommended Badge on Image */}
-                    {product.isRecommended && (
+                    {product.isRecommended && !hasDiscount && (
                       <div className="absolute top-4 left-4">
                         <span className="bg-yellow-500 text-white px-3 py-2 text-sm font-bold rounded-full flex items-center shadow-lg">
                           <Trophy className="w-4 h-4 mr-2" />
@@ -203,12 +187,10 @@ export default function ProductDetailPage() {
                     {product.tags.map((tag, index) => (
                       <span
                         key={index}
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getTagColor(
-                          tag
-                        )}`}
+                        className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border bg-gray-50 text-gray-800 border-gray-200"
                       >
-                        {getTagIcon(tag)}
-                        <span className="ml-2 capitalize">
+                        <Tag className="w-3 h-3 mr-1" />
+                        <span className="capitalize">
                           {tag.replace("-", " ")}
                         </span>
                       </span>
@@ -224,23 +206,49 @@ export default function ProductDetailPage() {
                 </p>
               </div>
 
-              {/* Price and Weight */}
-              <div className="mb-4 sm:mb-6">
-                <div className="flex items-baseline mb-2">
-                  <span className="text-2xl sm:text-3xl font-medium text-gray-900">
-                    ₹{product.price}
-                  </span>
-                  <span className="text-gray-500 ml-2 text-sm sm:text-base">
-                    per {formatWeight()}
-                  </span>
-                </div>
+              {/* Price and Discount */}
+              <div className="mb-4 sm:mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                <DiscountPriceDisplay
+                  product={product}
+                  quantity={quantity}
+                  showOriginalPrice={true}
+                  className="mb-2"
+                  discountedPriceClassName="text-3xl font-bold text-green-600"
+                  originalPriceClassName="text-xl text-gray-500 line-through"
+                />
 
-                {/* Weight Information */}
-                <div className="flex items-center text-gray-600 text-sm">
-                  <Weight className="w-4 h-4 mr-2" />
-                  <span>Weight: {formatWeight()} per unit</span>
+                {hasDiscount &&
+                  discountCalc &&
+                  discountCalc.discountAmount > 0 && (
+                    <div className="text-sm text-green-700 font-medium flex items-center gap-2">
+                      <Percent className="w-4 h-4" />
+                      <span>
+                        {getSavingsMessage(
+                          discountCalc.originalPrice,
+                          discountCalc.discountedPrice
+                        )}
+                      </span>
+                    </div>
+                  )}
+
+                <div className="text-sm text-gray-600 mt-2">
+                  Price per {formatWeight()} • Total:{" "}
+                  {(quantity * product.weight).toFixed(2)}{" "}
+                  {WEIGHT_UNIT_LABELS[product.weightUnit]?.split(" ")[1] ||
+                    product.weightUnit}
                 </div>
               </div>
+
+              {/* Quantity Discount Tiers */}
+              {hasDiscount && product.discount?.type !== "simple" && (
+                <div className="mb-6">
+                  <QuantityDiscountTiers
+                    product={product}
+                    currentQuantity={quantity}
+                    onQuantityClick={handleQuantityClick}
+                  />
+                </div>
+              )}
 
               {/* Rating */}
               <div className="flex items-center mb-4">
@@ -341,6 +349,23 @@ export default function ProductDetailPage() {
                     </p>
                   </div>
                 </div>
+
+                {hasDiscount && product.discount?.endDate && (
+                  <div className="flex items-start">
+                    <Clock className="w-5 h-5 text-orange-600 mr-3 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-gray-800">
+                        Limited Time Offer
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Offer ends on{" "}
+                        {new Date(
+                          product.discount.endDate
+                        ).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex items-start">
                   <Info className="w-5 h-5 text-purple-600 mr-3 mt-0.5" />

@@ -1,4 +1,4 @@
-// src/components/product/ProductCard.tsx - Updated with new fields
+// src/components/product/ProductCard.tsx - Updated with Discount Support
 "use client";
 
 import { useState } from "react";
@@ -9,7 +9,14 @@ import { useAppDispatch } from "@/store";
 import { addToCart } from "@/store/slices/cartSlice";
 import { showSuccessNotification } from "@/store/slices/uiSlice";
 import { Product, WEIGHT_UNIT_LABELS } from "@/types";
-import { ProductCardSkeleton } from "@/components/ui/SkeletonLoader";
+import {
+  calculateProductDiscount,
+  isDiscountActive,
+} from "@/lib/discountUtils";
+import { ProductCardSkeleton } from "../ui/SkeletonLoader";
+import { DiscountBadgeCompact } from "@/components/product/DiscountBadge";
+import { DiscountPriceDisplay } from "@/components/product/DiscountPriceDisplay";
+import { QuantityDiscountBadge } from "./QuantityDiscountTiers";
 import {
   ShoppingCart,
   Star,
@@ -18,6 +25,7 @@ import {
   Leaf,
   Award,
   Tag,
+  TrendingUp,
 } from "lucide-react";
 
 interface ProductCardProps {
@@ -37,6 +45,7 @@ export function ProductCard({
 }: ProductCardProps) {
   const dispatch = useAppDispatch();
   const [imageLoading, setImageLoading] = useState(true);
+  const [quantity, setQuantity] = useState(1);
 
   // Show skeleton if loading
   if (isLoading) {
@@ -47,11 +56,13 @@ export function ProductCard({
     e.preventDefault();
     e.stopPropagation();
 
-    dispatch(addToCart({ product, quantity: 1 }));
+    dispatch(addToCart({ product, quantity }));
     dispatch(showSuccessNotification(`${product.name} added to cart!`));
+    setQuantity(1);
   };
 
   const isOutOfStock = product.stock === 0;
+  const hasDiscount = product.discount && isDiscountActive(product.discount);
 
   // Get tag icon based on tag name
   const getTagIcon = (tag: string) => {
@@ -129,6 +140,11 @@ export function ProductCard({
               className="block flex-shrink-0"
             >
               <div className="relative w-24 h-24 overflow-hidden bg-gray-50 rounded-lg">
+                {/* Discount Badge */}
+                {hasDiscount && (
+                  <DiscountBadgeCompact product={product} quantity={quantity} />
+                )}
+
                 {imageLoading && (
                   <div className="absolute inset-0 bg-gray-200 animate-pulse" />
                 )}
@@ -212,17 +228,25 @@ export function ProductCard({
                 </p>
               </Link>
 
+              {/* Quantity Discount Badge */}
+              {hasDiscount && product.discount?.type !== "simple" && (
+                <div className="mb-2">
+                  <QuantityDiscountBadge product={product} />
+                </div>
+              )}
+
               <div className="flex items-end justify-between">
                 <div className="flex flex-col">
-                  <div className="flex items-baseline">
-                    <span className="text-lg font-bold text-gray-800">
-                      ₹{product.price}
-                    </span>
-                    <span className="text-sm text-gray-500 ml-1">
-                      per {formatWeight()}
-                    </span>
+                  {/* Price Display with Discount */}
+                  <DiscountPriceDisplay
+                    product={product}
+                    quantity={quantity}
+                    className="mb-1"
+                  />
+                  <div className="text-sm text-gray-500">
+                    per {formatWeight()}
                   </div>
-                  <div className="text-sm text-green-600">
+                  <div className="text-sm text-green-600 mt-1">
                     {product.stock} units available
                   </div>
                 </div>
@@ -271,6 +295,11 @@ export function ProductCard({
         {/* Image Container */}
         <Link href={`/products/${product.id}`} className="block">
           <div className="relative aspect-square overflow-hidden bg-gray-50">
+            {/* Discount Badge */}
+            {hasDiscount && (
+              <DiscountBadgeCompact product={product} quantity={quantity} />
+            )}
+
             {/* Image Loading Skeleton */}
             {imageLoading && (
               <div className="absolute inset-0 bg-gray-200 animate-pulse" />
@@ -295,7 +324,7 @@ export function ProductCard({
             )}
 
             {/* Recommended Badge */}
-            {product.isRecommended && (
+            {product.isRecommended && !hasDiscount && (
               <div className="absolute top-2 left-2">
                 <span className="bg-yellow-500 text-white px-2 py-1 text-xs font-bold rounded-full flex items-center shadow-lg">
                   <Trophy className="w-3 h-3 mr-1" />
@@ -331,7 +360,7 @@ export function ProductCard({
           {/* Tags */}
           {product.tags && product.tags.length > 0 && (
             <div className="flex flex-wrap gap-1 mb-2">
-              {product.tags.slice(0, 3).map((tag, tagIndex) => (
+              {product.tags.slice(0, 2).map((tag, tagIndex) => (
                 <span
                   key={tagIndex}
                   className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium border ${getTagColor(
@@ -361,26 +390,30 @@ export function ProductCard({
             </p>
           </Link>
 
-          {/* Price and Stock Info */}
-          <div className="flex items-end justify-between mb-3">
-            <div className="flex flex-col">
-              <div className="flex items-baseline">
-                <span className="text-lg sm:text-xl font-bold text-gray-800">
-                  ₹{product.price}
-                </span>
-                <span className="text-xs text-gray-500 ml-1">
-                  per {formatWeight()}
-                </span>
-              </div>
+          {/* Quantity Discount Info */}
+          {hasDiscount && product.discount?.type !== "simple" && (
+            <div className="mb-2">
+              <QuantityDiscountBadge product={product} />
             </div>
-            <div className="text-right">
-              <div className="text-xs text-gray-500">Available</div>
+          )}
+
+          {/* Price and Stock Info */}
+          <div className="mb-3">
+            <DiscountPriceDisplay
+              product={product}
+              quantity={quantity}
+              className="mb-1"
+            />
+            <div className="flex items-baseline text-xs text-gray-500">
+              <span>per {formatWeight()}</span>
+            </div>
+            <div className="mt-1">
               <div
                 className={`text-xs font-medium ${
                   product.stock < 10 ? "text-orange-600" : "text-green-600"
                 }`}
               >
-                {product.stock} units
+                {product.stock} units available
               </div>
             </div>
           </div>
