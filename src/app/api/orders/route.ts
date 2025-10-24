@@ -1,4 +1,4 @@
-// src/app/api/orders/route.ts
+// src/app/api/orders/route.ts - Complete Updated with Discount Support
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Order from "@/models/Order";
@@ -17,37 +17,54 @@ export async function POST(request: NextRequest) {
     const orderId = generateOrderId();
     const invoiceNumber = generateInvoiceNumber();
 
-    // Prepare order items with detailed information
-    const orderItems = orderData.items.map((item: any) => ({
-      product: {
-        id: item.product.id,
-        name: item.product.name,
-        description: item.product.description || "",
-        price: item.product.price,
-        weight: item.product.weight,
-        category: item.product.category,
-        images: item.product.images || [],
-      },
-      quantity: item.quantity,
-      price: item.product.price,
-      totalPrice: item.product.price * item.quantity,
-      weight: item.product.weight,
-      totalWeight: item.product.weight * item.quantity,
-    }));
+    // Prepare order items with DISCOUNTED prices
+    const orderItems = orderData.items.map((item: any) => {
+      // Use the price already calculated in checkout (which includes discount)
+      const unitPrice = item.product.price; // This is already the discounted price from checkout
+      const totalPrice = unitPrice * item.quantity;
+      const totalWeight = item.product.weight * item.quantity;
 
-    // Calculate totals
-    const subtotal = orderItems.reduce(
-      (sum: number, item: any) => sum + item.totalPrice,
-      0
-    );
+      return {
+        product: {
+          id: item.product.id,
+          name: item.product.name,
+          description: item.product.description || "",
+          price: unitPrice, // Store discounted unit price
+          originalPrice: item.product.originalPrice || unitPrice, // Store original price if available
+          weight: item.product.weight,
+          category: item.product.category,
+          images: item.product.images || [],
+          discount: item.product.discount, // Store discount information
+        },
+        quantity: item.quantity,
+        price: unitPrice, // Unit price (discounted)
+        totalPrice: totalPrice, // Total for this item (discounted)
+        weight: item.product.weight,
+        totalWeight: totalWeight,
+        appliedDiscount: item.appliedDiscount || 0, // Track discount applied
+        savings: item.savings || 0, // Track savings
+      };
+    });
+
+    // Calculate totals using DISCOUNTED prices
+    const subtotal =
+      orderData.subtotal ||
+      orderItems.reduce((sum: number, item: any) => sum + item.totalPrice, 0);
+
     const deliveryFee = orderData.deliveryFee || 0;
     const totalAmount = subtotal + deliveryFee;
+
     const totalWeight = orderItems.reduce(
       (sum: number, item: any) => sum + item.totalWeight,
       0
     );
 
-    // Create the order document - CONFIRMED by default
+    const totalSavings = orderItems.reduce(
+      (sum: number, item: any) => sum + (item.savings || 0),
+      0
+    );
+
+    // Create the order document with discounted prices
     const newOrder = new Order({
       orderId,
       invoiceNumber,
@@ -59,21 +76,23 @@ export async function POST(request: NextRequest) {
         email: orderData.customerInfo.email || null,
       },
 
-      // Order Items
+      // Order Items (with discounted prices)
       items: orderItems,
 
-      // Financial Details
-      totalAmount,
+      // Financial Details (using discounted totals)
+      totalAmount, // Total with discounts applied
+      originalAmount: orderData.originalAmount, // Original total without discounts
+      totalSavings, // Total savings from discounts
       totalWeight,
       deliveryFee,
-      subtotal,
+      subtotal, // Subtotal with discounts applied
 
       // Order Details
       deliveryType: orderData.deliveryType,
       paymentMethod: orderData.paymentMethod,
       paymentStatus:
         orderData.paymentMethod === "prepaid" ? "pending" : "pending",
-      orderStatus: "confirmed", // CHANGED: Start with confirmed status
+      orderStatus: "confirmed",
 
       // Delivery Information
       deliveryAddress: orderData.deliveryAddress || null,
@@ -83,24 +102,26 @@ export async function POST(request: NextRequest) {
       orderNotes: orderData.orderNotes || null,
       estimatedDeliveryDate:
         orderData.deliveryType === "delivery"
-          ? new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours from now
-          : new Date(Date.now() + 4 * 60 * 60 * 1000), // 4 hours from now
+          ? new Date(Date.now() + 24 * 60 * 60 * 1000)
+          : new Date(Date.now() + 4 * 60 * 60 * 1000),
 
       // Communication
-      whatsappMessageId: null, // Will be updated after WhatsApp message is sent
+      whatsappMessageId: null,
       whatsappStatus: null,
 
-      // Status History (automatically added by pre-save middleware)
+      // Status History
       statusHistory: [],
     });
 
     // Save the order to database
     const savedOrder = await newOrder.save();
 
-    console.log(
-      "✅ Order saved to database with CONFIRMED status:",
-      savedOrder._id
-    );
+    console.log("✅ Order saved with discounted prices:", {
+      orderId: savedOrder.orderId,
+      totalAmount: savedOrder.totalAmount,
+      originalAmount: orderData.originalAmount,
+      savings: totalSavings,
+    });
 
     // Format response
     const response = {
@@ -112,27 +133,33 @@ export async function POST(request: NextRequest) {
         customerInfo: savedOrder.customerInfo,
         items: savedOrder.items,
         totalAmount: savedOrder.totalAmount,
+        originalAmount: orderData.originalAmount,
+        totalSavings: totalSavings,
         totalWeight: savedOrder.totalWeight,
         deliveryFee: savedOrder.deliveryFee,
         subtotal: savedOrder.subtotal,
         deliveryType: savedOrder.deliveryType,
         paymentMethod: savedOrder.paymentMethod,
         paymentStatus: savedOrder.paymentStatus,
-        orderStatus: savedOrder.orderStatus, // Will be "confirmed"
+        orderStatus: savedOrder.orderStatus,
         deliveryAddress: savedOrder.deliveryAddress,
         isEligibleForFreeDelivery: savedOrder.isEligibleForFreeDelivery,
         estimatedDeliveryDate: savedOrder.estimatedDeliveryDate,
         createdAt: savedOrder.createdAt,
         statusHistory: savedOrder.statusHistory,
       },
-      message: "Order confirmed successfully",
+      message:
+        totalSavings > 0
+          ? `Order confirmed successfully! You saved ₹${totalSavings.toFixed(
+              2
+            )}`
+          : "Order confirmed successfully",
     };
 
     return NextResponse.json(response, { status: 201 });
   } catch (error) {
     console.error("❌ Create order error:", error);
 
-    // Handle specific MongoDB errors
     if (error instanceof Error) {
       if (error.message.includes("duplicate key")) {
         return NextResponse.json(
@@ -207,6 +234,8 @@ export async function GET(request: NextRequest) {
       customerInfo: order.customerInfo,
       items: order.items,
       totalAmount: order.totalAmount,
+      originalAmount: order.originalAmount,
+      totalSavings: order.totalSavings,
       totalWeight: order.totalWeight,
       deliveryFee: order.deliveryFee,
       deliveryType: order.deliveryType,

@@ -1,4 +1,4 @@
-// src/app/checkout/page.tsx - Responsive Version
+// src/app/checkout/page.tsx - Complete Updated Version with Discount Support
 "use client";
 
 import { useState, useEffect } from "react";
@@ -163,37 +163,6 @@ export default function CheckoutPage() {
     return `ORD${timestamp}${random}`;
   };
 
-  const sendWhatsAppMessage = async (phoneNumber: string, orderData: any) => {
-    try {
-      console.log("📱 Sending WhatsApp message to:", phoneNumber);
-
-      const response = await fetch("/api/whatsapp/send", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          phoneNumber: phoneNumber,
-          message: "",
-          messageType: "order_enquiry",
-          orderData: orderData,
-        }),
-      });
-
-      const data = await response.json();
-      console.log("📨 WhatsApp API Response:", data);
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to send WhatsApp message");
-      }
-
-      return data;
-    } catch (error) {
-      console.error("❌ WhatsApp API error:", error);
-      throw error;
-    }
-  };
-
   const handlePlaceOrder = async () => {
     if (!validateForm()) return;
 
@@ -201,6 +170,64 @@ export default function CheckoutPage() {
 
     try {
       const orderId = generateOrderId();
+
+      // Calculate items with discounted prices
+      const orderItems = cart.items.map((item) => {
+        const hasDiscount =
+          item.product.discount && isDiscountActive(item.product.discount);
+
+        if (hasDiscount) {
+          const discountCalc = calculateProductDiscount(
+            item.product,
+            item.quantity
+          );
+
+          return {
+            product: {
+              id: item.product.id,
+              name: item.product.name,
+              description: item.product.description || "",
+              price: discountCalc.discountedPrice / item.quantity, // Discounted unit price
+              originalPrice: item.product.price, // Store original price
+              weight: item.product.weight,
+              category: item.product.category,
+              images: item.product.images || [],
+              discount: item.product.discount, // Include discount info
+            },
+            quantity: item.quantity,
+            appliedDiscount: discountCalc.discountAmount, // Track discount applied
+            savings: discountCalc.discountAmount, // Track savings
+          };
+        } else {
+          return {
+            product: {
+              id: item.product.id,
+              name: item.product.name,
+              description: item.product.description || "",
+              price: item.product.price,
+              weight: item.product.weight,
+              category: item.product.category,
+              images: item.product.images || [],
+            },
+            quantity: item.quantity,
+          };
+        }
+      });
+
+      // Calculate total with discounts
+      const subtotal = orderItems.reduce((sum, item) => {
+        return sum + item.product.price * item.quantity;
+      }, 0);
+
+      const totalSavings = orderItems.reduce((sum, item) => {
+        return sum + (item.savings || 0);
+      }, 0);
+
+      // Calculate original amount (without discounts)
+      const originalAmount = cart.items.reduce((sum, item) => {
+        return sum + item.product.price * item.quantity;
+      }, 0);
+
       const orderData = {
         orderId,
         customerInfo: {
@@ -209,33 +236,29 @@ export default function CheckoutPage() {
             .replace(/\D/g, "")
             .replace(/^91/, ""),
         },
-        items: cart.items.map((item) => ({
-          product: {
-            id: item.product.id,
-            name: item.product.name,
-            description: item.product.description || "",
-            price: item.product.price,
-            weight: item.product.weight,
-            category: item.product.category,
-            images: item.product.images || [],
-          },
-          quantity: item.quantity,
-        })),
-        totalAmount,
+        items: orderItems,
+        totalAmount: subtotal + deliveryFee, // Total with discounts
+        originalAmount: originalAmount + deliveryFee, // Original total without discounts
+        totalSavings: totalSavings, // Total savings from discounts
         totalWeight: cart.totalWeight,
         deliveryType,
         paymentMethod,
         deliveryAddress:
           deliveryType === "delivery" ? customerInfo.address : null,
         deliveryFee,
+        subtotal: subtotal,
         isEligibleForFreeDelivery: cart.isEligibleForFreeDelivery,
         orderDate: new Date().toISOString(),
         orderNotes: `Order placed via Digital Catalogue website. ${
           deliveryType === "delivery" ? "Home delivery" : "Store pickup"
-        } requested.`,
+        } requested.${
+          totalSavings > 0
+            ? ` Customer saved ₹${totalSavings.toFixed(2)} with discounts.`
+            : ""
+        }`,
       };
 
-      console.log("📦 Creating order with data:", orderData);
+      console.log("📦 Creating order with discounted prices:", orderData);
 
       // Save order to database
       const orderController = new AbortController();
@@ -328,6 +351,7 @@ export default function CheckoutPage() {
 Order Details:
 • Order ID: ${savedOrder.orderId}
 • Invoice: ${savedOrder.invoiceNumber}
+${totalSavings > 0 ? `• You saved: ₹${totalSavings.toFixed(2)}` : ""}
 • WhatsApp confirmation sent to +91${orderData.customerInfo.phoneNumber}
 
 Please check your WhatsApp for complete order details and next steps.`
@@ -336,6 +360,7 @@ Please check your WhatsApp for complete order details and next steps.`
 Order Details:
 • Order ID: ${savedOrder.orderId}
 • Invoice: ${savedOrder.invoiceNumber}
+${totalSavings > 0 ? `• You saved: ₹${totalSavings.toFixed(2)}` : ""}
 
 WhatsApp notification: ${whatsappResult.error || "Failed to send"}
 

@@ -1,4 +1,4 @@
-// src/models/Order.ts
+// src/models/Order.ts - Complete Updated Model with Discount Support
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IOrderItem extends Document {
@@ -6,16 +6,20 @@ export interface IOrderItem extends Document {
     id: string;
     name: string;
     description: string;
-    price: number;
+    price: number; // Discounted price (if applicable)
+    originalPrice?: number; // Original price before discount
     weight: number;
     category: string;
     images: string[];
+    discount?: any; // Store discount details
   };
   quantity: number;
-  price: number;
-  totalPrice: number;
+  price: number; // Unit price (discounted)
+  totalPrice: number; // Total for this item (discounted)
   weight: number;
   totalWeight: number;
+  appliedDiscount?: number; // Amount of discount applied to this item
+  savings?: number; // Amount saved on this item
 }
 
 export interface IOrder extends Document {
@@ -32,20 +36,19 @@ export interface IOrder extends Document {
   // Order Items
   items: IOrderItem[];
 
-  // Financial Details
-  totalAmount: number;
+  // Financial Details (with discount support)
+  totalAmount: number; // Total with discounts applied
+  originalAmount?: number; // Original total without discounts
+  totalSavings?: number; // Total savings from discounts
   totalWeight: number;
   deliveryFee: number;
-  subtotal: number;
+  subtotal: number; // Subtotal with discounts applied
 
   // Order Details
   deliveryType: "delivery" | "pickup";
   paymentMethod: "prepaid" | "cash_on_pickup";
   paymentStatus: "pending" | "paid" | "failed" | "refunded";
-  orderStatus:
-    | "confirmed" // Changed: Start with confirmed, removed pending
-    | "delivered"
-    | "cancelled";
+  orderStatus: "confirmed" | "delivered" | "cancelled";
 
   // Delivery Information
   deliveryAddress?: {
@@ -81,16 +84,20 @@ const OrderItemSchema = new Schema({
     id: { type: String, required: true },
     name: { type: String, required: true },
     description: { type: String, required: true },
-    price: { type: Number, required: true },
+    price: { type: Number, required: true }, // Discounted price
+    originalPrice: { type: Number }, // Original price before discount
     weight: { type: Number, required: true },
     category: { type: String, required: true },
     images: [{ type: String }],
+    discount: { type: Schema.Types.Mixed }, // Store discount info
   },
   quantity: { type: Number, required: true, min: 1 },
-  price: { type: Number, required: true },
-  totalPrice: { type: Number, required: true },
+  price: { type: Number, required: true }, // Unit price (discounted)
+  totalPrice: { type: Number, required: true }, // Total (discounted)
   weight: { type: Number, required: true },
   totalWeight: { type: Number, required: true },
+  appliedDiscount: { type: Number, default: 0 }, // Discount amount
+  savings: { type: Number, default: 0 }, // Savings amount
 });
 
 const OrderSchema = new Schema<IOrder>(
@@ -118,11 +125,13 @@ const OrderSchema = new Schema<IOrder>(
     // Order Items
     items: [OrderItemSchema],
 
-    // Financial Details
-    totalAmount: { type: Number, required: true, min: 0 },
+    // Financial Details (with discount support)
+    totalAmount: { type: Number, required: true, min: 0 }, // With discounts
+    originalAmount: { type: Number, min: 0 }, // Without discounts
+    totalSavings: { type: Number, min: 0, default: 0 }, // Total savings
     totalWeight: { type: Number, required: true, min: 0 },
     deliveryFee: { type: Number, required: true, min: 0 },
-    subtotal: { type: Number, required: true, min: 0 },
+    subtotal: { type: Number, required: true, min: 0 }, // With discounts
 
     // Order Details
     deliveryType: {
@@ -143,12 +152,8 @@ const OrderSchema = new Schema<IOrder>(
     },
     orderStatus: {
       type: String,
-      enum: [
-        "confirmed", // Default status - order is confirmed
-        "delivered", // Order has been delivered/picked up
-        "cancelled", // Order was cancelled
-      ],
-      default: "confirmed", // Changed: Default to confirmed
+      enum: ["confirmed", "delivered", "cancelled"],
+      default: "confirmed",
       index: true,
     },
 
@@ -186,21 +191,27 @@ const OrderSchema = new Schema<IOrder>(
   }
 );
 
-// Indexes
+// Indexes for better query performance
 OrderSchema.index({ createdAt: -1 });
 OrderSchema.index({ "customerInfo.phoneNumber": 1, createdAt: -1 });
 OrderSchema.index({ orderStatus: 1, createdAt: -1 });
 OrderSchema.index({ deliveryType: 1, orderStatus: 1 });
 OrderSchema.index({ "deliveryAddress.pincode": 1 });
+OrderSchema.index({ totalSavings: -1 }); // New index for analytics
 
 // Pre-save middleware to add initial status to history
 OrderSchema.pre("save", function (next) {
   if (this.isNew) {
     // Add initial status to history (confirmed)
+    const savingsNote =
+      this.totalSavings && this.totalSavings > 0
+        ? ` Customer saved ₹${this.totalSavings.toFixed(2)} with discounts.`
+        : "";
+
     this.statusHistory.push({
       status: this.orderStatus,
       timestamp: new Date(),
-      notes: "Order confirmed automatically upon placement",
+      notes: `Order confirmed automatically upon placement.${savingsNote}`,
     });
   } else if (this.isModified("orderStatus")) {
     // Add status change to history
@@ -211,7 +222,7 @@ OrderSchema.pre("save", function (next) {
     });
   }
 
-  // Calculate subtotal
+  // Calculate subtotal (already discounted from items)
   this.subtotal = this.items.reduce((sum, item) => sum + item.totalPrice, 0);
 
   next();
@@ -240,6 +251,19 @@ OrderSchema.methods.addNote = function (note: string) {
   return this.save();
 };
 
+OrderSchema.methods.getTotalWithoutDiscounts = function () {
+  return this.originalAmount || this.totalAmount;
+};
+
+OrderSchema.methods.getDiscountPercentage = function () {
+  if (!this.originalAmount || !this.totalSavings) return 0;
+  return (this.totalSavings / this.originalAmount) * 100;
+};
+
+OrderSchema.methods.hasDiscounts = function () {
+  return this.totalSavings && this.totalSavings > 0;
+};
+
 // Static methods
 OrderSchema.statics.findByPhoneNumber = function (phoneNumber: string) {
   return this.find({ "customerInfo.phoneNumber": phoneNumber }).sort({
@@ -262,9 +286,38 @@ OrderSchema.statics.getOrderStats = function () {
         _id: "$orderStatus",
         count: { $sum: 1 },
         totalAmount: { $sum: "$totalAmount" },
+        totalSavings: { $sum: { $ifNull: ["$totalSavings", 0] } },
+        averageOrderValue: { $avg: "$totalAmount" },
+        averageSavings: { $avg: { $ifNull: ["$totalSavings", 0] } },
       },
     },
   ]);
+};
+
+OrderSchema.statics.getDiscountStats = function () {
+  return this.aggregate([
+    {
+      $match: {
+        totalSavings: { $gt: 0 },
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        ordersWithDiscounts: { $sum: 1 },
+        totalDiscountGiven: { $sum: "$totalSavings" },
+        averageDiscount: { $avg: "$totalSavings" },
+        maxDiscount: { $max: "$totalSavings" },
+        minDiscount: { $min: "$totalSavings" },
+      },
+    },
+  ]);
+};
+
+OrderSchema.statics.findOrdersWithDiscounts = function () {
+  return this.find({
+    totalSavings: { $gt: 0 },
+  }).sort({ totalSavings: -1 });
 };
 
 // Check if the model exists before creating it
