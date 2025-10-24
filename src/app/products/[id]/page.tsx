@@ -1,4 +1,4 @@
-// src/app/products/[id]/page.tsx - Product Detail with Discount Support
+// src/app/products/[id]/page.tsx - Enhanced with Stock Validation
 "use client";
 
 import { useEffect, useState } from "react";
@@ -7,7 +7,10 @@ import Image from "next/image";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { fetchProductById } from "@/store/slices/productSlice";
 import { addToCart } from "@/store/slices/cartSlice";
-import { showSuccessNotification } from "@/store/slices/uiSlice";
+import {
+  showSuccessNotification,
+  showErrorNotification,
+} from "@/store/slices/uiSlice";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { WEIGHT_UNIT_LABELS } from "@/types";
 import {
@@ -36,6 +39,7 @@ import {
   Info,
   Clock,
   Percent,
+  AlertCircle,
 } from "lucide-react";
 
 export default function ProductDetailPage() {
@@ -45,6 +49,7 @@ export default function ProductDetailPage() {
   const productId = params.id as string;
 
   const { products, isLoading } = useAppSelector((state) => state.products);
+  const { cart } = useAppSelector((state) => state.cart);
   const product = products.find((p) => p.id === productId);
 
   const [quantity, setQuantity] = useState(1);
@@ -56,16 +61,59 @@ export default function ProductDetailPage() {
     }
   }, [dispatch, productId, product]);
 
-  const handleAddToCart = () => {
-    if (product) {
-      dispatch(addToCart({ product, quantity }));
-      dispatch(showSuccessNotification(`${product.name} added to cart!`));
-      setQuantity(1);
+  // Calculate remaining stock (considering items already in cart)
+  const getAvailableStock = () => {
+    if (!product) return 0;
+
+    const cartItem = cart.items.find((item) => item.product.id === product.id);
+    const quantityInCart = cartItem?.quantity || 0;
+    const availableStock = product.stock - quantityInCart;
+
+    return Math.max(0, availableStock);
+  };
+
+  const availableStock = getAvailableStock();
+  const isOutOfStock = product?.stock === 0 || availableStock === 0;
+  const isLowStock = availableStock > 0 && availableStock <= 5;
+
+  // Handle quantity change with stock validation
+  const handleQuantityChange = (newQuantity: number) => {
+    if (!product) return;
+
+    const validQuantity = Math.max(1, Math.min(availableStock, newQuantity));
+    setQuantity(validQuantity);
+
+    // Show warning if trying to exceed stock
+    if (newQuantity > availableStock) {
+      dispatch(
+        showErrorNotification(
+          `Only ${availableStock} unit${
+            availableStock !== 1 ? "s" : ""
+          } available for this product`
+        )
+      );
     }
   };
 
+  const handleAddToCart = () => {
+    if (!product) return;
+
+    if (quantity > availableStock) {
+      dispatch(
+        showErrorNotification(
+          `Cannot add ${quantity} units. Only ${availableStock} available.`
+        )
+      );
+      return;
+    }
+
+    dispatch(addToCart({ product, quantity }));
+    dispatch(showSuccessNotification(`${product.name} added to cart!`));
+    setQuantity(1);
+  };
+
   const handleQuantityClick = (newQuantity: number) => {
-    setQuantity(Math.min(product?.stock || 1, newQuantity));
+    handleQuantityChange(Math.min(availableStock, newQuantity));
   };
 
   if (isLoading || !product) {
@@ -76,7 +124,6 @@ export default function ProductDetailPage() {
     );
   }
 
-  const isOutOfStock = product.stock === 0;
   const hasDiscount = product.discount && isDiscountActive(product.discount);
   const discountCalc = hasDiscount
     ? calculateProductDiscount(product, quantity)
@@ -131,8 +178,22 @@ export default function ProductDetailPage() {
                       </div>
                     )}
 
+                    {/* Out of Stock Overlay */}
+                    {isOutOfStock && (
+                      <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center">
+                        <div className="text-center">
+                          <div className="bg-red-600 text-white px-6 py-3 rounded-lg font-bold text-lg mb-2">
+                            OUT OF STOCK
+                          </div>
+                          <p className="text-white text-sm">
+                            Currently Unavailable
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Recommended Badge on Image */}
-                    {product.isRecommended && !hasDiscount && (
+                    {product.isRecommended && !hasDiscount && !isOutOfStock && (
                       <div className="absolute top-4 left-4">
                         <span className="bg-yellow-500 text-white px-3 py-2 text-sm font-bold rounded-full flex items-center shadow-lg">
                           <Trophy className="w-4 h-4 mr-2" />
@@ -206,6 +267,52 @@ export default function ProductDetailPage() {
                 </p>
               </div>
 
+              {/* Stock Status - Prominent Display */}
+              <div className="mb-4 sm:mb-6">
+                {isOutOfStock ? (
+                  <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4">
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 bg-red-500 rounded-full mr-3"></div>
+                      <div>
+                        <p className="text-red-600 font-bold text-lg">
+                          Out of Stock
+                        </p>
+                        <p className="text-red-500 text-sm">
+                          This product is currently unavailable
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : isLowStock ? (
+                  <div className="bg-orange-50 border-2 border-orange-200 rounded-lg p-4">
+                    <div className="flex items-center">
+                      <AlertCircle className="w-5 h-5 text-orange-500 mr-3" />
+                      <div>
+                        <p className="text-orange-600 font-semibold">
+                          Only {availableStock} unit
+                          {availableStock !== 1 ? "s" : ""} left in stock!
+                        </p>
+                        <p className="text-orange-500 text-sm">
+                          Order soon before it's gone
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
+                      <div>
+                        <p className="text-green-600 font-semibold">In Stock</p>
+                        <p className="text-green-500 text-sm">
+                          {availableStock} units available
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Price and Discount */}
               <div className="mb-4 sm:mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
                 <DiscountPriceDisplay
@@ -240,15 +347,17 @@ export default function ProductDetailPage() {
               </div>
 
               {/* Quantity Discount Tiers */}
-              {hasDiscount && product.discount?.type !== "simple" && (
-                <div className="mb-6">
-                  <QuantityDiscountTiers
-                    product={product}
-                    currentQuantity={quantity}
-                    onQuantityClick={handleQuantityClick}
-                  />
-                </div>
-              )}
+              {hasDiscount &&
+                product.discount?.type !== "simple" &&
+                !isOutOfStock && (
+                  <div className="mb-6">
+                    <QuantityDiscountTiers
+                      product={product}
+                      currentQuantity={quantity}
+                      onQuantityClick={handleQuantityClick}
+                    />
+                  </div>
+                )}
 
               {/* Rating */}
               <div className="flex items-center mb-4">
@@ -265,34 +374,22 @@ export default function ProductDetailPage() {
                 </span>
               </div>
 
-              {/* Stock Status */}
-              <div className="mb-4 sm:mb-6">
-                {isOutOfStock ? (
-                  <div className="flex items-center">
-                    <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
-                    <p className="text-red-600 font-medium">Out of Stock</p>
-                  </div>
-                ) : (
-                  <div className="flex items-center">
-                    <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                    <p className="text-green-600">
-                      {product.stock} units available
-                    </p>
-                  </div>
-                )}
-              </div>
-
               {/* Quantity Selector and Add to Cart */}
               {!isOutOfStock && (
                 <div className="mb-6 sm:mb-8">
                   <label className="block text-gray-700 mb-2 font-medium">
                     Quantity
+                    {isLowStock && (
+                      <span className="text-orange-600 text-sm ml-2">
+                        (Max: {availableStock})
+                      </span>
+                    )}
                   </label>
                   <div className="flex items-center space-x-4">
                     <div className="flex items-center border border-gray-300 rounded-lg">
                       <button
-                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                        className="p-2 sm:p-3 hover:bg-gray-50 transition-colors"
+                        onClick={() => handleQuantityChange(quantity - 1)}
+                        className="p-2 sm:p-3 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         disabled={quantity <= 1}
                       >
                         <Minus className="w-4 h-4" />
@@ -301,11 +398,9 @@ export default function ProductDetailPage() {
                         {quantity}
                       </span>
                       <button
-                        onClick={() =>
-                          setQuantity(Math.min(product.stock, quantity + 1))
-                        }
-                        className="p-2 sm:p-3 hover:bg-gray-50 transition-colors"
-                        disabled={quantity >= product.stock}
+                        onClick={() => handleQuantityChange(quantity + 1)}
+                        className="p-2 sm:p-3 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={quantity >= availableStock}
                       >
                         <Plus className="w-4 h-4" />
                       </button>
@@ -313,12 +408,33 @@ export default function ProductDetailPage() {
 
                     <button
                       onClick={handleAddToCart}
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 sm:py-3 px-6 sm:px-8 rounded-lg transition-colors flex items-center justify-center font-medium"
+                      disabled={quantity > availableStock}
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 sm:py-3 px-6 sm:px-8 rounded-lg transition-colors flex items-center justify-center font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <ShoppingCart className="w-5 h-5 mr-2" />
                       Add to Cart
                     </button>
                   </div>
+
+                  {/* Stock warning when approaching limit */}
+                  {quantity >= availableStock && availableStock > 0 && (
+                    <p className="text-orange-600 text-sm mt-2 flex items-center">
+                      <AlertCircle className="w-4 h-4 mr-1" />
+                      You've selected the maximum available quantity
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Out of Stock Message */}
+              {isOutOfStock && (
+                <div className="mb-6 bg-gray-100 border border-gray-300 rounded-lg p-4">
+                  <p className="text-gray-700 font-medium mb-2">
+                    This product is currently out of stock
+                  </p>
+                  <p className="text-gray-600 text-sm">
+                    Check back soon or contact us for restocking information
+                  </p>
                 </div>
               )}
 
@@ -376,6 +492,9 @@ export default function ProductDetailPage() {
                     </p>
                     <p className="text-sm text-gray-600">
                       Category: {product.category}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Available Stock: {availableStock} units
                     </p>
                     {product.tags && product.tags.length > 0 && (
                       <p className="text-sm text-gray-600">

@@ -1,13 +1,16 @@
-// src/components/product/ProductCard.tsx - Updated with Discount Support
+// src/components/product/ProductCard.tsx - Complete with Stock Validation
 "use client";
 
 import { useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { useAppDispatch } from "@/store";
+import { useAppDispatch, useAppSelector } from "@/store";
 import { addToCart } from "@/store/slices/cartSlice";
-import { showSuccessNotification } from "@/store/slices/uiSlice";
+import {
+  showSuccessNotification,
+  showErrorNotification,
+} from "@/store/slices/uiSlice";
 import { Product, WEIGHT_UNIT_LABELS } from "@/types";
 import {
   calculateProductDiscount,
@@ -21,11 +24,9 @@ import {
   ShoppingCart,
   Star,
   Trophy,
-  Zap,
-  Leaf,
-  Award,
   Tag,
-  TrendingUp,
+  AlertCircle,
+  CheckCircle,
 } from "lucide-react";
 
 interface ProductCardProps {
@@ -44,24 +45,43 @@ export function ProductCard({
   layout = "grid",
 }: ProductCardProps) {
   const dispatch = useAppDispatch();
+  const { cart } = useAppSelector((state) => state.cart);
   const [imageLoading, setImageLoading] = useState(true);
-  const [quantity, setQuantity] = useState(1);
 
   // Show skeleton if loading
   if (isLoading) {
     return <ProductCardSkeleton />;
   }
 
+  // Calculate available stock (considering items already in cart)
+  const getAvailableStock = () => {
+    const cartItem = cart.items.find((item) => item.product.id === product.id);
+    const quantityInCart = cartItem?.quantity || 0;
+    const availableStock = product.stock - quantityInCart;
+    return Math.max(0, availableStock);
+  };
+
+  const availableStock = getAvailableStock();
+  const isOutOfStock = product.stock === 0 || availableStock === 0;
+  const isLowStock = availableStock > 0 && availableStock <= 5;
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    dispatch(addToCart({ product, quantity }));
+    // Validate stock before adding
+    if (isOutOfStock) {
+      dispatch(
+        showErrorNotification(`${product.name} is currently out of stock`)
+      );
+      return;
+    }
+
+    // Always add only 1 unit from product card
+    dispatch(addToCart({ product, quantity: 1 }));
     dispatch(showSuccessNotification(`${product.name} added to cart!`));
-    setQuantity(1);
   };
 
-  const isOutOfStock = product.stock === 0;
   const hasDiscount = product.discount && isDiscountActive(product.discount);
 
   // Get tag icon based on tag name
@@ -71,14 +91,6 @@ export function ProductCard({
         return <Trophy className="w-3 h-3" />;
       case "best-selling":
         return <Star className="w-3 h-3" />;
-      case "fresh":
-        return <Leaf className="w-3 h-3" />;
-      case "organic":
-        return <Leaf className="w-3 h-3" />;
-      case "premium":
-        return <Award className="w-3 h-3" />;
-      case "new-arrival":
-        return <Zap className="w-3 h-3" />;
       default:
         return <Tag className="w-3 h-3" />;
     }
@@ -141,8 +153,8 @@ export function ProductCard({
             >
               <div className="relative w-24 h-24 overflow-hidden bg-gray-50 rounded-lg">
                 {/* Discount Badge */}
-                {hasDiscount && (
-                  <DiscountBadgeCompact product={product} quantity={quantity} />
+                {hasDiscount && !isOutOfStock && (
+                  <DiscountBadgeCompact product={product} quantity={1} />
                 )}
 
                 {imageLoading && (
@@ -197,11 +209,6 @@ export function ProductCard({
                           </span>
                         </span>
                       ))}
-                      {product.tags.length > 2 && (
-                        <span className="text-xs text-gray-500">
-                          +{product.tags.length - 2} more
-                        </span>
-                      )}
                     </div>
                   )}
 
@@ -229,25 +236,44 @@ export function ProductCard({
               </Link>
 
               {/* Quantity Discount Badge */}
-              {hasDiscount && product.discount?.type !== "simple" && (
-                <div className="mb-2">
-                  <QuantityDiscountBadge product={product} />
-                </div>
-              )}
+              {hasDiscount &&
+                product.discount?.type !== "simple" &&
+                !isOutOfStock && (
+                  <div className="mb-2">
+                    <QuantityDiscountBadge product={product} />
+                  </div>
+                )}
 
               <div className="flex items-end justify-between">
                 <div className="flex flex-col">
                   {/* Price Display with Discount */}
                   <DiscountPriceDisplay
                     product={product}
-                    quantity={quantity}
+                    quantity={1}
                     className="mb-1"
                   />
                   <div className="text-sm text-gray-500">
                     per {formatWeight()}
                   </div>
-                  <div className="text-sm text-green-600 mt-1">
-                    {product.stock} units available
+
+                  {/* Stock Status */}
+                  <div className="mt-1">
+                    {isOutOfStock ? (
+                      <span className="text-xs text-red-600 font-medium flex items-center">
+                        <AlertCircle className="w-3 h-3 mr-1" />
+                        Out of stock
+                      </span>
+                    ) : isLowStock ? (
+                      <span className="text-xs text-orange-600 font-medium flex items-center">
+                        <AlertCircle className="w-3 h-3 mr-1" />
+                        Only {availableStock} left!
+                      </span>
+                    ) : (
+                      <span className="text-xs text-green-600 font-medium flex items-center">
+                        <CheckCircle className="w-3 h-3 mr-1" />
+                        {availableStock} available
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -296,8 +322,8 @@ export function ProductCard({
         <Link href={`/products/${product.id}`} className="block">
           <div className="relative aspect-square overflow-hidden bg-gray-50">
             {/* Discount Badge */}
-            {hasDiscount && (
-              <DiscountBadgeCompact product={product} quantity={quantity} />
+            {hasDiscount && !isOutOfStock && (
+              <DiscountBadgeCompact product={product} quantity={1} />
             )}
 
             {/* Image Loading Skeleton */}
@@ -324,7 +350,7 @@ export function ProductCard({
             )}
 
             {/* Recommended Badge */}
-            {product.isRecommended && !hasDiscount && (
+            {product.isRecommended && !hasDiscount && !isOutOfStock && (
               <div className="absolute top-2 left-2">
                 <span className="bg-yellow-500 text-white px-2 py-1 text-xs font-bold rounded-full flex items-center shadow-lg">
                   <Trophy className="w-3 h-3 mr-1" />
@@ -391,30 +417,43 @@ export function ProductCard({
           </Link>
 
           {/* Quantity Discount Info */}
-          {hasDiscount && product.discount?.type !== "simple" && (
-            <div className="mb-2">
-              <QuantityDiscountBadge product={product} />
-            </div>
-          )}
+          {hasDiscount &&
+            product.discount?.type !== "simple" &&
+            !isOutOfStock && (
+              <div className="mb-2">
+                <QuantityDiscountBadge product={product} />
+              </div>
+            )}
 
           {/* Price and Stock Info */}
           <div className="mb-3">
             <DiscountPriceDisplay
               product={product}
-              quantity={quantity}
+              quantity={1}
               className="mb-1"
             />
             <div className="flex items-baseline text-xs text-gray-500">
               <span>per {formatWeight()}</span>
             </div>
-            <div className="mt-1">
-              <div
-                className={`text-xs font-medium ${
-                  product.stock < 10 ? "text-orange-600" : "text-green-600"
-                }`}
-              >
-                {product.stock} units available
-              </div>
+
+            {/* Stock Status */}
+            <div className="mt-2">
+              {isOutOfStock ? (
+                <span className="text-xs text-red-600 font-medium flex items-center">
+                  <AlertCircle className="w-3 h-3 mr-1" />
+                  Out of stock
+                </span>
+              ) : isLowStock ? (
+                <span className="text-xs text-orange-600 font-medium flex items-center">
+                  <AlertCircle className="w-3 h-3 mr-1" />
+                  Only {availableStock} left!
+                </span>
+              ) : (
+                <span className="text-xs text-green-600 font-medium flex items-center">
+                  <CheckCircle className="w-3 h-3 mr-1" />
+                  {availableStock} available
+                </span>
+              )}
             </div>
           </div>
 
