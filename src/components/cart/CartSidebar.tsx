@@ -1,4 +1,4 @@
-// src/components/cart/CartSidebar.tsx - Updated with weight units
+// src/components/cart/CartSidebar.tsx - Updated with Discount Display
 "use client";
 
 import { useEffect } from "react";
@@ -11,7 +11,20 @@ import {
   removeFromCart,
 } from "@/store/slices/cartSlice";
 import { WEIGHT_UNIT_LABELS } from "@/types";
-import { X, Plus, Minus, Trash2, ShoppingBag, Weight } from "lucide-react";
+import {
+  calculateProductDiscount,
+  isDiscountActive,
+} from "@/lib/discountUtils";
+import {
+  X,
+  Plus,
+  Minus,
+  Trash2,
+  ShoppingBag,
+  Weight,
+  Tag,
+  Percent,
+} from "lucide-react";
 
 export function CartSidebar() {
   const router = useRouter();
@@ -114,95 +127,143 @@ export function CartSidebar() {
               </div>
             ) : (
               <div className="p-4 sm:p-6 space-y-4">
-                {cart.items.map((item) => (
-                  <div
-                    key={item.product.id}
-                    className="flex space-x-4 pb-4 border-b last:border-b-0"
-                  >
-                    {/* Product Image */}
-                    <div className="relative w-16 sm:w-20 h-16 sm:h-20 bg-gray-100 rounded overflow-hidden flex-shrink-0">
-                      {item.product.images && item.product.images.length > 0 ? (
-                        <Image
-                          src={item.product.images[0]}
-                          alt={item.product.name}
-                          fill
-                          className="object-cover"
-                          sizes="80px"
-                        />
-                      ) : (
-                        <div className="flex items-center justify-center h-full text-gray-400">
-                          <ShoppingBag className="w-6 h-6" />
-                        </div>
-                      )}
-                    </div>
+                {cart.items.map((item) => {
+                  // Calculate discount for this item
+                  const hasDiscount =
+                    item.product.discount &&
+                    isDiscountActive(item.product.discount);
+                  const discountCalc = hasDiscount
+                    ? calculateProductDiscount(item.product, item.quantity)
+                    : null;
 
-                    {/* Product Details */}
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-gray-800 mb-1 text-sm sm:text-base leading-tight">
-                        {item.product.name}
-                      </h4>
+                  const originalPrice = item.product.price * item.quantity;
+                  const finalPrice =
+                    discountCalc?.discountedPrice || originalPrice;
+                  const savings = discountCalc?.discountAmount || 0;
 
-                      {/* Category */}
-                      <p className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded w-fit mb-2">
-                        {item.product.category}
-                      </p>
+                  return (
+                    <div
+                      key={item.product.id}
+                      className="flex space-x-4 pb-4 border-b last:border-b-0"
+                    >
+                      {/* Product Image */}
+                      <div className="relative w-16 sm:w-20 h-16 sm:h-20 bg-gray-100 rounded overflow-hidden flex-shrink-0">
+                        {item.product.images &&
+                        item.product.images.length > 0 ? (
+                          <Image
+                            src={item.product.images[0]}
+                            alt={item.product.name}
+                            fill
+                            className="object-cover"
+                            sizes="80px"
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center h-full text-gray-400">
+                            <ShoppingBag className="w-6 h-6" />
+                          </div>
+                        )}
 
-                      {/* Price and Weight Info */}
-                      <div className="space-y-1 mb-3">
-                        <p className="text-sm text-gray-600">
-                          ₹{item.product.price} × {item.quantity} = ₹
-                          {(item.product.price * item.quantity).toFixed(2)}
+                        {/* Discount Badge */}
+                        {hasDiscount &&
+                          discountCalc &&
+                          discountCalc.discountPercentage > 0 && (
+                            <div className="absolute top-1 right-1">
+                              <div className="bg-red-500 text-white px-1.5 py-0.5 rounded text-xs font-bold">
+                                {discountCalc.discountPercentage.toFixed(0)}%
+                                OFF
+                              </div>
+                            </div>
+                          )}
+                      </div>
+
+                      {/* Product Details */}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-gray-800 mb-1 text-sm sm:text-base leading-tight">
+                          {item.product.name}
+                        </h4>
+
+                        {/* Category */}
+                        <p className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded w-fit mb-2">
+                          {item.product.category}
                         </p>
-                        <div className="flex items-center text-xs text-gray-500">
-                          <Weight className="w-3 h-3 mr-1" />
-                          <span>
-                            {formatWeight(item.product, item.quantity)}
-                          </span>
-                        </div>
-                      </div>
 
-                      {/* Quantity Controls */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-1 sm:space-x-2">
-                          <button
-                            onClick={() =>
-                              handleUpdateQuantity(
-                                item.product.id,
-                                item.quantity - 1
-                              )
-                            }
-                            disabled={item.quantity <= 1}
-                            className="w-6 h-6 sm:w-7 sm:h-7 border rounded flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            <Minus className="w-3 h-3" />
-                          </button>
-                          <span className="w-8 text-center text-sm font-medium">
-                            {item.quantity}
-                          </span>
-                          <button
-                            onClick={() =>
-                              handleUpdateQuantity(
-                                item.product.id,
-                                item.quantity + 1
-                              )
-                            }
-                            disabled={item.quantity >= item.product.stock}
-                            className="w-6 h-6 sm:w-7 sm:h-7 border rounded flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            <Plus className="w-3 h-3" />
-                          </button>
+                        {/* Price with Discount */}
+                        <div className="space-y-1 mb-3">
+                          <div className="flex items-center gap-2">
+                            {hasDiscount && savings > 0 ? (
+                              <>
+                                <span className="text-sm font-bold text-green-600">
+                                  ₹{finalPrice.toFixed(2)}
+                                </span>
+                                <span className="text-xs text-gray-500 line-through">
+                                  ₹{originalPrice.toFixed(2)}
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-sm font-medium text-gray-800">
+                                ₹{finalPrice.toFixed(2)}
+                              </span>
+                            )}
+                          </div>
+
+                          {hasDiscount && savings > 0 && (
+                            <div className="flex items-center text-xs text-green-600 font-medium">
+                              <Tag className="w-3 h-3 mr-1" />
+                              <span>Save ₹{savings.toFixed(2)}</span>
+                            </div>
+                          )}
+
+                          <div className="flex items-center text-xs text-gray-500">
+                            <Weight className="w-3 h-3 mr-1" />
+                            <span>
+                              {formatWeight(item.product, item.quantity)}
+                            </span>
+                          </div>
                         </div>
 
-                        <button
-                          onClick={() => handleRemoveItem(item.product.id)}
-                          className="text-red-500 hover:text-red-700 p-1 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {/* Quantity Controls */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-1 sm:space-x-2">
+                            <button
+                              onClick={() =>
+                                handleUpdateQuantity(
+                                  item.product.id,
+                                  item.quantity - 1
+                                )
+                              }
+                              disabled={item.quantity <= 1}
+                              className="w-6 h-6 sm:w-7 sm:h-7 border rounded flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <Minus className="w-3 h-3" />
+                            </button>
+                            <span className="w-8 text-center text-sm font-medium">
+                              {item.quantity}
+                            </span>
+                            <button
+                              onClick={() =>
+                                handleUpdateQuantity(
+                                  item.product.id,
+                                  item.quantity + 1
+                                )
+                              }
+                              disabled={item.quantity >= item.product.stock}
+                              className="w-6 h-6 sm:w-7 sm:h-7 border rounded flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <Plus className="w-3 h-3" />
+                            </button>
+                          </div>
+
+                          <button
+                            onClick={() => handleRemoveItem(item.product.id)}
+                            className="text-red-500 hover:text-red-700 p-1 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -246,6 +307,43 @@ export function CartSidebar() {
                   <span>₹{totalWithDelivery.toFixed(2)}</span>
                 </div>
               </div>
+
+              {/* Total Savings Banner */}
+              {cart.items.some((item) => {
+                const hasDiscount =
+                  item.product.discount &&
+                  isDiscountActive(item.product.discount);
+                const discountCalc = hasDiscount
+                  ? calculateProductDiscount(item.product, item.quantity)
+                  : null;
+                return discountCalc && discountCalc.discountAmount > 0;
+              }) && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                  <div className="flex items-center text-green-800">
+                    <Percent className="w-4 h-4 mr-2 flex-shrink-0" />
+                    <div className="text-sm">
+                      <span className="font-medium">Total Savings: </span>
+                      <span className="font-bold">
+                        ₹
+                        {cart.items
+                          .reduce((total, item) => {
+                            const hasDiscount =
+                              item.product.discount &&
+                              isDiscountActive(item.product.discount);
+                            const discountCalc = hasDiscount
+                              ? calculateProductDiscount(
+                                  item.product,
+                                  item.quantity
+                                )
+                              : null;
+                            return total + (discountCalc?.discountAmount || 0);
+                          }, 0)
+                          .toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Free Delivery Message */}
               {!cart.isEligibleForFreeDelivery && (

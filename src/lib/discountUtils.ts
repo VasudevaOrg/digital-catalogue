@@ -216,7 +216,8 @@ export const getAvailableQuantityDiscounts = (
     product.discount.type === "quantity-based" ||
     product.discount.type === "both"
   ) {
-    return product.discount.quantityDiscounts.sort(
+    // Create a shallow copy before sorting to avoid mutating the original array
+    return [...product.discount.quantityDiscounts].sort(
       (a, b) => a.minQuantity - b.minQuantity
     );
   }

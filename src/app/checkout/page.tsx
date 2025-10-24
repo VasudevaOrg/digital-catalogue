@@ -29,6 +29,10 @@ import {
   ArrowLeft,
   Weight,
 } from "lucide-react";
+import {
+  calculateProductDiscount,
+  isDiscountActive,
+} from "@/lib/discountUtils";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -965,26 +969,126 @@ Please call us at +91 82971 37702 for order confirmation.`;
               <div className="p-4 sm:p-6">
                 {/* Items */}
                 <div className="space-y-3 mb-6 max-h-64 overflow-y-auto">
-                  {cart.items.map((item) => (
-                    <div key={item.product.id} className="flex justify-between">
-                      <div className="flex-1">
-                        <h4 className="text-sm font-medium text-gray-900">
-                          {item.product.name}
-                        </h4>
-                        <div className="text-xs sm:text-sm text-gray-500">
-                          ₹{item.product.price} × {item.quantity} •{" "}
-                          {(item.product.weight * item.quantity).toFixed(2)}kg
+                  {cart.items.map((item) => {
+                    const hasDiscount =
+                      item.product.discount &&
+                      isDiscountActive(item.product.discount);
+                    const discountCalc = hasDiscount
+                      ? calculateProductDiscount(item.product, item.quantity)
+                      : null;
+
+                    const originalPrice = item.product.price * item.quantity;
+                    const finalPrice =
+                      discountCalc?.discountedPrice || originalPrice;
+                    const savings = discountCalc?.discountAmount || 0;
+
+                    return (
+                      <div
+                        key={item.product.id}
+                        className="flex justify-between"
+                      >
+                        <div className="flex-1">
+                          <h4 className="text-sm font-medium text-gray-900">
+                            {item.product.name}
+                          </h4>
+                          <div className="text-xs sm:text-sm text-gray-500">
+                            {hasDiscount && savings > 0 ? (
+                              <div className="flex flex-col gap-1">
+                                <div>
+                                  <span className="line-through">
+                                    ₹{item.product.price}
+                                  </span>{" "}
+                                  →{" "}
+                                  <span className="text-green-600 font-medium">
+                                    ₹{(finalPrice / item.quantity).toFixed(2)}
+                                  </span>{" "}
+                                  × {item.quantity}
+                                </div>
+                                <div className="text-green-600 font-medium text-xs">
+                                  Save ₹{savings.toFixed(2)}
+                                </div>
+                              </div>
+                            ) : (
+                              <>
+                                ₹{item.product.price} × {item.quantity}
+                              </>
+                            )}
+                            {" • "}
+                            {(item.product.weight * item.quantity).toFixed(2)}kg
+                          </div>
+                        </div>
+                        <div className="text-sm font-medium">
+                          {hasDiscount && savings > 0 ? (
+                            <div className="flex flex-col items-end gap-1">
+                              <span className="text-green-600">
+                                ₹{finalPrice.toFixed(2)}
+                              </span>
+                              <span className="text-xs text-gray-400 line-through">
+                                ₹{originalPrice.toFixed(2)}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-gray-900">
+                              ₹{finalPrice.toFixed(2)}
+                            </span>
+                          )}
                         </div>
                       </div>
-                      <div className="text-sm font-medium text-gray-900">
-                        ₹{(item.product.price * item.quantity).toFixed(2)}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {/* Totals */}
                 <div className="border-t pt-4 space-y-2">
+                  {/* Show original total if there are discounts */}
+                  {cart.items.some((item) => {
+                    const hasDiscount =
+                      item.product.discount &&
+                      isDiscountActive(item.product.discount);
+                    const discountCalc = hasDiscount
+                      ? calculateProductDiscount(item.product, item.quantity)
+                      : null;
+                    return discountCalc && discountCalc.discountAmount > 0;
+                  }) && (
+                    <>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Original Price:</span>
+                        <span className="text-gray-500 line-through">
+                          ₹
+                          {cart.items
+                            .reduce((total, item) => {
+                              return total + item.product.price * item.quantity;
+                            }, 0)
+                            .toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-green-600 font-medium">
+                          Discount Savings:
+                        </span>
+                        <span className="text-green-600 font-medium">
+                          -₹
+                          {cart.items
+                            .reduce((total, item) => {
+                              const hasDiscount =
+                                item.product.discount &&
+                                isDiscountActive(item.product.discount);
+                              const discountCalc = hasDiscount
+                                ? calculateProductDiscount(
+                                    item.product,
+                                    item.quantity
+                                  )
+                                : null;
+                              return (
+                                total + (discountCalc?.discountAmount || 0)
+                              );
+                            }, 0)
+                            .toFixed(2)}
+                        </span>
+                      </div>
+                    </>
+                  )}
+
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Subtotal:</span>
                     <span className="text-gray-900">
