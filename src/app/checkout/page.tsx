@@ -1,15 +1,22 @@
-// src/app/checkout/page.tsx - Complete Updated Version with Discount Support
+// src/app/checkout/page.tsx - Complete Updated with Free Delivery Logic
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/store";
-import { clearCart } from "@/store/slices/cartSlice";
+import {
+  clearCart,
+  isProductEligibleForFreeDelivery,
+} from "@/store/slices/cartSlice";
 import {
   showSuccessNotification,
   showErrorNotification,
 } from "@/store/slices/uiSlice";
 import { CheckoutPageSkeleton } from "@/components/ui/SkeletonLoader";
+import {
+  calculateProductDiscount,
+  isDiscountActive,
+} from "@/lib/discountUtils";
 import {
   Package,
   Truck,
@@ -28,11 +35,8 @@ import {
   Calendar,
   ArrowLeft,
   Weight,
+  Tag,
 } from "lucide-react";
-import {
-  calculateProductDiscount,
-  isDiscountActive,
-} from "@/lib/discountUtils";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -64,6 +68,37 @@ export default function CheckoutPage() {
   const [isDeliveryAvailable, setIsDeliveryAvailable] = useState(true);
   const [deliveryRadius] = useState(10);
 
+  // Calculate eligible and excluded amounts
+  const eligibleAmount = cart.items
+    .filter((item) => isProductEligibleForFreeDelivery(item.product))
+    .reduce((sum, item) => {
+      const hasDiscount =
+        item.product.discount && isDiscountActive(item.product.discount);
+      const discountCalc = hasDiscount
+        ? calculateProductDiscount(item.product, item.quantity)
+        : null;
+      const finalPrice =
+        discountCalc?.discountedPrice || item.product.price * item.quantity;
+      return sum + finalPrice;
+    }, 0);
+
+  const excludedAmount = cart.items
+    .filter((item) => !isProductEligibleForFreeDelivery(item.product))
+    .reduce((sum, item) => {
+      const hasDiscount =
+        item.product.discount && isDiscountActive(item.product.discount);
+      const discountCalc = hasDiscount
+        ? calculateProductDiscount(item.product, item.quantity)
+        : null;
+      const finalPrice =
+        discountCalc?.discountedPrice || item.product.price * item.quantity;
+      return sum + finalPrice;
+    }, 0);
+
+  const amountNeededForFreeDelivery = Math.max(0, 1000 - eligibleAmount);
+  const isEligibleForFreeDelivery =
+    eligibleAmount >= 1000 && excludedAmount === 0 && isDeliveryAvailable;
+
   // Initialize client-side rendering
   useEffect(() => {
     setIsClient(true);
@@ -86,7 +121,7 @@ export default function CheckoutPage() {
   // Calculate delivery fee
   const calculateDeliveryFee = () => {
     if (deliveryType === "pickup") return 0;
-    if (cart.isEligibleForFreeDelivery && isDeliveryAvailable) return 0;
+    if (isEligibleForFreeDelivery && isDeliveryAvailable) return 0;
     return isDeliveryAvailable ? 50 : 0;
   };
 
@@ -187,16 +222,16 @@ export default function CheckoutPage() {
               id: item.product.id,
               name: item.product.name,
               description: item.product.description || "",
-              price: discountCalc.discountedPrice / item.quantity, // Discounted unit price
-              originalPrice: item.product.price, // Store original price
+              price: discountCalc.discountedPrice / item.quantity,
+              originalPrice: item.product.price,
               weight: item.product.weight,
               category: item.product.category,
               images: item.product.images || [],
-              discount: item.product.discount, // Include discount info
+              discount: item.product.discount,
             },
             quantity: item.quantity,
-            appliedDiscount: discountCalc.discountAmount, // Track discount applied
-            savings: discountCalc.discountAmount, // Track savings
+            appliedDiscount: discountCalc.discountAmount,
+            savings: discountCalc.discountAmount,
           };
         } else {
           return {
@@ -214,7 +249,6 @@ export default function CheckoutPage() {
         }
       });
 
-      // Calculate total with discounts
       const subtotal = orderItems.reduce((sum, item) => {
         return sum + item.product.price * item.quantity;
       }, 0);
@@ -223,7 +257,6 @@ export default function CheckoutPage() {
         return sum + (item.savings || 0);
       }, 0);
 
-      // Calculate original amount (without discounts)
       const originalAmount = cart.items.reduce((sum, item) => {
         return sum + item.product.price * item.quantity;
       }, 0);
@@ -237,9 +270,9 @@ export default function CheckoutPage() {
             .replace(/^91/, ""),
         },
         items: orderItems,
-        totalAmount: subtotal + deliveryFee, // Total with discounts
-        originalAmount: originalAmount + deliveryFee, // Original total without discounts
-        totalSavings: totalSavings, // Total savings from discounts
+        totalAmount: subtotal + deliveryFee,
+        originalAmount: originalAmount + deliveryFee,
+        totalSavings: totalSavings,
         totalWeight: cart.totalWeight,
         deliveryType,
         paymentMethod,
@@ -247,7 +280,7 @@ export default function CheckoutPage() {
           deliveryType === "delivery" ? customerInfo.address : null,
         deliveryFee,
         subtotal: subtotal,
-        isEligibleForFreeDelivery: cart.isEligibleForFreeDelivery,
+        isEligibleForFreeDelivery: isEligibleForFreeDelivery,
         orderDate: new Date().toISOString(),
         orderNotes: `Order placed via Digital Catalogue website. ${
           deliveryType === "delivery" ? "Home delivery" : "Store pickup"
@@ -255,12 +288,13 @@ export default function CheckoutPage() {
           totalSavings > 0
             ? ` Customer saved ₹${totalSavings.toFixed(2)} with discounts.`
             : ""
-        }`,
+        } Eligible amount: ₹${eligibleAmount.toFixed(
+          2
+        )}, Excluded amount: ₹${excludedAmount.toFixed(2)}`,
       };
 
-      console.log("📦 Creating order with discounted prices:", orderData);
+      console.log("📦 Creating order:", orderData);
 
-      // Save order to database
       const orderController = new AbortController();
       const orderTimeout = setTimeout(() => orderController.abort(), 30000);
 
@@ -284,7 +318,7 @@ export default function CheckoutPage() {
           );
         }
 
-        console.log("✅ Order saved to database:", orderResult.order.orderId);
+        console.log("✅ Order saved:", orderResult.order.orderId);
       } catch (error) {
         clearTimeout(orderTimeout);
         if (error.name === "AbortError") {
@@ -295,7 +329,6 @@ export default function CheckoutPage() {
 
       const savedOrder = orderResult.order;
 
-      // Send WhatsApp message
       console.log("📱 Sending WhatsApp notification...");
 
       const whatsappController = new AbortController();
@@ -352,6 +385,11 @@ Order Details:
 • Order ID: ${savedOrder.orderId}
 • Invoice: ${savedOrder.invoiceNumber}
 ${totalSavings > 0 ? `• You saved: ₹${totalSavings.toFixed(2)}` : ""}
+${
+  isEligibleForFreeDelivery
+    ? "• FREE Delivery Applied! ✅"
+    : `• Delivery Fee: ₹${deliveryFee}`
+}
 • WhatsApp confirmation sent to +91${orderData.customerInfo.phoneNumber}
 
 Please check your WhatsApp for complete order details and next steps.`
@@ -361,6 +399,11 @@ Order Details:
 • Order ID: ${savedOrder.orderId}
 • Invoice: ${savedOrder.invoiceNumber}
 ${totalSavings > 0 ? `• You saved: ₹${totalSavings.toFixed(2)}` : ""}
+${
+  isEligibleForFreeDelivery
+    ? "• FREE Delivery Applied! ✅"
+    : `• Delivery Fee: ₹${deliveryFee}`
+}
 
 WhatsApp notification: ${whatsappResult.error || "Failed to send"}
 
@@ -440,7 +483,6 @@ Please call us at +91 82971 37702 for order confirmation.`;
     return (
       <div className="min-h-screen bg-gray-50 py-8 sm:py-12">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Success Header */}
           <div className="text-center mb-6 sm:mb-8">
             <div className="w-12 sm:w-16 h-12 sm:h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-6 sm:w-8 h-6 sm:h-8 text-green-600" />
@@ -453,7 +495,6 @@ Please call us at +91 82971 37702 for order confirmation.`;
             </p>
           </div>
 
-          {/* Order Details Card */}
           <div className="bg-white rounded-lg shadow-sm border mb-6 sm:mb-8">
             <div className="border-b p-4 sm:p-6">
               <h3 className="text-lg font-semibold text-gray-900">
@@ -462,7 +503,7 @@ Please call us at +91 82971 37702 for order confirmation.`;
               <p className="text-gray-600">Ready for processing</p>
               <div className="mt-2">
                 <span className="text-xl sm:text-2xl font-bold text-gray-900">
-                  ₹{totalAmount}
+                  ₹{totalAmount.toFixed(2)}
                 </span>
                 <span className="text-gray-600 ml-2 text-sm sm:text-base">
                   {cart.items.length} items
@@ -471,33 +512,41 @@ Please call us at +91 82971 37702 for order confirmation.`;
             </div>
 
             <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-              {/* WhatsApp Status */}
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
-                <div className="flex items-start">
-                  <MessageCircle className="w-5 h-5 text-green-600 mt-0.5 mr-3" />
-                  <div className="flex-1">
-                    <h4 className="font-medium text-green-900 text-sm sm:text-base">
-                      WhatsApp Confirmation Sent
-                    </h4>
-                    <p className="text-green-800 text-xs sm:text-sm mt-1">
-                      Sent to:{" "}
-                      <span className="font-mono">
-                        +91{customerInfo.phoneNumber}
-                      </span>
-                    </p>
-                    {whatsappResult?.messageId && (
-                      <p className="text-green-700 text-xs mt-1">
-                        Message ID:{" "}
+              {whatsappResult?.success && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
+                  <div className="flex items-start">
+                    <MessageCircle className="w-5 h-5 text-green-600 mt-0.5 mr-3" />
+                    <div className="flex-1">
+                      <h4 className="font-medium text-green-900 text-sm sm:text-base">
+                        WhatsApp Confirmation Sent
+                      </h4>
+                      <p className="text-green-800 text-xs sm:text-sm mt-1">
+                        Sent to:{" "}
                         <span className="font-mono">
-                          {whatsappResult.messageId}
+                          +91{customerInfo.phoneNumber}
                         </span>
                       </p>
-                    )}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
-              {/* Next Steps */}
+              {isEligibleForFreeDelivery && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
+                  <div className="flex items-start">
+                    <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 mr-3" />
+                    <div className="flex-1">
+                      <h4 className="font-medium text-green-900 text-sm sm:text-base">
+                        🎉 FREE Delivery Applied!
+                      </h4>
+                      <p className="text-green-800 text-xs sm:text-sm mt-1">
+                        Eligible items: ₹{eligibleAmount.toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
                 <div className="flex items-start">
                   <Clock className="w-5 h-5 text-blue-600 mt-0.5 mr-3" />
@@ -520,60 +569,9 @@ Please call us at +91 82971 37702 for order confirmation.`;
                   </div>
                 </div>
               </div>
-
-              {/* Order Summary */}
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4">
-                <h4 className="font-medium text-gray-900 mb-3 text-sm sm:text-base">
-                  Order Summary
-                </h4>
-
-                <div className="space-y-2 mb-4">
-                  {cart.items.slice(0, 3).map((item, index) => (
-                    <div
-                      key={index}
-                      className="flex justify-between text-xs sm:text-sm"
-                    >
-                      <div>
-                        <span className="text-gray-800">
-                          {item.product.name}
-                        </span>
-                        <span className="text-gray-500 ml-2">
-                          x{item.quantity}
-                        </span>
-                      </div>
-                      <span className="text-gray-800">
-                        ₹{(item.product.price * item.quantity).toFixed(2)}
-                      </span>
-                    </div>
-                  ))}
-                  {cart.items.length > 3 && (
-                    <div className="text-xs sm:text-sm text-gray-500 text-center py-1">
-                      ... and {cart.items.length - 3} more items
-                    </div>
-                  )}
-                </div>
-
-                <div className="border-t pt-3 space-y-1">
-                  <div className="flex justify-between text-xs sm:text-sm">
-                    <span className="text-gray-600">Subtotal:</span>
-                    <span>₹{(totalAmount - deliveryFee).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-xs sm:text-sm">
-                    <span className="text-gray-600">Delivery:</span>
-                    <span className={deliveryFee === 0 ? "text-green-600" : ""}>
-                      {deliveryFee === 0 ? "FREE" : `₹${deliveryFee}`}
-                    </span>
-                  </div>
-                  <div className="flex justify-between font-semibold border-t pt-2 text-sm sm:text-base">
-                    <span>Total:</span>
-                    <span>₹{totalAmount.toFixed(2)}</span>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 
-          {/* Action Buttons */}
           <div className="text-center space-y-4">
             <button
               onClick={() => router.push("/")}
@@ -585,31 +583,6 @@ Please call us at +91 82971 37702 for order confirmation.`;
             <p className="text-xs sm:text-sm text-gray-500">
               Redirecting to home page in 6 seconds...
             </p>
-
-            {/* Contact Support */}
-            <div className="pt-4 border-t">
-              <p className="text-gray-600 mb-3 text-sm sm:text-base">
-                Need assistance?
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <button
-                  onClick={() =>
-                    window.open("https://wa.me/919876543210", "_blank")
-                  }
-                  className="inline-flex items-center justify-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                >
-                  <MessageCircle className="w-4 h-4 mr-2" />
-                  WhatsApp
-                </button>
-                <button
-                  onClick={() => window.open("tel:+919876543210", "_blank")}
-                  className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                >
-                  <Phone className="w-4 h-4 mr-2" />
-                  Call
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -621,7 +594,6 @@ Please call us at +91 82971 37702 for order confirmation.`;
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-6 sm:mb-8">
-          {/* Back Button */}
           <button
             onClick={() => router.back()}
             className="flex items-center text-gray-600 hover:text-gray-800 mb-4 p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -673,7 +645,7 @@ Please call us at +91 82971 37702 for order confirmation.`;
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-          {/* Main Content */}
+          {/* Main Content - Customer Info, Delivery, Payment */}
           <div className="lg:col-span-2 space-y-4 sm:space-y-6">
             {/* Customer Information */}
             <div className="bg-white rounded-lg shadow-sm border">
@@ -1007,6 +979,10 @@ Please call us at +91 82971 37702 for order confirmation.`;
                       discountCalc?.discountedPrice || originalPrice;
                     const savings = discountCalc?.discountAmount || 0;
 
+                    const isEligible = isProductEligibleForFreeDelivery(
+                      item.product
+                    );
+
                     return (
                       <div
                         key={item.product.id}
@@ -1015,6 +991,11 @@ Please call us at +91 82971 37702 for order confirmation.`;
                         <div className="flex-1">
                           <h4 className="text-sm font-medium text-gray-900">
                             {item.product.name}
+                            {!isEligible && (
+                              <span className="ml-2 text-xs text-amber-600">
+                                ⚠️
+                              </span>
+                            )}
                           </h4>
                           <div className="text-xs sm:text-sm text-gray-500">
                             {hasDiscount && savings > 0 ? (
@@ -1039,7 +1020,8 @@ Please call us at +91 82971 37702 for order confirmation.`;
                               </>
                             )}
                             {" • "}
-                            {(item.product.weight * item.quantity).toFixed(2)}kg
+                            {(item.product.weight * item.quantity).toFixed(2)}
+                            kg
                           </div>
                         </div>
                         <div className="text-sm font-medium">
@@ -1065,7 +1047,6 @@ Please call us at +91 82971 37702 for order confirmation.`;
 
                 {/* Totals */}
                 <div className="border-t pt-4 space-y-2">
-                  {/* Show original total if there are discounts */}
                   {cart.items.some((item) => {
                     const hasDiscount =
                       item.product.discount &&
@@ -1142,19 +1123,80 @@ Please call us at +91 82971 37702 for order confirmation.`;
                   </div>
                 </div>
 
-                {/* Free Delivery Notice */}
-                {deliveryType === "delivery" &&
-                  !cart.isEligibleForFreeDelivery && (
-                    <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                      <p className="text-amber-800 font-medium text-xs sm:text-sm text-center">
-                        Add ₹{(1000 - cart.totalAmount).toFixed(2)} more for
-                        FREE delivery!
-                      </p>
-                      <p className="text-amber-700 text-xs text-center mt-1">
-                        *Excludes sugar, oils, and jaggery items
-                      </p>
-                    </div>
-                  )}
+                {/* Free Delivery Status */}
+                {deliveryType === "delivery" && (
+                  <div className="mt-4">
+                    {excludedAmount > 0 ? (
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                        <div className="space-y-2 text-xs">
+                          <div className="flex items-start">
+                            <AlertCircle className="w-4 h-4 text-red-600 mr-2 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <p className="font-medium text-red-800">
+                                ⚠️ Ineligible items: ₹
+                                {excludedAmount.toFixed(2)}
+                              </p>
+                              <p className="text-red-700 text-xs mt-1">
+                                Your cart contains sugar, oils, or jaggery which
+                                are NOT eligible for free delivery. Remove these
+                                items to qualify.
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-start">
+                            <Tag className="w-3 h-3 text-amber-600 mr-2 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <p className="font-medium text-amber-800">
+                                Eligible items: ₹{eligibleAmount.toFixed(2)}
+                              </p>
+                              <p className="text-amber-700 text-xs mt-1">
+                                {eligibleAmount >= 1000
+                                  ? "You have enough eligible items, but must remove ineligible items for FREE delivery"
+                                  : `Add ₹${amountNeededForFreeDelivery.toFixed(
+                                      2
+                                    )} more in eligible items AND remove ineligible items for FREE delivery`}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : !isEligibleForFreeDelivery ? (
+                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                        <div className="space-y-2 text-xs">
+                          <div className="flex items-start">
+                            <Tag className="w-3 h-3 text-amber-600 mr-2 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <p className="font-medium text-amber-800">
+                                Eligible items: ₹{eligibleAmount.toFixed(2)}
+                              </p>
+                              {amountNeededForFreeDelivery > 0 && (
+                                <p className="text-amber-700 text-xs mt-1">
+                                  Add ₹{amountNeededForFreeDelivery.toFixed(2)}{" "}
+                                  more in eligible items for FREE delivery!
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                        <div className="flex items-center text-green-800 text-xs">
+                          <CheckCircle className="w-4 h-4 mr-2 flex-shrink-0" />
+                          <div>
+                            <p className="font-medium">
+                              🎉 FREE Delivery Applied!
+                            </p>
+                            <p className="text-green-700">
+                              Eligible items: ₹{eligibleAmount.toFixed(2)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Delivery Time */}
                 <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">

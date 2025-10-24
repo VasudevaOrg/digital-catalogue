@@ -1,4 +1,4 @@
-// src/store/slices/cartSlice.ts - Updated with Discount Support
+// src/store/slices/cartSlice.ts - Complete Updated with Free Delivery Logic
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { CartState, Cart, Product, CartItem } from "@/types";
 import { calculateProductDiscount } from "@/lib/discountUtils";
@@ -17,6 +17,88 @@ const initialState: CartState = {
   error: null,
 };
 
+// Helper function to check if product is eligible for free delivery calculation
+export const isProductEligibleForFreeDelivery = (product: Product): boolean => {
+  // Check if product has the isEligibleForFreeDelivery flag set to false
+  if (product.isEligibleForFreeDelivery === false) {
+    return false;
+  }
+
+  // Additional check: Exclude sugar, oils, and jaggery categories
+  const excludedCategories = [
+    "sugar",
+    "sugars",
+    "sweetener",
+    "sweeteners",
+    "sugar & sweeteners",
+    "sugar and sweeteners",
+    "oils",
+    "cooking oils",
+    "cooking oil",
+    "oil",
+    "edible oils",
+    "jaggery",
+    "jaggerys",
+    "gur",
+    "gud",
+  ];
+
+  // Normalize category string - convert to lowercase and remove extra spaces
+  const categoryNormalized = product.category
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, " ");
+
+  console.log("🔍 Checking product:", {
+    name: product.name,
+    category: product.category,
+    categoryNormalized: categoryNormalized,
+    isEligibleFlag: product.isEligibleForFreeDelivery,
+  });
+
+  // Check if category matches any excluded category (case-insensitive)
+  const isCategoryExcluded = excludedCategories.some((excluded) => {
+    const excludedNormalized = excluded
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, " ");
+    // Check for exact match or if category contains the excluded term
+    return (
+      categoryNormalized === excludedNormalized ||
+      categoryNormalized.includes(excludedNormalized) ||
+      excludedNormalized.includes(categoryNormalized)
+    );
+  });
+
+  if (isCategoryExcluded) {
+    console.log("❌ Category excluded:", product.category);
+    return false;
+  }
+
+  // Check product name for excluded items (case-insensitive)
+  const productNameLower = product.name.toLowerCase().trim();
+  const excludedKeywords = [
+    "sugar",
+    "oil",
+    "jaggery",
+    "gur",
+    "gud",
+    "sweetener",
+  ];
+
+  const hasExcludedKeyword = excludedKeywords.some((keyword) =>
+    productNameLower.includes(keyword.toLowerCase())
+  );
+
+  if (hasExcludedKeyword) {
+    console.log("❌ Name contains excluded keyword:", product.name);
+    return false;
+  }
+
+  console.log("✅ Product eligible for free delivery:", product.name);
+  return true;
+};
+
 // Helper functions
 const calculateCartTotals = (
   items: CartItem[]
@@ -24,6 +106,8 @@ const calculateCartTotals = (
   totalAmount: number;
   totalWeight: number;
   isEligibleForFreeDelivery: boolean;
+  eligibleAmount: number;
+  excludedAmount: number;
 } => {
   // Calculate total with discounts applied
   const totalAmount = items.reduce((sum, item) => {
@@ -36,9 +120,9 @@ const calculateCartTotals = (
     0
   );
 
-  // Check if eligible for free delivery (excluding sugar, oils, jaggery)
+  // Calculate eligible amount (excluding sugar, oils, jaggery)
   const eligibleAmount = items
-    .filter((item) => item.product.isEligibleForFreeDelivery)
+    .filter((item) => isProductEligibleForFreeDelivery(item.product))
     .reduce((sum, item) => {
       const discountCalc = calculateProductDiscount(
         item.product,
@@ -47,12 +131,37 @@ const calculateCartTotals = (
       return sum + discountCalc.discountedPrice;
     }, 0);
 
-  const isEligibleForFreeDelivery = eligibleAmount >= 1000;
+  // Calculate excluded amount (sugar, oils, jaggery)
+  const excludedAmount = items
+    .filter((item) => !isProductEligibleForFreeDelivery(item.product))
+    .reduce((sum, item) => {
+      const discountCalc = calculateProductDiscount(
+        item.product,
+        item.quantity
+      );
+      return sum + discountCalc.discountedPrice;
+    }, 0);
+
+  // Free delivery only if:
+  // 1. Eligible items total >= 1000
+  // 2. NO excluded/ineligible items in cart
+  const isEligibleForFreeDelivery =
+    eligibleAmount >= 1000 && excludedAmount === 0;
+
+  console.log("📊 Cart Totals:", {
+    totalAmount: totalAmount.toFixed(2),
+    eligibleAmount: eligibleAmount.toFixed(2),
+    excludedAmount: excludedAmount.toFixed(2),
+    hasIneligibleItems: excludedAmount > 0,
+    isEligibleForFreeDelivery,
+  });
 
   return {
     totalAmount: parseFloat(totalAmount.toFixed(2)),
     totalWeight: parseFloat(totalWeight.toFixed(2)),
     isEligibleForFreeDelivery,
+    eligibleAmount: parseFloat(eligibleAmount.toFixed(2)),
+    excludedAmount: parseFloat(excludedAmount.toFixed(2)),
   };
 };
 
@@ -66,7 +175,12 @@ const loadCartFromStorage = (): Cart => {
       const parsedCart = JSON.parse(storedCart);
       // Recalculate totals with discounts
       const totals = calculateCartTotals(parsedCart.items);
-      return { ...parsedCart, ...totals };
+      return {
+        items: parsedCart.items,
+        totalAmount: totals.totalAmount,
+        totalWeight: totals.totalWeight,
+        isEligibleForFreeDelivery: totals.isEligibleForFreeDelivery,
+      };
     }
   } catch (error) {
     console.error("Error loading cart from localStorage:", error);
@@ -155,9 +269,14 @@ const cartSlice = createSlice({
         state.cart.items.push({ product, quantity });
       }
 
-      // Recalculate totals with discounts
+      // Recalculate totals with discounts and free delivery eligibility
       const totals = calculateCartTotals(state.cart.items);
-      state.cart = { ...state.cart, ...totals };
+      state.cart = {
+        items: state.cart.items,
+        totalAmount: totals.totalAmount,
+        totalWeight: totals.totalWeight,
+        isEligibleForFreeDelivery: totals.isEligibleForFreeDelivery,
+      };
 
       saveCartToStorage(state.cart);
     },
@@ -169,7 +288,12 @@ const cartSlice = createSlice({
       );
 
       const totals = calculateCartTotals(state.cart.items);
-      state.cart = { ...state.cart, ...totals };
+      state.cart = {
+        items: state.cart.items,
+        totalAmount: totals.totalAmount,
+        totalWeight: totals.totalWeight,
+        isEligibleForFreeDelivery: totals.isEligibleForFreeDelivery,
+      };
 
       saveCartToStorage(state.cart);
     },
@@ -193,7 +317,12 @@ const cartSlice = createSlice({
         }
 
         const totals = calculateCartTotals(state.cart.items);
-        state.cart = { ...state.cart, ...totals };
+        state.cart = {
+          items: state.cart.items,
+          totalAmount: totals.totalAmount,
+          totalWeight: totals.totalWeight,
+          isEligibleForFreeDelivery: totals.isEligibleForFreeDelivery,
+        };
 
         saveCartToStorage(state.cart);
       }
@@ -213,7 +342,12 @@ const cartSlice = createSlice({
         state.cart.isEligibleForFreeDelivery = true;
       } else {
         const totals = calculateCartTotals(state.cart.items);
-        state.cart = { ...state.cart, ...totals };
+        state.cart = {
+          items: state.cart.items,
+          totalAmount: totals.totalAmount,
+          totalWeight: totals.totalWeight,
+          isEligibleForFreeDelivery: totals.isEligibleForFreeDelivery,
+        };
       }
 
       saveCartToStorage(state.cart);
@@ -224,10 +358,15 @@ const cartSlice = createSlice({
       state.cart = storedCart;
     },
 
-    // New: Recalculate cart (useful when discounts change)
+    // Recalculate cart (useful when discounts change)
     recalculateCart: (state) => {
       const totals = calculateCartTotals(state.cart.items);
-      state.cart = { ...state.cart, ...totals };
+      state.cart = {
+        items: state.cart.items,
+        totalAmount: totals.totalAmount,
+        totalWeight: totals.totalWeight,
+        isEligibleForFreeDelivery: totals.isEligibleForFreeDelivery,
+      };
       saveCartToStorage(state.cart);
     },
   },
@@ -272,5 +411,23 @@ export const {
   initializeCart,
   recalculateCart,
 } = cartSlice.actions;
+
+// Selectors
+export const selectEligibleAmount = (state: { cart: CartState }) => {
+  const totals = calculateCartTotals(state.cart.cart.items);
+  return totals.eligibleAmount;
+};
+
+export const selectExcludedAmount = (state: { cart: CartState }) => {
+  const totals = calculateCartTotals(state.cart.cart.items);
+  return totals.excludedAmount;
+};
+
+export const selectAmountNeededForFreeDelivery = (state: {
+  cart: CartState;
+}) => {
+  const totals = calculateCartTotals(state.cart.cart.items);
+  return Math.max(0, 1000 - totals.eligibleAmount);
+};
 
 export default cartSlice.reducer;

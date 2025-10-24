@@ -1,4 +1,4 @@
-// src/components/cart/CartSidebar.tsx - Updated with Discount Display
+// src/components/cart/CartSidebar.tsx - Complete Updated with Free Delivery Info
 "use client";
 
 import { useEffect } from "react";
@@ -10,6 +10,7 @@ import {
   updateCartItemQuantity,
   removeFromCart,
 } from "@/store/slices/cartSlice";
+import { isProductEligibleForFreeDelivery } from "@/lib/freeDeliveryUtils";
 import { WEIGHT_UNIT_LABELS } from "@/types";
 import {
   calculateProductDiscount,
@@ -24,6 +25,8 @@ import {
   Weight,
   Tag,
   Percent,
+  AlertCircle,
+  CheckCircle,
 } from "lucide-react";
 
 export function CartSidebar() {
@@ -48,6 +51,35 @@ export function CartSidebar() {
     router.push("/checkout");
     handleClose();
   };
+
+  // Calculate eligible and excluded amounts
+  const eligibleAmount = cart.items
+    .filter((item) => isProductEligibleForFreeDelivery(item.product))
+    .reduce((sum, item) => {
+      const hasDiscount =
+        item.product.discount && isDiscountActive(item.product.discount);
+      const discountCalc = hasDiscount
+        ? calculateProductDiscount(item.product, item.quantity)
+        : null;
+      const finalPrice =
+        discountCalc?.discountedPrice || item.product.price * item.quantity;
+      return sum + finalPrice;
+    }, 0);
+
+  const excludedAmount = cart.items
+    .filter((item) => !isProductEligibleForFreeDelivery(item.product))
+    .reduce((sum, item) => {
+      const hasDiscount =
+        item.product.discount && isDiscountActive(item.product.discount);
+      const discountCalc = hasDiscount
+        ? calculateProductDiscount(item.product, item.quantity)
+        : null;
+      const finalPrice =
+        discountCalc?.discountedPrice || item.product.price * item.quantity;
+      return sum + finalPrice;
+    }, 0);
+
+  const amountNeededForFreeDelivery = Math.max(0, 1000 - eligibleAmount);
 
   // Format weight display
   const formatWeight = (product: any, quantity: number = 1) => {
@@ -128,7 +160,6 @@ export function CartSidebar() {
             ) : (
               <div className="p-4 sm:p-6 space-y-4">
                 {cart.items.map((item) => {
-                  // Calculate discount for this item
                   const hasDiscount =
                     item.product.discount &&
                     isDiscountActive(item.product.discount);
@@ -140,6 +171,10 @@ export function CartSidebar() {
                   const finalPrice =
                     discountCalc?.discountedPrice || originalPrice;
                   const savings = discountCalc?.discountAmount || 0;
+
+                  const isEligible = isProductEligibleForFreeDelivery(
+                    item.product
+                  );
 
                   return (
                     <div
@@ -174,6 +209,15 @@ export function CartSidebar() {
                               </div>
                             </div>
                           )}
+
+                        {/* Not Eligible Badge */}
+                        {!isEligible && (
+                          <div className="absolute bottom-1 left-1">
+                            <div className="bg-amber-500 text-white px-1.5 py-0.5 rounded text-xs font-bold">
+                              ⚠️
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       {/* Product Details */}
@@ -186,6 +230,14 @@ export function CartSidebar() {
                         <p className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded w-fit mb-2">
                           {item.product.category}
                         </p>
+
+                        {/* Not Eligible Warning */}
+                        {!isEligible && (
+                          <div className="flex items-center text-xs text-amber-600 mb-2">
+                            <AlertCircle className="w-3 h-3 mr-1" />
+                            <span>Not eligible for free delivery</span>
+                          </div>
+                        )}
 
                         {/* Price with Discount */}
                         <div className="space-y-1 mb-3">
@@ -345,16 +397,74 @@ export function CartSidebar() {
                 </div>
               )}
 
-              {/* Free Delivery Message */}
-              {!cart.isEligibleForFreeDelivery && (
-                <div className="text-xs text-amber-600 bg-amber-50 p-3 rounded-lg border border-amber-200">
-                  <p className="font-medium mb-1">
-                    Add ₹{(1000 - cart.totalAmount).toFixed(2)} more for FREE
-                    delivery!
-                  </p>
-                  <p className="text-amber-700">
-                    *Excludes sugar, oils, and jaggery items
-                  </p>
+              {/* Free Delivery Status */}
+              {!cart.isEligibleForFreeDelivery && cart.items.length > 0 && (
+                <div className="text-xs bg-amber-50 p-3 rounded-lg border border-amber-200">
+                  <div className="space-y-2">
+                    {excludedAmount > 0 && (
+                      <>
+                        <div className="flex items-start">
+                          <AlertCircle className="w-3 h-3 text-red-600 mr-2 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <p className="font-medium text-red-800">
+                              ⚠️ Ineligible items in cart: ₹
+                              {excludedAmount.toFixed(2)}
+                            </p>
+                            <p className="text-red-700 text-xs mt-1">
+                              Sugar, oils, and jaggery are NOT eligible for free
+                              delivery. Remove these items to qualify for FREE
+                              delivery.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start">
+                          <Tag className="w-3 h-3 text-amber-600 mr-2 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <p className="font-medium text-amber-800">
+                              Eligible items: ₹{eligibleAmount.toFixed(2)}
+                            </p>
+                            <p className="text-amber-700 text-xs mt-1">
+                              You have enough eligible items, but must remove
+                              ineligible items for FREE delivery
+                            </p>
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {excludedAmount === 0 &&
+                      amountNeededForFreeDelivery > 0 && (
+                        <div className="flex items-start">
+                          <Tag className="w-3 h-3 text-amber-600 mr-2 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <p className="font-medium text-amber-800">
+                              Eligible items: ₹{eligibleAmount.toFixed(2)}
+                            </p>
+                            <p className="text-amber-700 text-xs mt-1">
+                              Add ₹{amountNeededForFreeDelivery.toFixed(2)} more
+                              in eligible items for FREE delivery!
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                  </div>
+                </div>
+              )}
+
+              {cart.isEligibleForFreeDelivery && (
+                <div className="text-xs bg-green-50 p-3 rounded-lg border border-green-200">
+                  <div className="flex items-center text-green-800">
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    <div>
+                      <p className="font-medium">
+                        🎉 You qualify for FREE delivery!
+                      </p>
+                      <p className="text-green-700 text-xs mt-1">
+                        Eligible items: ₹{eligibleAmount.toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               )}
 
