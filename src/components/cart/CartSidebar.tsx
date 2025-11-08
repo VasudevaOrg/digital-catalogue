@@ -401,53 +401,35 @@ export function CartSidebar() {
               {!cart.isEligibleForFreeDelivery && cart.items.length > 0 && (
                 <div className="text-xs bg-amber-50 p-3 rounded-lg border border-amber-200">
                   <div className="space-y-2">
+                    <div className="flex items-start">
+                      <Tag className="w-3 h-3 text-amber-600 mr-2 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="font-medium text-amber-800">
+                          Eligible items: ₹{eligibleAmount.toFixed(2)}
+                        </p>
+                        {amountNeededForFreeDelivery > 0 && (
+                          <p className="text-amber-700 text-xs mt-1">
+                            Add ₹{amountNeededForFreeDelivery.toFixed(2)} more
+                            in eligible items for FREE delivery!
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
                     {excludedAmount > 0 && (
-                      <>
-                        <div className="flex items-start">
-                          <AlertCircle className="w-3 h-3 text-red-600 mr-2 mt-0.5 flex-shrink-0" />
-                          <div>
-                            <p className="font-medium text-red-800">
-                              ⚠️ Ineligible items in cart: ₹
-                              {excludedAmount.toFixed(2)}
-                            </p>
-                            <p className="text-red-700 text-xs mt-1">
-                              Sugar, oils, and jaggery are NOT eligible for free
-                              delivery. Remove these items to qualify for FREE
-                              delivery.
-                            </p>
-                          </div>
+                      <div className="flex items-start">
+                        <AlertCircle className="w-3 h-3 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="font-medium text-blue-800">
+                            DELTA products: ₹{excludedAmount.toFixed(2)}
+                          </p>
+                          <p className="text-blue-700 text-xs mt-1">
+                            Sugar, oils, and jaggery don't count toward the
+                            ₹1000 threshold but can stay in your cart.
+                          </p>
                         </div>
-
-                        <div className="flex items-start">
-                          <Tag className="w-3 h-3 text-amber-600 mr-2 mt-0.5 flex-shrink-0" />
-                          <div>
-                            <p className="font-medium text-amber-800">
-                              Eligible items: ₹{eligibleAmount.toFixed(2)}
-                            </p>
-                            <p className="text-amber-700 text-xs mt-1">
-                              You have enough eligible items, but must remove
-                              ineligible items for FREE delivery
-                            </p>
-                          </div>
-                        </div>
-                      </>
+                      </div>
                     )}
-
-                    {excludedAmount === 0 &&
-                      amountNeededForFreeDelivery > 0 && (
-                        <div className="flex items-start">
-                          <Tag className="w-3 h-3 text-amber-600 mr-2 mt-0.5 flex-shrink-0" />
-                          <div>
-                            <p className="font-medium text-amber-800">
-                              Eligible items: ₹{eligibleAmount.toFixed(2)}
-                            </p>
-                            <p className="text-amber-700 text-xs mt-1">
-                              Add ₹{amountNeededForFreeDelivery.toFixed(2)} more
-                              in eligible items for FREE delivery!
-                            </p>
-                          </div>
-                        </div>
-                      )}
                   </div>
                 </div>
               )}
@@ -463,6 +445,12 @@ export function CartSidebar() {
                       <p className="text-green-700 text-xs mt-1">
                         Eligible items: ₹{eligibleAmount.toFixed(2)}
                       </p>
+                      {excludedAmount > 0 && (
+                        <p className="text-green-600 text-xs mt-1">
+                          (DELTA products: ₹{excludedAmount.toFixed(2)} - bonus
+                          items!)
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>

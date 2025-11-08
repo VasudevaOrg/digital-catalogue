@@ -1,7 +1,11 @@
-// src/store/slices/cartSlice.ts - Complete Updated with Free Delivery Logic
+// src/store/slices/cartSlice.ts - Fixed with Correct Free Delivery Logic
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { CartState, Cart, Product, CartItem } from "@/types";
 import { calculateProductDiscount } from "@/lib/discountUtils";
+import {
+  isDeltaProduct,
+  calculateFreeDeliveryEligibility,
+} from "@/lib/freeDeliveryUtils";
 import { api } from "@/lib/api";
 
 const CART_STORAGE_KEY = "digital_catalogue_cart";
@@ -17,89 +21,13 @@ const initialState: CartState = {
   error: null,
 };
 
-// Helper function to check if product is eligible for free delivery calculation
+// Helper function - checks if product is DELTA (excluded from free delivery calculation)
+// This is just for backward compatibility - use isDeltaProduct from freeDeliveryUtils
 export const isProductEligibleForFreeDelivery = (product: Product): boolean => {
-  // Check if product has the isEligibleForFreeDelivery flag set to false
-  if (product.isEligibleForFreeDelivery === false) {
-    return false;
-  }
-
-  // Additional check: Exclude sugar, oils, and jaggery categories
-  const excludedCategories = [
-    "sugar",
-    "sugars",
-    "sweetener",
-    "sweeteners",
-    "sugar & sweeteners",
-    "sugar and sweeteners",
-    "oils",
-    "cooking oils",
-    "cooking oil",
-    "oil",
-    "edible oils",
-    "jaggery",
-    "jaggerys",
-    "gur",
-    "gud",
-  ];
-
-  // Normalize category string - convert to lowercase and remove extra spaces
-  const categoryNormalized = product.category
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, " ");
-
-  console.log("🔍 Checking product:", {
-    name: product.name,
-    category: product.category,
-    categoryNormalized: categoryNormalized,
-    isEligibleFlag: product.isEligibleForFreeDelivery,
-  });
-
-  // Check if category matches any excluded category (case-insensitive)
-  const isCategoryExcluded = excludedCategories.some((excluded) => {
-    const excludedNormalized = excluded
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, " ");
-    // Check for exact match or if category contains the excluded term
-    return (
-      categoryNormalized === excludedNormalized ||
-      categoryNormalized.includes(excludedNormalized) ||
-      excludedNormalized.includes(categoryNormalized)
-    );
-  });
-
-  if (isCategoryExcluded) {
-    console.log("❌ Category excluded:", product.category);
-    return false;
-  }
-
-  // Check product name for excluded items (case-insensitive)
-  const productNameLower = product.name.toLowerCase().trim();
-  const excludedKeywords = [
-    "sugar",
-    "oil",
-    "jaggery",
-    "gur",
-    "gud",
-    "sweetener",
-  ];
-
-  const hasExcludedKeyword = excludedKeywords.some((keyword) =>
-    productNameLower.includes(keyword.toLowerCase())
-  );
-
-  if (hasExcludedKeyword) {
-    console.log("❌ Name contains excluded keyword:", product.name);
-    return false;
-  }
-
-  console.log("✅ Product eligible for free delivery:", product.name);
-  return true;
+  return !isDeltaProduct(product);
 };
 
-// Helper functions
+// Helper function to calculate cart totals with CORRECT free delivery logic
 const calculateCartTotals = (
   items: CartItem[]
 ): {
@@ -107,7 +35,7 @@ const calculateCartTotals = (
   totalWeight: number;
   isEligibleForFreeDelivery: boolean;
   eligibleAmount: number;
-  excludedAmount: number;
+  deltaAmount: number;
 } => {
   // Calculate total with discounts applied
   const totalAmount = items.reduce((sum, item) => {
@@ -120,48 +48,33 @@ const calculateCartTotals = (
     0
   );
 
-  // Calculate eligible amount (excluding sugar, oils, jaggery)
-  const eligibleAmount = items
-    .filter((item) => isProductEligibleForFreeDelivery(item.product))
-    .reduce((sum, item) => {
-      const discountCalc = calculateProductDiscount(
-        item.product,
-        item.quantity
-      );
-      return sum + discountCalc.discountedPrice;
-    }, 0);
+  // Prepare items for free delivery calculation
+  const itemsWithPrices = items.map((item) => {
+    const discountCalc = calculateProductDiscount(item.product, item.quantity);
+    return {
+      product: item.product,
+      quantity: item.quantity,
+      finalPrice: discountCalc.discountedPrice,
+    };
+  });
 
-  // Calculate excluded amount (sugar, oils, jaggery)
-  const excludedAmount = items
-    .filter((item) => !isProductEligibleForFreeDelivery(item.product))
-    .reduce((sum, item) => {
-      const discountCalc = calculateProductDiscount(
-        item.product,
-        item.quantity
-      );
-      return sum + discountCalc.discountedPrice;
-    }, 0);
+  // Use the CORRECTED free delivery calculation from freeDeliveryUtils
+  const deliveryCalc = calculateFreeDeliveryEligibility(itemsWithPrices);
 
-  // Free delivery only if:
-  // 1. Eligible items total >= 1000
-  // 2. NO excluded/ineligible items in cart
-  const isEligibleForFreeDelivery =
-    eligibleAmount >= 1000 && excludedAmount === 0;
-
-  console.log("📊 Cart Totals:", {
-    totalAmount: totalAmount.toFixed(2),
-    eligibleAmount: eligibleAmount.toFixed(2),
-    excludedAmount: excludedAmount.toFixed(2),
-    hasIneligibleItems: excludedAmount > 0,
-    isEligibleForFreeDelivery,
+  console.log("📊 Cart Totals (CORRECTED LOGIC):", {
+    totalAmount: deliveryCalc.totalAmount.toFixed(2),
+    eligibleAmount: deliveryCalc.eligibleAmount.toFixed(2),
+    deltaAmount: deliveryCalc.deltaAmount.toFixed(2),
+    isEligibleForFreeDelivery: deliveryCalc.isEligibleForFreeDelivery,
+    amountNeeded: deliveryCalc.amountNeededForFreeDelivery.toFixed(2),
   });
 
   return {
     totalAmount: parseFloat(totalAmount.toFixed(2)),
     totalWeight: parseFloat(totalWeight.toFixed(2)),
-    isEligibleForFreeDelivery,
-    eligibleAmount: parseFloat(eligibleAmount.toFixed(2)),
-    excludedAmount: parseFloat(excludedAmount.toFixed(2)),
+    isEligibleForFreeDelivery: deliveryCalc.isEligibleForFreeDelivery,
+    eligibleAmount: deliveryCalc.eligibleAmount,
+    deltaAmount: deliveryCalc.deltaAmount,
   };
 };
 
@@ -173,7 +86,7 @@ const loadCartFromStorage = (): Cart => {
     const storedCart = localStorage.getItem(CART_STORAGE_KEY);
     if (storedCart) {
       const parsedCart = JSON.parse(storedCart);
-      // Recalculate totals with discounts
+      // Recalculate totals with correct free delivery logic
       const totals = calculateCartTotals(parsedCart.items);
       return {
         items: parsedCart.items,
@@ -269,7 +182,7 @@ const cartSlice = createSlice({
         state.cart.items.push({ product, quantity });
       }
 
-      // Recalculate totals with discounts and free delivery eligibility
+      // Recalculate totals with CORRECT free delivery logic
       const totals = calculateCartTotals(state.cart.items);
       state.cart = {
         items: state.cart.items,
@@ -412,15 +325,15 @@ export const {
   recalculateCart,
 } = cartSlice.actions;
 
-// Selectors
+// Selectors with CORRECT logic
 export const selectEligibleAmount = (state: { cart: CartState }) => {
   const totals = calculateCartTotals(state.cart.cart.items);
   return totals.eligibleAmount;
 };
 
-export const selectExcludedAmount = (state: { cart: CartState }) => {
+export const selectDeltaAmount = (state: { cart: CartState }) => {
   const totals = calculateCartTotals(state.cart.cart.items);
-  return totals.excludedAmount;
+  return totals.deltaAmount;
 };
 
 export const selectAmountNeededForFreeDelivery = (state: {
@@ -429,5 +342,8 @@ export const selectAmountNeededForFreeDelivery = (state: {
   const totals = calculateCartTotals(state.cart.cart.items);
   return Math.max(0, 1000 - totals.eligibleAmount);
 };
+
+// Legacy selector for backward compatibility
+export const selectExcludedAmount = selectDeltaAmount;
 
 export default cartSlice.reducer;

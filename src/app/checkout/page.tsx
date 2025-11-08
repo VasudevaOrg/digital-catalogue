@@ -1,13 +1,10 @@
-// src/app/checkout/page.tsx - Complete Updated with Free Delivery Logic
+// src/app/checkout/page.tsx - Complete Fixed Version
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/store";
-import {
-  clearCart,
-  isProductEligibleForFreeDelivery,
-} from "@/store/slices/cartSlice";
+import { clearCart } from "@/store/slices/cartSlice";
 import {
   showSuccessNotification,
   showErrorNotification,
@@ -17,6 +14,10 @@ import {
   calculateProductDiscount,
   isDiscountActive,
 } from "@/lib/discountUtils";
+import {
+  isDeltaProduct,
+  calculateFreeDeliveryEligibility,
+} from "@/lib/freeDeliveryUtils";
 import {
   Package,
   Truck,
@@ -68,36 +69,30 @@ export default function CheckoutPage() {
   const [isDeliveryAvailable, setIsDeliveryAvailable] = useState(true);
   const [deliveryRadius] = useState(10);
 
-  // Calculate eligible and excluded amounts
-  const eligibleAmount = cart.items
-    .filter((item) => isProductEligibleForFreeDelivery(item.product))
-    .reduce((sum, item) => {
-      const hasDiscount =
-        item.product.discount && isDiscountActive(item.product.discount);
-      const discountCalc = hasDiscount
-        ? calculateProductDiscount(item.product, item.quantity)
-        : null;
-      const finalPrice =
-        discountCalc?.discountedPrice || item.product.price * item.quantity;
-      return sum + finalPrice;
-    }, 0);
+  // Calculate eligible and delta amounts using the CORRECT utility
+  const itemsWithPrices = cart.items.map((item) => {
+    const hasDiscount =
+      item.product.discount && isDiscountActive(item.product.discount);
+    const discountCalc = hasDiscount
+      ? calculateProductDiscount(item.product, item.quantity)
+      : null;
+    const finalPrice =
+      discountCalc?.discountedPrice || item.product.price * item.quantity;
 
-  const excludedAmount = cart.items
-    .filter((item) => !isProductEligibleForFreeDelivery(item.product))
-    .reduce((sum, item) => {
-      const hasDiscount =
-        item.product.discount && isDiscountActive(item.product.discount);
-      const discountCalc = hasDiscount
-        ? calculateProductDiscount(item.product, item.quantity)
-        : null;
-      const finalPrice =
-        discountCalc?.discountedPrice || item.product.price * item.quantity;
-      return sum + finalPrice;
-    }, 0);
+    return {
+      product: item.product,
+      quantity: item.quantity,
+      finalPrice: finalPrice,
+    };
+  });
 
-  const amountNeededForFreeDelivery = Math.max(0, 1000 - eligibleAmount);
+  // Use the CORRECT free delivery calculation
+  const deliveryCalc = calculateFreeDeliveryEligibility(itemsWithPrices);
+  const eligibleAmount = deliveryCalc.eligibleAmount;
+  const deltaAmount = deliveryCalc.deltaAmount;
+  const amountNeededForFreeDelivery = deliveryCalc.amountNeededForFreeDelivery;
   const isEligibleForFreeDelivery =
-    eligibleAmount >= 1000 && excludedAmount === 0 && isDeliveryAvailable;
+    deliveryCalc.isEligibleForFreeDelivery && isDeliveryAvailable;
 
   // Initialize client-side rendering
   useEffect(() => {
@@ -118,10 +113,10 @@ export default function CheckoutPage() {
     }
   }, [customerInfo.address.pincode, isClient]);
 
-  // Calculate delivery fee
+  // Calculate delivery fee - CORRECTED
   const calculateDeliveryFee = () => {
     if (deliveryType === "pickup") return 0;
-    if (isEligibleForFreeDelivery && isDeliveryAvailable) return 0;
+    if (isEligibleForFreeDelivery) return 0;
     return isDeliveryAvailable ? 50 : 0;
   };
 
@@ -261,6 +256,16 @@ export default function CheckoutPage() {
         return sum + item.product.price * item.quantity;
       }, 0);
 
+      console.log("💰 ORDER CALCULATION:", {
+        subtotal,
+        deliveryFee,
+        totalAmount: subtotal + deliveryFee,
+        eligibleAmount,
+        deltaAmount,
+        isEligibleForFreeDelivery,
+        deliveryType,
+      });
+
       const orderData = {
         orderId,
         customerInfo: {
@@ -290,10 +295,14 @@ export default function CheckoutPage() {
             : ""
         } Eligible amount: ₹${eligibleAmount.toFixed(
           2
-        )}, Excluded amount: ₹${excludedAmount.toFixed(2)}`,
+        )}, DELTA products: ₹${deltaAmount.toFixed(2)}${
+          isEligibleForFreeDelivery
+            ? `. FREE delivery applied (eligible ≥₹1000).`
+            : `. Delivery fee: ₹${deliveryFee}.`
+        }`,
       };
 
-      console.log("📦 Creating order:", orderData);
+      console.log("📦 Creating order with correct free delivery:", orderData);
 
       const orderController = new AbortController();
       const orderTimeout = setTimeout(() => orderController.abort(), 30000);
@@ -979,9 +988,7 @@ Please call us at +91 82971 37702 for order confirmation.`;
                       discountCalc?.discountedPrice || originalPrice;
                     const savings = discountCalc?.discountAmount || 0;
 
-                    const isEligible = isProductEligibleForFreeDelivery(
-                      item.product
-                    );
+                    const isItemDelta = isDeltaProduct(item.product);
 
                     return (
                       <div
@@ -991,9 +998,9 @@ Please call us at +91 82971 37702 for order confirmation.`;
                         <div className="flex-1">
                           <h4 className="text-sm font-medium text-gray-900">
                             {item.product.name}
-                            {!isEligible && (
+                            {isItemDelta && (
                               <span className="ml-2 text-xs text-amber-600">
-                                ⚠️
+                                DELTA
                               </span>
                             )}
                           </h4>
@@ -1123,45 +1130,30 @@ Please call us at +91 82971 37702 for order confirmation.`;
                   </div>
                 </div>
 
-                {/* Free Delivery Status */}
+                {/* Free Delivery Status - CORRECTED MESSAGING */}
                 {deliveryType === "delivery" && (
                   <div className="mt-4">
-                    {excludedAmount > 0 ? (
-                      <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                        <div className="space-y-2 text-xs">
-                          <div className="flex items-start">
-                            <AlertCircle className="w-4 h-4 text-red-600 mr-2 mt-0.5 flex-shrink-0" />
-                            <div>
-                              <p className="font-medium text-red-800">
-                                ⚠️ Ineligible items: ₹
-                                {excludedAmount.toFixed(2)}
+                    {isEligibleForFreeDelivery ? (
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                        <div className="flex items-center text-green-800 text-xs">
+                          <CheckCircle className="w-4 h-4 mr-2 flex-shrink-0" />
+                          <div>
+                            <p className="font-medium">
+                              🎉 FREE Delivery Applied!
+                            </p>
+                            <p className="text-green-700">
+                              Eligible items: ₹{eligibleAmount.toFixed(2)}
+                            </p>
+                            {deltaAmount > 0 && (
+                              <p className="text-green-600 text-xs mt-1">
+                                (DELTA products: ₹{deltaAmount.toFixed(2)} -
+                                bonus items!)
                               </p>
-                              <p className="text-red-700 text-xs mt-1">
-                                Your cart contains sugar, oils, or jaggery which
-                                are NOT eligible for free delivery. Remove these
-                                items to qualify.
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-start">
-                            <Tag className="w-3 h-3 text-amber-600 mr-2 mt-0.5 flex-shrink-0" />
-                            <div>
-                              <p className="font-medium text-amber-800">
-                                Eligible items: ₹{eligibleAmount.toFixed(2)}
-                              </p>
-                              <p className="text-amber-700 text-xs mt-1">
-                                {eligibleAmount >= 1000
-                                  ? "You have enough eligible items, but must remove ineligible items for FREE delivery"
-                                  : `Add ₹${amountNeededForFreeDelivery.toFixed(
-                                      2
-                                    )} more in eligible items AND remove ineligible items for FREE delivery`}
-                              </p>
-                            </div>
+                            )}
                           </div>
                         </div>
                       </div>
-                    ) : !isEligibleForFreeDelivery ? (
+                    ) : (
                       <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
                         <div className="space-y-2 text-xs">
                           <div className="flex items-start">
@@ -1178,20 +1170,21 @@ Please call us at +91 82971 37702 for order confirmation.`;
                               )}
                             </div>
                           </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                        <div className="flex items-center text-green-800 text-xs">
-                          <CheckCircle className="w-4 h-4 mr-2 flex-shrink-0" />
-                          <div>
-                            <p className="font-medium">
-                              🎉 FREE Delivery Applied!
-                            </p>
-                            <p className="text-green-700">
-                              Eligible items: ₹{eligibleAmount.toFixed(2)}
-                            </p>
-                          </div>
+
+                          {deltaAmount > 0 && (
+                            <div className="flex items-start">
+                              <AlertCircle className="w-3 h-3 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <p className="font-medium text-blue-800">
+                                  DELTA products: ₹{deltaAmount.toFixed(2)}
+                                </p>
+                                <p className="text-blue-700 text-xs mt-1">
+                                  Sugar, oils, and jaggery don't count toward
+                                  the ₹1000 threshold but can stay in your cart.
+                                </p>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
