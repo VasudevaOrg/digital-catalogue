@@ -1,4 +1,4 @@
-// src/app/checkout/page.tsx - Complete Fixed Version
+// src/app/checkout/page.tsx - Complete Updated Version
 "use client";
 
 import { useState, useEffect } from "react";
@@ -68,6 +68,15 @@ export default function CheckoutPage() {
   const [whatsappResult, setWhatsappResult] = useState<any>(null);
   const [isDeliveryAvailable, setIsDeliveryAvailable] = useState(true);
   const [deliveryRadius] = useState(10);
+
+  // Auto-update payment method when delivery type changes
+  useEffect(() => {
+    if (deliveryType === "pickup") {
+      setPaymentMethod("cash_on_pickup");
+    } else {
+      setPaymentMethod("prepaid");
+    }
+  }, [deliveryType]);
 
   // Calculate eligible and delta amounts using the CORRECT utility
   const itemsWithPrices = cart.items.map((item) => {
@@ -399,6 +408,9 @@ ${
     ? "• FREE Delivery Applied! ✅"
     : `• Delivery Fee: ₹${deliveryFee}`
 }
+• Payment: ${
+            paymentMethod === "prepaid" ? "Prepaid (Online)" : "Cash on Pickup"
+          }
 • WhatsApp confirmation sent to +91${orderData.customerInfo.phoneNumber}
 
 Please check your WhatsApp for complete order details and next steps.`
@@ -413,6 +425,9 @@ ${
     ? "• FREE Delivery Applied! ✅"
     : `• Delivery Fee: ₹${deliveryFee}`
 }
+• Payment: ${
+            paymentMethod === "prepaid" ? "Prepaid (Online)" : "Cash on Pickup"
+          }
 
 WhatsApp notification: ${whatsappResult.error || "Failed to send"}
 
@@ -566,7 +581,12 @@ Please call us at +91 82971 37702 for order confirmation.`;
                     <ul className="text-blue-800 text-xs sm:text-sm mt-2 space-y-1">
                       <li>• Check your WhatsApp for order confirmation</li>
                       <li>• Our team will contact you within 10-15 minutes</li>
-                      <li>• We'll process payment if prepaid</li>
+                      {paymentMethod === "prepaid" && (
+                        <li>• Payment details will be shared via WhatsApp</li>
+                      )}
+                      {paymentMethod === "cash_on_pickup" && (
+                        <li>• Prepare cash payment for store pickup</li>
+                      )}
                       <li>• Order preparation begins immediately</li>
                       <li>
                         •{" "}
@@ -884,75 +904,114 @@ Please call us at +91 82971 37702 for order confirmation.`;
                 </h2>
               </div>
               <div className="p-4 sm:p-6">
-                <div className="space-y-3">
-                  <div
-                    className={`border-2 rounded-lg p-3 sm:p-4 cursor-pointer transition-colors ${
-                      paymentMethod === "prepaid"
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                    onClick={() => setPaymentMethod("prepaid")}
-                  >
-                    <div className="flex items-center">
-                      <input
-                        type="radio"
-                        checked={paymentMethod === "prepaid"}
-                        onChange={() => setPaymentMethod("prepaid")}
-                        className="mr-3"
-                        disabled={isPlacingOrder}
-                      />
-                      <CreditCard className="w-5 h-5 text-blue-600 mr-2" />
-                      <span className="font-medium text-sm sm:text-base">
-                        Prepaid (Online Payment)
-                      </span>
-                    </div>
-                    <p className="text-xs sm:text-sm text-gray-600 ml-10">
-                      Pay online before delivery/pickup
-                    </p>
-                  </div>
-
-                  {deliveryType === "pickup" && (
-                    <div
-                      className={`border-2 rounded-lg p-3 sm:p-4 cursor-pointer transition-colors ${
-                        paymentMethod === "cash_on_pickup"
-                          ? "border-blue-500 bg-blue-50"
-                          : "border-gray-200 hover:border-gray-300"
-                      }`}
-                      onClick={() => setPaymentMethod("cash_on_pickup")}
-                    >
+                {deliveryType === "pickup" ? (
+                  // Store Pickup - Cash Payment Only
+                  <>
+                    <div className="border-2 rounded-lg p-3 sm:p-4 border-green-500 bg-green-50">
                       <div className="flex items-center">
                         <input
                           type="radio"
-                          checked={paymentMethod === "cash_on_pickup"}
-                          onChange={() => setPaymentMethod("cash_on_pickup")}
+                          checked={true}
+                          readOnly
                           className="mr-3"
-                          disabled={isPlacingOrder}
                         />
                         <Package className="w-5 h-5 text-green-600 mr-2" />
                         <span className="font-medium text-sm sm:text-base">
                           Cash on Pickup
                         </span>
                       </div>
-                      <p className="text-xs sm:text-sm text-gray-600 ml-10">
-                        Pay when you collect your order
+                      <p className="text-xs sm:text-sm text-green-700 ml-10 mt-1">
+                        Pay when you collect your order from our store
                       </p>
                     </div>
-                  )}
-                </div>
 
-                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="flex">
-                    <Shield className="w-4 sm:w-5 h-4 sm:h-5 text-blue-600 mr-2 flex-shrink-0" />
-                    <div className="text-xs sm:text-sm text-blue-800">
-                      <p className="font-medium">Payment Information</p>
-                      <p>
-                        {deliveryType === "delivery"
-                          ? "Home delivery orders require prepaid payment for security."
-                          : "Store pickup allows both prepaid and cash payment options."}
-                      </p>
+                    <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex">
+                        <Shield className="w-4 sm:w-5 h-4 sm:h-5 text-green-600 mr-2 flex-shrink-0" />
+                        <div className="text-xs sm:text-sm text-green-800">
+                          <p className="font-medium">
+                            Cash Payment for Store Pickup
+                          </p>
+                          <p>
+                            You can pay in cash when you pick up your order from
+                            our store. No advance payment required.
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  </>
+                ) : (
+                  // Home Delivery - Original Multiple Payment Options
+                  <>
+                    <div className="space-y-3">
+                      <div
+                        className={`border-2 rounded-lg p-3 sm:p-4 cursor-pointer transition-colors ${
+                          paymentMethod === "prepaid"
+                            ? "border-blue-500 bg-blue-50"
+                            : "border-gray-200 hover:border-gray-300"
+                        }`}
+                        onClick={() => setPaymentMethod("prepaid")}
+                      >
+                        <div className="flex items-center">
+                          <input
+                            type="radio"
+                            checked={paymentMethod === "prepaid"}
+                            onChange={() => setPaymentMethod("prepaid")}
+                            className="mr-3"
+                            disabled={isPlacingOrder}
+                          />
+                          <CreditCard className="w-5 h-5 text-blue-600 mr-2" />
+                          <span className="font-medium text-sm sm:text-base">
+                            Prepaid (Online Payment)
+                          </span>
+                        </div>
+                        <p className="text-xs sm:text-sm text-gray-600 ml-10">
+                          Pay online before delivery/pickup
+                        </p>
+                      </div>
+
+                      <div
+                        className={`border-2 rounded-lg p-3 sm:p-4 cursor-pointer transition-colors ${
+                          paymentMethod === "cash_on_pickup"
+                            ? "border-blue-500 bg-blue-50"
+                            : "border-gray-200 hover:border-gray-300"
+                        }`}
+                        onClick={() => setPaymentMethod("cash_on_pickup")}
+                      >
+                        <div className="flex items-center">
+                          <input
+                            type="radio"
+                            checked={paymentMethod === "cash_on_pickup"}
+                            onChange={() => setPaymentMethod("cash_on_pickup")}
+                            className="mr-3"
+                            disabled={isPlacingOrder}
+                          />
+                          <Package className="w-5 h-5 text-green-600 mr-2" />
+                          <span className="font-medium text-sm sm:text-base">
+                            Cash on Delivery
+                          </span>
+                        </div>
+                        <p className="text-xs sm:text-sm text-gray-600 ml-10">
+                          Pay when you receive your order
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="flex">
+                        <Shield className="w-4 sm:w-5 h-4 sm:h-5 text-blue-600 mr-2 flex-shrink-0" />
+                        <div className="text-xs sm:text-sm text-blue-800">
+                          <p className="font-medium">Payment Information</p>
+                          <p>
+                            Choose your preferred payment method. Our team will
+                            share payment details via WhatsApp after order
+                            confirmation.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -1270,6 +1329,19 @@ Please call us at +91 82971 37702 for order confirmation.`;
                       </p>
                     </div>
                   </div>
+                  {deliveryType === "pickup" && (
+                    <div className="flex items-start space-x-2">
+                      <Package className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="font-medium text-gray-800">
+                          Cash Payment
+                        </p>
+                        <p className="text-gray-600">
+                          Pay in cash when you collect your order
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
