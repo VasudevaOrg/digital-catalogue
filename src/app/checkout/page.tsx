@@ -69,6 +69,10 @@ export default function CheckoutPage() {
   const [isDeliveryAvailable, setIsDeliveryAvailable] = useState(true);
   const [deliveryRadius] = useState(10);
 
+  // Terms and Conditions state
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
+
   // Auto-update payment method when delivery type changes
   useEffect(() => {
     if (deliveryType === "pickup") {
@@ -189,6 +193,17 @@ export default function CheckoutPage() {
         dispatch(showErrorNotification("Please enter your city"));
         return false;
       }
+    }
+
+    // Validate terms and conditions
+    if (!acceptedTerms) {
+      dispatch(showErrorNotification("Please accept the Terms and Conditions"));
+      return false;
+    }
+
+    if (!acceptedPrivacy) {
+      dispatch(showErrorNotification("Please accept the Privacy Policy"));
+      return false;
     }
 
     return true;
@@ -1271,13 +1286,60 @@ Please call us at +91 82971 37702 for order confirmation.`;
               </div>
             </div>
 
+            {/* Terms and Conditions Checkboxes */}
+            <div className="mt-4 bg-white rounded-lg shadow-sm border p-4">
+              <div className="space-y-3">
+                <div className="flex items-start">
+                  <input
+                    type="checkbox"
+                    id="terms"
+                    checked={acceptedTerms}
+                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                    disabled={isPlacingOrder}
+                    className="mt-1 mr-3 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <label
+                    htmlFor="terms"
+                    className="text-xs sm:text-sm text-gray-700 cursor-pointer"
+                  >
+                    I agree to the{" "}
+                    <span className="text-blue-600 hover:underline">
+                      Terms and Conditions
+                    </span>{" "}
+                    *
+                  </label>
+                </div>
+
+                <div className="flex items-start">
+                  <input
+                    type="checkbox"
+                    id="privacy"
+                    checked={acceptedPrivacy}
+                    onChange={(e) => setAcceptedPrivacy(e.target.checked)}
+                    disabled={isPlacingOrder}
+                    className="mt-1 mr-3 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <label
+                    htmlFor="privacy"
+                    className="text-xs sm:text-sm text-gray-700 cursor-pointer"
+                  >
+                    I agree to the{" "}
+                    <span className="text-blue-600 hover:underline">
+                      Privacy Policy
+                    </span>{" "}
+                    *
+                  </label>
+                </div>
+              </div>
+            </div>
+
             {/* Place Order Button */}
             <div className="mt-4 sm:mt-6">
               <button
                 onClick={handlePlaceOrder}
-                disabled={isPlacingOrder}
+                disabled={isPlacingOrder || !acceptedTerms || !acceptedPrivacy}
                 className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-lg font-semibold text-base sm:text-lg flex items-center justify-center space-x-2 transition-colors ${
-                  isPlacingOrder
+                  isPlacingOrder || !acceptedTerms || !acceptedPrivacy
                     ? "bg-gray-400 text-gray-200 cursor-not-allowed"
                     : "bg-blue-600 hover:bg-blue-700 text-white"
                 }`}
