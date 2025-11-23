@@ -83,9 +83,15 @@ export const findQuantityDiscount = (
 
 /**
  * Calculate discount amount based on discount type
+ * @param price - Total price (price per unit × quantity)
+ * @param quantity - Number of items
+ * @param discountType - Type of discount (percentage or fixed)
+ * @param discountValue - Value of discount
+ * @param maxDiscountAmount - Optional maximum discount cap
  */
 const calculateDiscountAmount = (
   price: number,
+  quantity: number,
   discountType: "percentage" | "fixed",
   discountValue: number,
   maxDiscountAmount?: number
@@ -93,9 +99,11 @@ const calculateDiscountAmount = (
   let discount = 0;
 
   if (discountType === "percentage") {
+    // Percentage discount applies to total price
     discount = (price * discountValue) / 100;
   } else {
-    discount = discountValue;
+    // Fixed discount applies PER ITEM, so multiply by quantity
+    discount = discountValue * quantity;
   }
 
   // Apply max discount cap if set
@@ -138,6 +146,7 @@ export const calculateProductDiscount = (
     if (product.discount.simpleDiscount) {
       const simpleDiscountAmount = calculateDiscountAmount(
         originalPrice,
+        quantity, // ADD THIS PARAMETER
         product.discount.simpleDiscount.discountType,
         product.discount.simpleDiscount.discountValue,
         product.discount.maxDiscountAmount
@@ -168,6 +177,7 @@ export const calculateProductDiscount = (
       if (quantityDiscount) {
         const quantityDiscountAmount = calculateDiscountAmount(
           originalPrice,
+          quantity, // ADD THIS PARAMETER
           quantityDiscount.discountType,
           quantityDiscount.discountValue,
           product.discount.maxDiscountAmount
