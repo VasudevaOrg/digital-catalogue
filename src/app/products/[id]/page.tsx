@@ -1,4 +1,4 @@
-// src/app/products/[id]/page.tsx - Enhanced with Stock Validation
+// src/app/products/[id]/page.tsx - Enhanced with Direct Quantity Input
 "use client";
 
 import { useEffect, useState } from "react";
@@ -53,6 +53,7 @@ export default function ProductDetailPage() {
   const product = products.find((p) => p.id === productId);
 
   const [quantity, setQuantity] = useState(1);
+  const [inputValue, setInputValue] = useState("1"); // For input field
   const [selectedImage, setSelectedImage] = useState(0);
 
   useEffect(() => {
@@ -82,6 +83,7 @@ export default function ProductDetailPage() {
 
     const validQuantity = Math.max(1, Math.min(availableStock, newQuantity));
     setQuantity(validQuantity);
+    setInputValue(validQuantity.toString());
 
     // Show warning if trying to exceed stock
     if (newQuantity > availableStock) {
@@ -92,6 +94,44 @@ export default function ProductDetailPage() {
           } available for this product`
         )
       );
+    }
+  };
+
+  // Handle input field change
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+
+    // Allow empty string for better UX while typing
+    if (value === "") {
+      setInputValue("");
+      return;
+    }
+
+    // Only allow numbers
+    if (!/^\d+$/.test(value)) {
+      return;
+    }
+
+    setInputValue(value);
+  };
+
+  // Handle input field blur (when user clicks outside)
+  const handleInputBlur = () => {
+    if (inputValue === "" || inputValue === "0") {
+      setQuantity(1);
+      setInputValue("1");
+      return;
+    }
+
+    const newQuantity = parseInt(inputValue, 10);
+    handleQuantityChange(newQuantity);
+  };
+
+  // Handle Enter key press
+  const handleInputKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleInputBlur();
+      e.currentTarget.blur();
     }
   };
 
@@ -110,6 +150,7 @@ export default function ProductDetailPage() {
     dispatch(addToCart({ product, quantity }));
     dispatch(showSuccessNotification(`${product.name} added to cart!`));
     setQuantity(1);
+    setInputValue("1");
   };
 
   const handleQuantityClick = (newQuantity: number) => {
@@ -385,40 +426,59 @@ export default function ProductDetailPage() {
                       </span>
                     )}
                   </label>
-                  <div className="flex items-center space-x-4">
-                    <div className="flex items-center border border-gray-300 rounded-lg">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
+                    {/* Quantity Input with +/- buttons */}
+                    <div className="flex items-center border-2 border-gray-300 rounded-lg overflow-hidden focus-within:border-blue-500 transition-colors">
                       <button
                         onClick={() => handleQuantityChange(quantity - 1)}
-                        className="p-2 sm:p-3 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="p-3 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                         disabled={quantity <= 1}
+                        type="button"
                       >
-                        <Minus className="w-4 h-4" />
+                        <Minus className="w-5 h-5 text-gray-700" />
                       </button>
-                      <span className="px-4 sm:px-6 py-2 sm:py-3 min-w-[80px] text-center font-medium">
-                        {quantity}
-                      </span>
+
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={inputValue}
+                        onChange={handleInputChange}
+                        onBlur={handleInputBlur}
+                        onKeyPress={handleInputKeyPress}
+                        className="w-24 px-4 py-3 text-center font-semibold text-lg border-none focus:outline-none focus:ring-0"
+                        placeholder="1"
+                      />
+
                       <button
                         onClick={() => handleQuantityChange(quantity + 1)}
-                        className="p-2 sm:p-3 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="p-3 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                         disabled={quantity >= availableStock}
+                        type="button"
                       >
-                        <Plus className="w-4 h-4" />
+                        <Plus className="w-5 h-5 text-gray-700" />
                       </button>
                     </div>
 
+                    {/* Add to Cart Button */}
                     <button
                       onClick={handleAddToCart}
-                      disabled={quantity > availableStock}
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 sm:py-3 px-6 sm:px-8 rounded-lg transition-colors flex items-center justify-center font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={quantity > availableStock || quantity < 1}
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 sm:px-8 rounded-lg transition-colors flex items-center justify-center font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
                     >
                       <ShoppingCart className="w-5 h-5 mr-2" />
                       Add to Cart
                     </button>
                   </div>
 
+                  {/* Helper text */}
+                  <p className="text-sm text-gray-500 mt-2">
+                    💡 Tip: You can type the quantity directly or use +/-
+                    buttons
+                  </p>
+
                   {/* Stock warning when approaching limit */}
                   {quantity >= availableStock && availableStock > 0 && (
-                    <p className="text-orange-600 text-sm mt-2 flex items-center">
+                    <p className="text-orange-600 text-sm mt-2 flex items-center font-medium">
                       <AlertCircle className="w-4 h-4 mr-1" />
                       You've selected the maximum available quantity
                     </p>
