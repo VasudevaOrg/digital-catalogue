@@ -12,7 +12,7 @@ import {
   showErrorNotification,
 } from "@/store/slices/uiSlice";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { WEIGHT_UNIT_LABELS } from "@/types";
+import { WEIGHT_UNIT_LABELS, ProductVariant } from "@/types";
 import {
   calculateProductDiscount,
   isDiscountActive,
@@ -21,6 +21,7 @@ import {
 import { DiscountBadge } from "@/components/product/DiscountBadge";
 import { DiscountPriceDisplay } from "@/components/product/DiscountPriceDisplay";
 import { QuantityDiscountTiers } from "@/components/product/QuantityDiscountTiers";
+import { VariantSelector } from "@/components/product/VariantSelector";
 import {
   ShoppingCart,
   Plus,
@@ -54,6 +55,9 @@ export default function ProductDetailPage() {
 
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
+    null
+  );
 
   useEffect(() => {
     if (productId && !product) {
@@ -61,19 +65,63 @@ export default function ProductDetailPage() {
     }
   }, [dispatch, productId, product]);
 
+  // Don't auto-select variant - show base product by default
+  // Helper functions to get current values based on selected variant or base product
+  const getCurrentPrice = () => {
+    if (product?.hasVariants && selectedVariant) {
+      return selectedVariant.price;
+    }
+    return product?.price || 0;
+  };
+
+  const getCurrentStock = () => {
+    if (product?.hasVariants && selectedVariant) {
+      return selectedVariant.stock;
+    }
+    return product?.stock || 0;
+  };
+
+  const getCurrentWeight = () => {
+    if (product?.hasVariants && selectedVariant) {
+      return selectedVariant.weight;
+    }
+    return product?.weight || 0;
+  };
+
+  const getCurrentWeightUnit = () => {
+    if (product?.hasVariants && selectedVariant) {
+      return selectedVariant.weightUnit;
+    }
+    return product?.weightUnit || "kg";
+  };
+
   // Calculate remaining stock (considering items already in cart)
   const getAvailableStock = () => {
     if (!product) return 0;
 
-    const cartItem = cart.items.find((item) => item.product.id === product.id);
-    const quantityInCart = cartItem?.quantity || 0;
-    const availableStock = product.stock - quantityInCart;
+    const currentStock = getCurrentStock();
 
-    return Math.max(0, availableStock);
+    // For variants, check cart items with same variant
+    if (product.hasVariants && selectedVariant) {
+      const cartItem = cart.items.find(
+        (item) =>
+          item.product.id === product.id &&
+          item.selectedVariant?.sku === selectedVariant.sku
+      );
+      const quantityInCart = cartItem?.quantity || 0;
+      return Math.max(0, currentStock - quantityInCart);
+    }
+
+    // For non-variant products
+    const cartItem = cart.items.find(
+      (item) => item.product.id === product.id && !item.selectedVariant
+    );
+    const quantityInCart = cartItem?.quantity || 0;
+    return Math.max(0, currentStock - quantityInCart);
   };
 
   const availableStock = getAvailableStock();
-  const isOutOfStock = product?.stock === 0 || availableStock === 0;
+  const isOutOfStock = getCurrentStock() === 0 || availableStock === 0;
   const isLowStock = availableStock > 0 && availableStock <= 5;
 
   // Handle quantity change with stock validation
@@ -98,6 +146,12 @@ export default function ProductDetailPage() {
   const handleAddToCart = () => {
     if (!product) return;
 
+    // Variant selection is now optional
+    // if (product.hasVariants && !selectedVariant) {
+    //   dispatch(showErrorNotification("Please select a variant first"));
+    //   return;
+    // }
+
     if (quantity > availableStock) {
       dispatch(
         showErrorNotification(
@@ -107,8 +161,26 @@ export default function ProductDetailPage() {
       return;
     }
 
-    dispatch(addToCart({ product, quantity }));
-    dispatch(showSuccessNotification(`${product.name} added to cart!`));
+    // Add to cart with selected variant if applicable
+    dispatch(
+      addToCart({
+        product,
+        quantity,
+        selectedVariant:
+          product.hasVariants && selectedVariant ? selectedVariant : undefined,
+      })
+    );
+
+    const variantInfo = selectedVariant ? ` (${formatWeight()})` : "";
+    dispatch(
+      showSuccessNotification(`${product.name}${variantInfo} added to cart!`)
+    );
+    setQuantity(1);
+  };
+
+  const handleVariantSelect = (variant: ProductVariant) => {
+    setSelectedVariant(variant);
+    // Reset quantity when variant changes
     setQuantity(1);
   };
 
@@ -131,14 +203,21 @@ export default function ProductDetailPage() {
 
   // Format weight display
   const formatWeight = () => {
-    const unit = WEIGHT_UNIT_LABELS[product.weightUnit] || product.weightUnit;
-    if (product.weightUnit === "grams" && product.weight >= 1000) {
-      return `${(product.weight / 1000).toFixed(1)} kg`;
+    const weight = getCurrentWeight();
+    const weightUnit = getCurrentWeightUnit();
+
+    if (product?.hasVariants && selectedVariant?.customUnit) {
+      return `${weight} ${selectedVariant.customUnit}`;
     }
-    if (product.weightUnit === "ml" && product.weight >= 1000) {
-      return `${(product.weight / 1000).toFixed(1)} L`;
+
+    const unit = WEIGHT_UNIT_LABELS[weightUnit] || weightUnit;
+    if (weightUnit === "grams" && weight >= 1000) {
+      return `${(weight / 1000).toFixed(1)} kg`;
     }
-    return `${product.weight} ${unit.split(" ")[1] || unit}`;
+    if (weightUnit === "ml" && weight >= 1000) {
+      return `${(weight / 1000).toFixed(1)} L`;
+    }
+    return `${weight} ${unit.split(" ")[1] || unit}`;
   };
 
   return (
@@ -267,6 +346,9 @@ export default function ProductDetailPage() {
                 </p>
               </div>
 
+              {/* Variant Selector */}
+              {/* Variant Selector moved below price */}
+
               {/* Stock Status - Prominent Display */}
               <div className="mb-4 sm:mb-6">
                 {isOutOfStock ? (
@@ -316,7 +398,12 @@ export default function ProductDetailPage() {
               {/* Price and Discount */}
               <div className="mb-4 sm:mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
                 <DiscountPriceDisplay
-                  product={product}
+                  product={{
+                    ...product,
+                    price: getCurrentPrice(),
+                    weight: getCurrentWeight(),
+                    weightUnit: getCurrentWeightUnit() as any,
+                  }}
                   quantity={quantity}
                   showOriginalPrice={true}
                   className="mb-2"
@@ -340,11 +427,22 @@ export default function ProductDetailPage() {
 
                 <div className="text-sm text-gray-600 mt-2">
                   Price per {formatWeight()} • Total:{" "}
-                  {(quantity * product.weight).toFixed(2)}{" "}
-                  {WEIGHT_UNIT_LABELS[product.weightUnit]?.split(" ")[1] ||
-                    product.weightUnit}
+                  {(quantity * getCurrentWeight()).toFixed(2)}{" "}
+                  {WEIGHT_UNIT_LABELS[getCurrentWeightUnit()]?.split(" ")[1] ||
+                    getCurrentWeightUnit()}
                 </div>
               </div>
+
+              {/* Variant Selector */}
+              {product.hasVariants &&
+                product.variants &&
+                product.variants.length > 0 && (
+                  <VariantSelector
+                    variants={product.variants}
+                    selectedVariant={selectedVariant}
+                    onVariantSelect={handleVariantSelect}
+                  />
+                )}
 
               {/* Quantity Discount Tiers */}
               {hasDiscount &&

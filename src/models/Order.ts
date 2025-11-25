@@ -12,6 +12,7 @@ export interface IOrderItem extends Document {
     category: string;
     images: string[];
     discount?: any; // Store discount details
+    selectedVariant?: any; // Store selected variant details
   };
   quantity: number;
   price: number; // Unit price (discounted)
@@ -90,6 +91,7 @@ const OrderItemSchema = new Schema({
     category: { type: String, required: true },
     images: [{ type: String }],
     discount: { type: Schema.Types.Mixed }, // Store discount info
+    selectedVariant: { type: Schema.Types.Mixed }, // Store selected variant details
   },
   quantity: { type: Number, required: true, min: 1 },
   price: { type: Number, required: true }, // Unit price (discounted)

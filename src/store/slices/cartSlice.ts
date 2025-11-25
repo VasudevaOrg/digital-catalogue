@@ -1,6 +1,6 @@
-// src/store/slices/cartSlice.ts - Fixed with Correct Free Delivery Logic
+// src/store/slices/cartSlice.ts - Fixed with Correct Free Delivery Logic and Variants Support
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { CartState, Cart, Product, CartItem } from "@/types";
+import { CartState, Cart, Product, CartItem, ProductVariant } from "@/types";
 import { calculateProductDiscount } from "@/lib/discountUtils";
 import {
   isDeltaProduct,
@@ -39,18 +39,35 @@ const calculateCartTotals = (
 } => {
   // Calculate total with discounts applied
   const totalAmount = items.reduce((sum, item) => {
-    const discountCalc = calculateProductDiscount(item.product, item.quantity);
+    // Use variant price if available, otherwise use product price
+    const basePrice = item.selectedVariant?.price || item.product.price;
+    const productForDiscount = item.selectedVariant
+      ? { ...item.product, price: item.selectedVariant.price }
+      : item.product;
+
+    const discountCalc = calculateProductDiscount(
+      productForDiscount,
+      item.quantity
+    );
     return sum + discountCalc.discountedPrice;
   }, 0);
 
-  const totalWeight = items.reduce(
-    (sum, item) => sum + item.product.weight * item.quantity,
-    0
-  );
+  const totalWeight = items.reduce((sum, item) => {
+    const weight = item.selectedVariant?.weight || item.product.weight;
+    return sum + weight * item.quantity;
+  }, 0);
 
   // Prepare items for free delivery calculation
   const itemsWithPrices = items.map((item) => {
-    const discountCalc = calculateProductDiscount(item.product, item.quantity);
+    const basePrice = item.selectedVariant?.price || item.product.price;
+    const productForDiscount = item.selectedVariant
+      ? { ...item.product, price: item.selectedVariant.price }
+      : item.product;
+
+    const discountCalc = calculateProductDiscount(
+      productForDiscount,
+      item.quantity
+    );
     return {
       product: item.product,
       quantity: item.quantity,
@@ -169,17 +186,32 @@ const cartSlice = createSlice({
   reducers: {
     addToCart: (
       state,
-      action: PayloadAction<{ product: Product; quantity: number }>
+      action: PayloadAction<{
+        product: Product;
+        quantity: number;
+        selectedVariant?: ProductVariant;
+      }>
     ) => {
-      const { product, quantity } = action.payload;
-      const existingItem = state.cart.items.find(
-        (item) => item.product.id === product.id
-      );
+      const { product, quantity, selectedVariant } = action.payload;
+
+      // Find existing item - must match both product ID and variant (if applicable)
+      const existingItem = state.cart.items.find((item) => {
+        if (selectedVariant) {
+          // For variant products, match both product ID and variant SKU
+          return (
+            item.product.id === product.id &&
+            item.selectedVariant?.sku === selectedVariant.sku
+          );
+        } else {
+          // For non-variant products, match product ID and ensure no variant is selected
+          return item.product.id === product.id && !item.selectedVariant;
+        }
+      });
 
       if (existingItem) {
         existingItem.quantity += quantity;
       } else {
-        state.cart.items.push({ product, quantity });
+        state.cart.items.push({ product, quantity, selectedVariant });
       }
 
       // Recalculate totals with CORRECT free delivery logic

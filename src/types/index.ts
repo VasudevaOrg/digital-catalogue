@@ -24,6 +24,28 @@ export interface ProductDiscount {
   maxDiscountAmount?: number;
 }
 
+// Product Variant interface
+export interface ProductVariant {
+  _id?: string;
+  sku: string;
+  weight: number;
+  weightUnit:
+    | "kg"
+    | "grams"
+    | "ltr"
+    | "ml"
+    | "box"
+    | "bags"
+    | "pieces"
+    | "other";
+  customUnit?: string;
+  price: number;
+  stock: number;
+  costPrice?: number;
+  isActive: boolean;
+  lowStockThreshold?: number;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -46,6 +68,8 @@ export interface Product {
   isRecommended: boolean;
   tags: string[];
   discount?: ProductDiscount; // NEW: Discount field
+  hasVariants?: boolean; // NEW: Indicates if product has variants
+  variants?: ProductVariant[]; // NEW: Product variants array
   createdAt: string;
   updatedAt: string;
 }
@@ -53,6 +77,7 @@ export interface Product {
 export interface CartItem {
   product: Product;
   quantity: number;
+  selectedVariant?: ProductVariant; // NEW: Selected variant if product has variants
 }
 
 export interface Cart {

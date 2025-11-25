@@ -82,14 +82,24 @@ export function CartSidebar() {
   const amountNeededForFreeDelivery = Math.max(0, 1000 - eligibleAmount);
 
   // Format weight display
-  const formatWeight = (product: any, quantity: number = 1) => {
-    const totalWeight = product.weight * quantity;
-    const unit = WEIGHT_UNIT_LABELS[product.weightUnit] || product.weightUnit;
+  // Format weight display
+  const formatWeight = (product: any, quantity: number = 1, variant?: any) => {
+    const weight = variant ? variant.weight : product.weight;
+    const weightUnit = variant ? variant.weightUnit : product.weightUnit;
 
-    if (product.weightUnit === "grams" && totalWeight >= 1000) {
+    if (variant?.customUnit) {
+      return `${weight * quantity} ${variant.customUnit}`;
+    }
+
+    const totalWeight = weight * quantity;
+    const unit =
+      WEIGHT_UNIT_LABELS[weightUnit as keyof typeof WEIGHT_UNIT_LABELS] ||
+      weightUnit;
+
+    if (weightUnit === "grams" && totalWeight >= 1000) {
       return `${(totalWeight / 1000).toFixed(1)} kg`;
     }
-    if (product.weightUnit === "ml" && totalWeight >= 1000) {
+    if (weightUnit === "ml" && totalWeight >= 1000) {
       return `${(totalWeight / 1000).toFixed(1)} L`;
     }
     return `${totalWeight} ${unit.split(" ")[1] || unit}`;
@@ -163,11 +173,17 @@ export function CartSidebar() {
                   const hasDiscount =
                     item.product.discount &&
                     isDiscountActive(item.product.discount);
+
+                  // Use variant price if available
+                  const productForPrice = item.selectedVariant
+                    ? { ...item.product, price: item.selectedVariant.price }
+                    : item.product;
+
                   const discountCalc = hasDiscount
-                    ? calculateProductDiscount(item.product, item.quantity)
+                    ? calculateProductDiscount(productForPrice, item.quantity)
                     : null;
 
-                  const originalPrice = item.product.price * item.quantity;
+                  const originalPrice = productForPrice.price * item.quantity;
                   const finalPrice =
                     discountCalc?.discountedPrice || originalPrice;
                   const savings = discountCalc?.discountAmount || 0;
@@ -178,7 +194,9 @@ export function CartSidebar() {
 
                   return (
                     <div
-                      key={item.product.id}
+                      key={`${item.product.id}-${
+                        item.selectedVariant?.sku || "base"
+                      }`}
                       className="flex space-x-4 pb-4 border-b last:border-b-0"
                     >
                       {/* Product Image */}
@@ -268,7 +286,11 @@ export function CartSidebar() {
                           <div className="flex items-center text-xs text-gray-500">
                             <Weight className="w-3 h-3 mr-1" />
                             <span>
-                              {formatWeight(item.product, item.quantity)}
+                              {formatWeight(
+                                item.product,
+                                item.quantity,
+                                item.selectedVariant
+                              )}
                             </span>
                           </div>
                         </div>

@@ -86,14 +86,20 @@ export default function CheckoutPage() {
   const itemsWithPrices = cart.items.map((item) => {
     const hasDiscount =
       item.product.discount && isDiscountActive(item.product.discount);
+
+    // Use variant price if available
+    const productForPrice = item.selectedVariant
+      ? { ...item.product, price: item.selectedVariant.price }
+      : item.product;
+
     const discountCalc = hasDiscount
-      ? calculateProductDiscount(item.product, item.quantity)
+      ? calculateProductDiscount(productForPrice, item.quantity)
       : null;
     const finalPrice =
-      discountCalc?.discountedPrice || item.product.price * item.quantity;
+      discountCalc?.discountedPrice || productForPrice.price * item.quantity;
 
     return {
-      product: item.product,
+      product: productForPrice,
       quantity: item.quantity,
       finalPrice: finalPrice,
     };
@@ -230,9 +236,19 @@ export default function CheckoutPage() {
         const hasDiscount =
           item.product.discount && isDiscountActive(item.product.discount);
 
+        // Use variant data if available
+        const productData = item.selectedVariant
+          ? {
+              ...item.product,
+              price: item.selectedVariant.price,
+              weight: item.selectedVariant.weight,
+              weightUnit: item.selectedVariant.weightUnit,
+            }
+          : item.product;
+
         if (hasDiscount) {
           const discountCalc = calculateProductDiscount(
-            item.product,
+            productData,
             item.quantity
           );
 
@@ -242,11 +258,12 @@ export default function CheckoutPage() {
               name: item.product.name,
               description: item.product.description || "",
               price: discountCalc.discountedPrice / item.quantity,
-              originalPrice: item.product.price,
-              weight: item.product.weight,
+              originalPrice: productData.price,
+              weight: productData.weight,
               category: item.product.category,
               images: item.product.images || [],
               discount: item.product.discount,
+              selectedVariant: item.selectedVariant, // Pass variant info
             },
             quantity: item.quantity,
             appliedDiscount: discountCalc.discountAmount,
@@ -258,10 +275,11 @@ export default function CheckoutPage() {
               id: item.product.id,
               name: item.product.name,
               description: item.product.description || "",
-              price: item.product.price,
-              weight: item.product.weight,
+              price: productData.price,
+              weight: productData.weight,
               category: item.product.category,
               images: item.product.images || [],
+              selectedVariant: item.selectedVariant, // Pass variant info
             },
             quantity: item.quantity,
           };
@@ -277,7 +295,8 @@ export default function CheckoutPage() {
       }, 0);
 
       const originalAmount = cart.items.reduce((sum, item) => {
-        return sum + item.product.price * item.quantity;
+        const price = item.selectedVariant?.price || item.product.price;
+        return sum + price * item.quantity;
       }, 0);
 
       console.log("💰 ORDER CALCULATION:", {
@@ -1053,25 +1072,67 @@ Please call us at +91 82971 37702 for order confirmation.`;
                     const hasDiscount =
                       item.product.discount &&
                       isDiscountActive(item.product.discount);
+
+                    // Use variant data
+                    const productForDisplay = item.selectedVariant
+                      ? {
+                          ...item.product,
+                          price: item.selectedVariant.price,
+                          weight: item.selectedVariant.weight,
+                        }
+                      : item.product;
+
                     const discountCalc = hasDiscount
-                      ? calculateProductDiscount(item.product, item.quantity)
+                      ? calculateProductDiscount(
+                          productForDisplay,
+                          item.quantity
+                        )
                       : null;
 
-                    const originalPrice = item.product.price * item.quantity;
+                    const originalPrice =
+                      productForDisplay.price * item.quantity;
                     const finalPrice =
                       discountCalc?.discountedPrice || originalPrice;
                     const savings = discountCalc?.discountAmount || 0;
 
                     const isItemDelta = isDeltaProduct(item.product);
 
+                    // Format weight
+                    const weight = item.selectedVariant
+                      ? item.selectedVariant.weight
+                      : item.product.weight;
+                    const weightUnit = item.selectedVariant
+                      ? item.selectedVariant.weightUnit
+                      : item.product.weightUnit;
+                    const customUnit = item.selectedVariant?.customUnit;
+
+                    let weightDisplay = "";
+                    if (customUnit) {
+                      weightDisplay = `${weight * item.quantity} ${customUnit}`;
+                    } else {
+                      weightDisplay = `${(weight * item.quantity).toFixed(
+                        2
+                      )} ${weightUnit}`;
+                    }
+
                     return (
                       <div
-                        key={item.product.id}
+                        key={`${item.product.id}-${
+                          item.selectedVariant?.sku || "base"
+                        }`}
                         className="flex justify-between"
                       >
                         <div className="flex-1">
                           <h4 className="text-sm font-medium text-gray-900">
                             {item.product.name}
+                            {item.selectedVariant && (
+                              <span className="text-gray-500 font-normal ml-1">
+                                (
+                                {item.selectedVariant.customUnit ||
+                                  `${item.selectedVariant.weight} ${item.selectedVariant.weightUnit}`}
+                                )
+                              </span>
+                            )}
                             {isItemDelta && (
                               <span className="ml-2 text-xs text-amber-600">
                                 DELTA
@@ -1083,7 +1144,7 @@ Please call us at +91 82971 37702 for order confirmation.`;
                               <div className="flex flex-col gap-1">
                                 <div>
                                   <span className="line-through">
-                                    ₹{item.product.price}
+                                    ₹{productForDisplay.price}
                                   </span>{" "}
                                   →{" "}
                                   <span className="text-green-600 font-medium">
@@ -1097,12 +1158,11 @@ Please call us at +91 82971 37702 for order confirmation.`;
                               </div>
                             ) : (
                               <>
-                                ₹{item.product.price} × {item.quantity}
+                                ₹{productForDisplay.price} × {item.quantity}
                               </>
                             )}
                             {" • "}
-                            {(item.product.weight * item.quantity).toFixed(2)}
-                            kg
+                            {weightDisplay}
                           </div>
                         </div>
                         <div className="text-sm font-medium">
@@ -1144,7 +1204,10 @@ Please call us at +91 82971 37702 for order confirmation.`;
                           ₹
                           {cart.items
                             .reduce((total, item) => {
-                              return total + item.product.price * item.quantity;
+                              const price =
+                                item.selectedVariant?.price ||
+                                item.product.price;
+                              return total + price * item.quantity;
                             }, 0)
                             .toFixed(2)}
                         </span>
@@ -1160,9 +1223,18 @@ Please call us at +91 82971 37702 for order confirmation.`;
                               const hasDiscount =
                                 item.product.discount &&
                                 isDiscountActive(item.product.discount);
+
+                              // Use variant data
+                              const productForDiscount = item.selectedVariant
+                                ? {
+                                    ...item.product,
+                                    price: item.selectedVariant.price,
+                                  }
+                                : item.product;
+
                               const discountCalc = hasDiscount
                                 ? calculateProductDiscount(
-                                    item.product,
+                                    productForDiscount,
                                     item.quantity
                                   )
                                 : null;

@@ -35,6 +35,7 @@ export async function POST(request: NextRequest) {
           category: item.product.category,
           images: item.product.images || [],
           discount: item.product.discount, // Store discount information
+          selectedVariant: item.product.selectedVariant, // Store selected variant details
         },
         quantity: item.quantity,
         price: unitPrice, // Unit price (discounted)
