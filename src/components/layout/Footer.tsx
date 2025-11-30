@@ -122,9 +122,9 @@ export function Footer() {
               <div className="flex items-start">
                 <MapPin className="w-4 sm:w-5 h-4 sm:h-5 mr-2 mt-0.5 flex-shrink-0 text-blue-600" />
                 <div>
-                  123 Main Street
+                  SHOP No. 11, APMC Yard
                   <br />
-                  Your City, 573103
+                  ARSIKERE, 573103
                   <br />
                   Karnataka, India
                 </div>
@@ -135,7 +135,7 @@ export function Footer() {
                   href="tel:+919876543210"
                   className="hover:text-blue-600 transition-colors duration-200 touch-target-sm"
                 >
-                  +91 98765 43210
+                  +91 91649 12323
                 </a>
               </div>
               <div className="flex items-center">

@@ -783,7 +783,7 @@ Happy Shopping! 🙏`;
 • Email: support@digitalcatalogue.com
 
 🏪 *Store Information:*
-• Address: 123 Main Street, Karnataka 573103
+• Address: SHOP No. 11, APMC Yard, Karnataka 573103
 • Hours: Mon-Sat 9AM-8PM, Sun 10AM-6PM
 • Free Delivery: Orders ₹1000+
 
@@ -805,7 +805,7 @@ Just type your question and I'll help you! 😊`;
 📧 *Email:* support@digitalcatalogue.com
 
 📍 *Store Address:*
-123 Main Street
+SHOP No. 11, APMC Yard
 Karnataka 573103
 India
 

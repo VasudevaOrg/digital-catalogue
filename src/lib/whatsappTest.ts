@@ -125,7 +125,7 @@ export class WhatsAppTestService {
       message += `Expected Delivery: Within 24-48 hours\n`;
     } else {
       message += `Type: Store Pickup\n`;
-      message += `Location: 123 Main Street, Karnataka 573103\n`;
+      message += `Location: SHOP No. 11, APMC Yard, Karnataka 573103\n`;
       message += `Ready for Pickup: Within 2-4 hours\n`;
     }
 
@@ -188,7 +188,7 @@ export class WhatsAppTestService {
           message += `Your order is packed and ready!\n\n`;
           message += `📍 Pickup Location:\n`;
           message += `${this.businessName}\n`;
-          message += `123 Main Street\n`;
+          message += `SHOP No. 11, APMC Yard\n`;
           message += `Karnataka 573103\n\n`;
           message += `⏰ Store Hours:\n`;
           message += `Monday - Saturday: 9:00 AM - 8:00 PM\n`;

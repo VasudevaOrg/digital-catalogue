@@ -267,7 +267,7 @@ export function TermsAndPoliciesModal({
                     </h4>
                     <p>To initiate a return:</p>
                     <p>
-                      • Contact us via WhatsApp (+91 82971 37702) or phone
+                      • Contact us via WhatsApp (+91 9164912323) or phone
                       within the return window.
                     </p>
                     <p>• Provide your Order ID and reason for return.</p>
@@ -350,10 +350,10 @@ export function TermsAndPoliciesModal({
                       8. Contact Information
                     </h4>
                     <p>For returns, refunds, or any questions:</p>
-                    <p>• Phone: +91 82971 37702</p>
-                    <p>• WhatsApp: +91 82971 37702</p>
+                    <p>• Phone: +91 91649 12323</p>
+                    <p>• WhatsApp: +91 91649 12323</p>
                     <p>• Email: support@digitalcatalogue.com</p>
-                    <p>• Store Address: 123 Main Street, Karnataka 573103</p>
+                    <p>• Store Address: SHOP No. 11, APMC Yard, Karnataka 573103</p>
                   </div>
                 </div>
               </div>

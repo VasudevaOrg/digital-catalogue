@@ -196,7 +196,7 @@ export function DeliveryInfo() {
             </button>
 
             <div className="text-primary-100">
-              <p className="text-sm">Call us: +91 98765 43210</p>
+              <p className="text-sm">Call us: +91 91649 12323</p>
               <p className="text-sm">Email: support@digitalcatalogue.com</p>
             </div>
           </div>

@@ -92,7 +92,7 @@ ${
 📍 ${order.deliveryAddress?.street}, ${order.deliveryAddress?.city}
 📅 Expected Delivery: Within 24-48 hours`
     : `🏪 Store Pickup
-📍 123 Main Street, Karnataka 573103
+📍 SHOP No. 11, APMC Yard, Karnataka 573103
 📅 Ready for Pickup: Within 2-4 hours`
 }
 
@@ -152,7 +152,7 @@ Your order is packed and ready for collection!
 
 📍 Pickup Location:
 Digital Catalogue Store
-123 Main Street
+SHOP No. 11, APMC Yard
 Karnataka 573103
 
 ⏰ Store Hours:

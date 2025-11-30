@@ -182,7 +182,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                   </p>
                   <p className="text-sm text-gray-700 flex items-start">
                     <span className="mr-2.5 mt-0.5">📍</span>
-                    <span>123 Main Street, 573103</span>
+                    <span>SHOP No. 11, APMC Yard, 573103</span>
                   </p>
                 </div>
               </div>
