@@ -1,5 +1,3 @@
-// src/app/api/whatsapp/webhook/route.ts
-// FIXED: Proper loop prevention that doesn't block customer messages
 import { NextRequest, NextResponse } from "next/server";
 import { whatsappFlowService } from "@/lib/whatsappFlowService";
 
