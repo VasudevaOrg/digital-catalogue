@@ -134,15 +134,16 @@ export function CartSidebar() {
       <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-xl z-50">
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 sm:p-6 border-b">
-            <h2 className="text-lg sm:text-xl font-light text-gray-800">
+          <div className="flex items-center justify-between p-4 sm:p-6 border-b bg-gradient-to-r from-blue-600 to-indigo-600">
+            <h2 className="text-lg sm:text-xl font-bold text-white">
               Shopping Cart ({cart.items.length})
             </h2>
             <button
               onClick={handleClose}
-              className="p-1 hover:bg-gray-100 rounded transition-colors"
+              className="touch-target p-2 hover:bg-white/20 rounded-lg transition-colors"
+              aria-label="Close cart"
             >
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5 text-white" />
             </button>
           </div>
 
@@ -151,7 +152,7 @@ export function CartSidebar() {
             {cart.items.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full px-6 text-center">
                 <ShoppingBag className="w-16 h-16 text-gray-300 mb-4" />
-                <h3 className="text-lg font-medium text-gray-800 mb-2">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
                   Your cart is empty
                 </h3>
                 <p className="text-gray-600 mb-6">
@@ -162,7 +163,7 @@ export function CartSidebar() {
                     router.push("/products");
                     handleClose();
                   }}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors font-medium"
+                  className="touch-target bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl transition-colors font-semibold shadow-md hover:shadow-lg"
                 >
                   Browse Products
                 </button>
@@ -240,7 +241,7 @@ export function CartSidebar() {
 
                       {/* Product Details */}
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-gray-800 mb-1 text-sm sm:text-base leading-tight">
+                        <h4 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base leading-tight">
                           {item.product.name}
                         </h4>
 
@@ -270,7 +271,7 @@ export function CartSidebar() {
                                 </span>
                               </>
                             ) : (
-                              <span className="text-sm font-medium text-gray-800">
+                              <span className="text-sm font-semibold text-gray-900">
                                 ₹{finalPrice.toFixed(2)}
                               </span>
                             )}
@@ -306,11 +307,11 @@ export function CartSidebar() {
                                 )
                               }
                               disabled={item.quantity <= 1}
-                              className="w-6 h-6 sm:w-7 sm:h-7 border rounded flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="w-6 h-6 sm:w-7 sm:h-7 border rounded flex items-center justify-center text-gray-600 hover:text-gray-800 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               <Minus className="w-3 h-3" />
                             </button>
-                            <span className="w-8 text-center text-sm font-medium">
+                            <span className="w-8 text-center text-sm font-medium text-gray-900">
                               {item.quantity}
                             </span>
                             <button
@@ -321,7 +322,7 @@ export function CartSidebar() {
                                 )
                               }
                               disabled={item.quantity >= item.product.stock}
-                              className="w-6 h-6 sm:w-7 sm:h-7 border rounded flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="w-6 h-6 sm:w-7 sm:h-7 border rounded flex items-center justify-center text-gray-600 hover:text-gray-800 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               <Plus className="w-3 h-3" />
                             </button>
@@ -329,7 +330,8 @@ export function CartSidebar() {
 
                           <button
                             onClick={() => handleRemoveItem(item.product.id)}
-                            className="text-red-500 hover:text-red-700 p-1 transition-colors"
+                            className="touch-target text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-all"
+                            aria-label="Remove item"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -376,9 +378,11 @@ export function CartSidebar() {
                       : `₹${deliveryFee}`}
                   </span>
                 </div>
-                <div className="flex justify-between font-medium text-base pt-2 border-t">
-                  <span>Total</span>
-                  <span>₹{totalWithDelivery.toFixed(2)}</span>
+                <div className="flex justify-between font-semibold text-base sm:text-lg pt-2 border-t">
+                  <span className="text-gray-900">Total</span>
+                  <span className="text-gray-900">
+                    ₹{totalWithDelivery.toFixed(2)}
+                  </span>
                 </div>
               </div>
 
@@ -481,7 +485,7 @@ export function CartSidebar() {
               {/* Checkout Button */}
               <button
                 onClick={handleCheckout}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg transition-colors font-medium"
+                className="touch-target w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-3.5 sm:py-4 rounded-xl transition-all duration-200 font-bold text-base sm:text-lg shadow-lg hover:shadow-xl"
               >
                 Proceed to Checkout
               </button>

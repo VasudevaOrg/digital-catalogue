@@ -487,17 +487,17 @@ export default function ProductDetailPage() {
                     <div className="flex items-center border border-gray-300 rounded-lg">
                       <button
                         onClick={() => handleQuantityChange(quantity - 1)}
-                        className="p-2 sm:p-3 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="p-2 sm:p-3 text-gray-600 hover:text-gray-800 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         disabled={quantity <= 1}
                       >
                         <Minus className="w-4 h-4" />
                       </button>
-                      <span className="px-4 sm:px-6 py-2 sm:py-3 min-w-[80px] text-center font-medium">
+                      <span className="px-4 sm:px-6 py-2 sm:py-3 min-w-[80px] text-center font-medium text-gray-900">
                         {quantity}
                       </span>
                       <button
                         onClick={() => handleQuantityChange(quantity + 1)}
-                        className="p-2 sm:p-3 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="p-2 sm:p-3 text-gray-600 hover:text-gray-800 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         disabled={quantity >= availableStock}
                       >
                         <Plus className="w-4 h-4" />

@@ -320,7 +320,7 @@ export function ProductCard({
       <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden border border-gray-200 h-full flex flex-col">
         {/* Image Container */}
         <Link href={`/products/${product.id}`} className="block">
-          <div className="relative aspect-square overflow-hidden bg-gray-50">
+          <div className="relative w-full aspect-square overflow-hidden bg-gray-50">
             {/* Discount Badge */}
             {hasDiscount && !isOutOfStock && (
               <DiscountBadgeCompact product={product} quantity={1} />

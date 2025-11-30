@@ -172,11 +172,13 @@ export default function HomePage() {
         <div className="absolute bottom-0 right-0 w-32 sm:w-40 h-32 sm:h-40 bg-gradient-to-tl from-orange-100 to-transparent rounded-full blur-2xl opacity-60"></div>
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-8 sm:mb-12">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-gray-800 via-blue-600 to-gray-800 bg-clip-text text-transparent mb-3 sm:mb-4">
-              Shop by Category
+          <div className="text-center mb-6 sm:mb-8 md:mb-12">
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 mb-2 sm:mb-3 md:mb-4">
+              <span className="bg-gradient-to-r from-gray-800 via-blue-600 to-gray-800 bg-clip-text text-transparent">
+                Shop by Category
+              </span>
             </h2>
-            <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto mb-4 sm:mb-6 px-4 sm:px-0">
+            <p className="text-sm sm:text-base md:text-lg text-gray-700 max-w-2xl mx-auto mb-3 sm:mb-4 md:mb-6 px-4 sm:px-0">
               Discover our premium collection of quality groceries and daily
               essentials
             </p>
@@ -233,15 +235,17 @@ export default function HomePage() {
         </div>
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-12 sm:mb-16">
-            <div className="inline-flex items-center px-3 sm:px-4 py-2 bg-yellow-100 text-yellow-800 rounded-full text-xs sm:text-sm font-medium mb-3 sm:mb-4">
-              <Trophy className="w-3 sm:w-4 h-3 sm:h-4 mr-2" />
+          <div className="text-center mb-8 sm:mb-12 md:mb-16">
+            <div className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 bg-yellow-100 text-yellow-800 rounded-full text-xs sm:text-sm font-medium mb-2 sm:mb-3 md:mb-4">
+              <Trophy className="w-3 sm:w-4 h-3 sm:h-4 mr-1.5 sm:mr-2" />
               Specially Recommended for You
             </div>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-gray-800 via-blue-600 to-gray-800 bg-clip-text text-transparent mb-3 sm:mb-4">
-              Recommended Products
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 mb-2 sm:mb-3 md:mb-4">
+              <span className="bg-gradient-to-r from-gray-800 via-blue-600 to-gray-800 bg-clip-text text-transparent">
+                Recommended Products
+              </span>
             </h2>
-            <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-4 sm:px-0">
+            <p className="text-sm sm:text-base md:text-lg text-gray-700 max-w-2xl mx-auto px-4 sm:px-0">
               Handpicked quality items specially recommended by our team
             </p>
           </div>
@@ -312,9 +316,9 @@ export default function HomePage() {
       )}
 
       {/* Features Section */}
-      <section className="py-12 sm:py-16 bg-white">
+      <section className="py-8 sm:py-12 md:py-16 bg-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
             {[
               {
                 icon: <Truck className="w-6 sm:w-8 h-6 sm:h-8" />,

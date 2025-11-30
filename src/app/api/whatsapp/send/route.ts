@@ -16,21 +16,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Clean phone number - for test setup, use the exact format Meta expects
+    // Clean phone number - format for Meta WhatsApp API
     let cleanPhone = phoneNumber.replace(/\D/g, "");
 
     if (cleanPhone.startsWith("91") && cleanPhone.length === 12) {
       cleanPhone = cleanPhone; // Keep as is for Indian numbers
     } else if (cleanPhone.length === 10) {
-      cleanPhone = `91${cleanPhone}`; // Add country code
+      cleanPhone = `91${cleanPhone}`; // Add country code for Indian numbers
     }
 
-    if (cleanPhone !== "918985346102") {
+    // Validate phone number format
+    if (cleanPhone.length < 10 || cleanPhone.length > 15) {
       return NextResponse.json(
         {
           success: false,
           message:
-            "This number is not in the test phone list. Only +91 89853 46102 is allowed for testing.",
+            "Invalid phone number format. Please provide a valid phone number.",
         },
         { status: 400 }
       );
@@ -38,10 +39,19 @@ export async function POST(request: NextRequest) {
 
     // WhatsApp Business API configuration
     const WHATSAPP_API_URL = "https://graph.facebook.com/v22.0";
-    const WHATSAPP_PHONE_ID = "802685189585173";
-    const WHATSAPP_ACCESS_TOKEN =
-      process.env.WHATSAPP_ACCESS_TOKEN ||
-      "EAASGzwVtiEMBPt4e2LEZAdCIZBWzvwwzqKQo8hzBnuRbObShSjTBEXv1ZBkPBtHdoBBxJmCHSScdzXphTsRZBkL6qKBklQV0DEPx2mz5dZAJjEIdgjxLv3S7rfdqx48u8QYwDDW8MYB6I5AI4ZCZBoOoWpBXicAx59iG5O7VzFTLyeB2K4DcZAjU9VQEgNNnCJd9JsMoIcIkaDKw9RZBx2iu4weCTNyZAGABLFJcf66v9HzpgZD";
+    const WHATSAPP_PHONE_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
+    const WHATSAPP_ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
+
+    if (!WHATSAPP_PHONE_ID || !WHATSAPP_ACCESS_TOKEN) {
+      console.error("❌ WhatsApp credentials missing in environment variables");
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Server configuration error: WhatsApp credentials missing",
+        },
+        { status: 500 }
+      );
+    }
 
     console.log("\n📱 WHATSAPP API - ENHANCED WITH DATABASE INTEGRATION");
     console.log("=".repeat(70));

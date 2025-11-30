@@ -8,37 +8,39 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-gray-100 border-t">
+    <footer className="bg-gradient-to-br from-gray-50 to-gray-100 border-t border-gray-200">
       {/* Main Footer */}
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
           {/* Company Info */}
           <div>
-            <h3 className="text-lg font-medium text-gray-800 mb-4">
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4">
               Digital Catalogue
             </h3>
-            <p className="text-gray-600 text-sm mb-4">
+            <p className="text-gray-700 text-sm sm:text-base mb-4 leading-relaxed">
               Your trusted partner for quality groceries and daily essentials.
             </p>
             <button
               onClick={() =>
                 window.open("https://wa.me/919876543210", "_blank")
               }
-              className="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm transition-colors"
+              className="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-lg font-semibold text-sm sm:text-base transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-lg touch-target"
             >
-              <MessageCircle className="w-4 h-4 mr-2" />
-              WhatsApp
+              <MessageCircle className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
+              WhatsApp Us
             </button>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h4 className="font-medium text-gray-800 mb-4">Quick Links</h4>
-            <ul className="space-y-2">
+            <h4 className="font-bold text-gray-900 mb-3 sm:mb-4 text-base sm:text-lg">
+              Quick Links
+            </h4>
+            <ul className="space-y-2 sm:space-y-2.5">
               <li>
                 <Link
                   href="/products"
-                  className="text-gray-600 hover:text-gray-800 text-sm"
+                  className="text-gray-700 hover:text-blue-600 text-sm sm:text-base transition-colors duration-200 inline-block py-1 touch-target-sm"
                 >
                   Products
                 </Link>
@@ -46,7 +48,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/about"
-                  className="text-gray-600 hover:text-gray-800 text-sm"
+                  className="text-gray-700 hover:text-blue-600 text-sm sm:text-base transition-colors duration-200 inline-block py-1 touch-target-sm"
                 >
                   About Us
                 </Link>
@@ -54,7 +56,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/contact"
-                  className="text-gray-600 hover:text-gray-800 text-sm"
+                  className="text-gray-700 hover:text-blue-600 text-sm sm:text-base transition-colors duration-200 inline-block py-1 touch-target-sm"
                 >
                   Contact
                 </Link>
@@ -62,7 +64,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/delivery"
-                  className="text-gray-600 hover:text-gray-800 text-sm"
+                  className="text-gray-700 hover:text-blue-600 text-sm sm:text-base transition-colors duration-200 inline-block py-1 touch-target-sm"
                 >
                   Delivery Info
                 </Link>
@@ -72,12 +74,14 @@ export function Footer() {
 
           {/* Categories */}
           <div>
-            <h4 className="font-medium text-gray-800 mb-4">Categories</h4>
-            <ul className="space-y-2">
+            <h4 className="font-bold text-gray-900 mb-3 sm:mb-4 text-base sm:text-lg">
+              Categories
+            </h4>
+            <ul className="space-y-2 sm:space-y-2.5">
               <li>
                 <Link
                   href="/products?category=rice-grains"
-                  className="text-gray-600 hover:text-gray-800 text-sm"
+                  className="text-gray-700 hover:text-blue-600 text-sm sm:text-base transition-colors duration-200 inline-block py-1 touch-target-sm"
                 >
                   Rice & Grains
                 </Link>
@@ -85,7 +89,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/products?category=oils"
-                  className="text-gray-600 hover:text-gray-800 text-sm"
+                  className="text-gray-700 hover:text-blue-600 text-sm sm:text-base transition-colors duration-200 inline-block py-1 touch-target-sm"
                 >
                   Oils
                 </Link>
@@ -93,7 +97,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/products?category=spices-herbs"
-                  className="text-gray-600 hover:text-gray-800 text-sm"
+                  className="text-gray-700 hover:text-blue-600 text-sm sm:text-base transition-colors duration-200 inline-block py-1 touch-target-sm"
                 >
                   Spices & Herbs
                 </Link>
@@ -101,7 +105,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/products?category=dairy"
-                  className="text-gray-600 hover:text-gray-800 text-sm"
+                  className="text-gray-700 hover:text-blue-600 text-sm sm:text-base transition-colors duration-200 inline-block py-1 touch-target-sm"
                 >
                   Dairy Products
                 </Link>
@@ -111,10 +115,12 @@ export function Footer() {
 
           {/* Contact Info */}
           <div>
-            <h4 className="font-medium text-gray-800 mb-4">Contact Us</h4>
-            <div className="space-y-3 text-sm text-gray-600">
+            <h4 className="font-bold text-gray-900 mb-3 sm:mb-4 text-base sm:text-lg">
+              Contact Us
+            </h4>
+            <div className="space-y-3 text-sm sm:text-base text-gray-700">
               <div className="flex items-start">
-                <MapPin className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" />
+                <MapPin className="w-4 sm:w-5 h-4 sm:h-5 mr-2 mt-0.5 flex-shrink-0 text-blue-600" />
                 <div>
                   123 Main Street
                   <br />
@@ -124,16 +130,19 @@ export function Footer() {
                 </div>
               </div>
               <div className="flex items-center">
-                <Phone className="w-4 h-4 mr-2 flex-shrink-0" />
-                <a href="tel:+919876543210" className="hover:text-gray-800">
+                <Phone className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0 text-blue-600" />
+                <a
+                  href="tel:+919876543210"
+                  className="hover:text-blue-600 transition-colors duration-200 touch-target-sm"
+                >
                   +91 98765 43210
                 </a>
               </div>
               <div className="flex items-center">
-                <Mail className="w-4 h-4 mr-2 flex-shrink-0" />
+                <Mail className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0 text-blue-600" />
                 <a
                   href="mailto:info@digitalcatalogue.com"
-                  className="hover:text-gray-800"
+                  className="hover:text-blue-600 transition-colors duration-200 touch-target-sm break-all"
                 >
                   info@digitalcatalogue.com
                 </a>
@@ -144,18 +153,29 @@ export function Footer() {
       </div>
 
       {/* Bottom Footer */}
-      <div className="bg-gray-200 py-4">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center text-sm text-gray-600">
-            <p>© {currentYear} Digital Catalogue. All rights reserved.</p>
-            <div className="flex space-x-6 mt-2 md:mt-0">
-              <Link href="/terms" className="hover:text-gray-800">
+      <div className="bg-gray-200 py-4 sm:py-5">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row justify-between items-center text-sm sm:text-base text-gray-700 gap-3 sm:gap-4">
+            <p className="text-center md:text-left">
+              © {currentYear} Digital Catalogue. All rights reserved.
+            </p>
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
+              <Link
+                href="/terms"
+                className="hover:text-blue-600 transition-colors duration-200 touch-target-sm"
+              >
                 Terms
               </Link>
-              <Link href="/privacy" className="hover:text-gray-800">
+              <Link
+                href="/privacy"
+                className="hover:text-blue-600 transition-colors duration-200 touch-target-sm"
+              >
                 Privacy
               </Link>
-              <Link href="/refund" className="hover:text-gray-800">
+              <Link
+                href="/refund"
+                className="hover:text-blue-600 transition-colors duration-200 touch-target-sm"
+              >
                 Refund Policy
               </Link>
             </div>

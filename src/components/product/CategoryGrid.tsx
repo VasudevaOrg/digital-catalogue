@@ -106,7 +106,7 @@ export function CategoryGrid({
   if (isLoading) {
     const skeletonCount = showAll ? 12 : 6;
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
         {Array.from({ length: skeletonCount }).map((_, index) => (
           <CategoryCardSkeleton key={index} />
         ))}
@@ -134,7 +134,7 @@ export function CategoryGrid({
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+    <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
       {categories.map((category, index) => {
         const config = getCategoryConfig(category);
 
@@ -153,9 +153,9 @@ export function CategoryGrid({
           >
             <Link
               href={`/products?category=${encodeURIComponent(category)}`}
-              className="group block h-full"
+              className="group block h-full touch-target"
             >
-              <div className="relative bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden h-full flex flex-col">
+              <div className="relative bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden h-full flex flex-col min-h-[180px] sm:min-h-[200px]">
                 {/* Background Gradient */}
                 <div
                   className={`absolute inset-0 bg-gradient-to-br ${config.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}
@@ -163,29 +163,29 @@ export function CategoryGrid({
 
                 {/* Icon Background */}
                 <div
-                  className={`w-16 h-16 bg-gradient-to-br ${config.gradient} rounded-xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-all duration-300 shadow-lg`}
+                  className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-br ${config.gradient} rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4 mx-auto group-hover:scale-110 transition-all duration-300 shadow-lg`}
                 >
-                  <span className="text-2xl filter drop-shadow-sm">
+                  <span className="text-xl sm:text-2xl md:text-3xl filter drop-shadow-sm">
                     {config.icon}
                   </span>
                 </div>
 
                 {/* Category Name */}
-                <h3 className="text-sm md:text-base font-bold text-gray-800 text-center mb-2 group-hover:text-gray-900 transition-colors duration-300 leading-tight flex-grow">
+                <h3 className="text-sm sm:text-base md:text-lg font-bold text-gray-900 text-center mb-2 group-hover:text-blue-600 transition-colors duration-300 leading-tight flex-grow">
                   {category}
                 </h3>
 
                 {/* Description */}
-                <p className="text-xs text-gray-500 text-center leading-relaxed group-hover:text-gray-600 transition-colors duration-300 mb-4">
+                <p className="text-xs sm:text-sm text-gray-600 text-center leading-relaxed group-hover:text-gray-700 transition-colors duration-300 mb-3 sm:mb-4">
                   {config.description}
                 </p>
 
                 {/* Shop Now Button */}
-                <div className="text-center">
-                  <div className="inline-flex items-center text-xs font-medium text-blue-600 group-hover:text-blue-700 transition-colors duration-300">
+                <div className="text-center mt-auto">
+                  <div className="inline-flex items-center text-xs sm:text-sm font-semibold text-blue-600 group-hover:text-blue-700 transition-colors duration-300">
                     <span>Shop Now</span>
                     <svg
-                      className="w-3 h-3 ml-1 group-hover:translate-x-0.5 transition-transform duration-300"
+                      className="w-3 h-3 sm:w-4 sm:h-4 ml-1 group-hover:translate-x-0.5 transition-transform duration-300"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"

@@ -1271,8 +1271,10 @@ Please call us at +91 82971 37702 for order confirmation.`;
                     </span>
                   </div>
                   <div className="flex justify-between font-semibold text-base sm:text-lg border-t pt-2">
-                    <span>Total:</span>
-                    <span>₹{totalAmount.toFixed(2)}</span>
+                    <span className="text-gray-900">Total:</span>
+                    <span className="text-gray-900">
+                      ₹{totalAmount.toFixed(2)}
+                    </span>
                   </div>
                 </div>
 

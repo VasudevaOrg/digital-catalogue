@@ -3,11 +3,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { whatsappFlowService } from "@/lib/whatsappFlowService";
 
-const VERIFY_TOKEN = "digital_catalogue_webhook_2025_secure";
-const WHATSAPP_ACCESS_TOKEN =
-  "EAASGzwVtiEMBPt4e2LEZAdCIZBWzvwwzqKQo8hzBnuRbObShSjTBEXv1ZBkPBtHdoBBxJmCHSScdzXphTsRZBkL6qKBklQV0DEPx2mz5dZAJjEIdgjxLv3S7rfdqx48u8QYwDDW8MYB6I5AI4ZCZBoOoWpBXicAx59iG5O7VzFTLyeB2K4DcZAjU9VQEgNNnCJd9JsMoIcIkaDKw9RZBx2iu4weCTNyZAGABLFJcf66v9HzpgZD";
+const VERIFY_TOKEN =
+  process.env.WHATSAPP_VERIFY_TOKEN || "digital_catalogue_webhook_2025_secure";
+const WHATSAPP_ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
 const WHATSAPP_API_URL = "https://graph.facebook.com/v22.0";
-const WHATSAPP_PHONE_ID = "802685189585173";
+const WHATSAPP_PHONE_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
 
 // Your business phone number (what customers see/message)
 const BUSINESS_PHONE_NUMBER = "15556233859";

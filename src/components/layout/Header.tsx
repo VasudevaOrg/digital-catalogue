@@ -107,7 +107,7 @@ export function Header() {
               </div>
             </Link>
 
-            {/* Desktop Navigation */}
+            {/* Desktop Navigation - Hidden below 1024px */}
             <nav className="hidden lg:flex items-center space-x-6 xl:space-x-8">
               {[
                 { name: "Products", href: "/products" },
@@ -132,7 +132,7 @@ export function Header() {
 
             {/* Right Actions */}
             <div className="flex items-center space-x-2 sm:space-x-3 md:space-x-4">
-              {/* Track Order Button - Desktop */}
+              {/* Track Order Button - Desktop only, hidden on mobile */}
               <Link
                 href="/track-order"
                 className="hidden md:inline-flex items-center bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-3 lg:px-4 py-2 rounded-lg font-semibold text-xs lg:text-sm transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-lg"
@@ -142,30 +142,12 @@ export function Header() {
                 <span className="lg:hidden">Track</span>
               </Link>
 
-              {/* Mobile Track Order Button */}
-              <Link
-                href="/track-order"
-                className="md:hidden w-8 h-8 sm:w-9 sm:h-9 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-lg flex items-center justify-center transition-all duration-300"
-              >
-                <Search className="w-4 h-4" />
-              </Link>
-
-              {/* Search */}
-              <div className="hidden sm:block">
-                <button
-                  onClick={() => setShowSearch(!showSearch)}
-                  className="w-8 sm:w-9 md:w-10 h-8 sm:h-9 md:h-10 bg-gray-100 hover:bg-blue-100 text-gray-600 hover:text-blue-600 rounded-lg md:rounded-xl flex items-center justify-center transition-all duration-300"
-                >
-                  <Search className="w-4 sm:w-5 h-4 sm:h-5" />
-                </button>
-              </div>
-
-              {/* Mobile Search */}
+              {/* Search - Hidden on mobile */}
               <button
                 onClick={() => setShowSearch(!showSearch)}
-                className="sm:hidden w-8 h-8 bg-gray-100 hover:bg-blue-100 text-gray-600 hover:text-blue-600 rounded-lg flex items-center justify-center transition-all duration-300"
+                className="hidden sm:flex w-8 sm:w-9 md:w-10 h-8 sm:h-9 md:h-10 bg-gray-100 hover:bg-blue-100 text-gray-600 hover:text-blue-600 rounded-lg md:rounded-xl items-center justify-center transition-all duration-300"
               >
-                <Search className="w-4 h-4" />
+                <Search className="w-4 sm:w-5 h-4 sm:h-5" />
               </button>
 
               {/* Wishlist - Hidden on mobile */}
@@ -176,10 +158,10 @@ export function Header() {
                 </span>
               </button>
 
-              {/* Cart */}
+              {/* Cart - Hidden on mobile */}
               <button
                 onClick={() => dispatch(openCart())}
-                className="relative w-8 sm:w-9 md:w-10 h-8 sm:h-9 md:h-10 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-lg md:rounded-xl flex items-center justify-center transition-all duration-300"
+                className="hidden sm:flex relative w-8 sm:w-9 md:w-10 h-8 sm:h-9 md:h-10 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-lg md:rounded-xl items-center justify-center transition-all duration-300"
               >
                 <ShoppingCart className="w-4 sm:w-5 h-4 sm:h-5" />
                 {isClient && cartItemsCount > 0 && (

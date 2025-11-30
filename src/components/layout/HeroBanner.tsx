@@ -205,29 +205,41 @@ export function HeroBanner() {
                 {currentSlideData.subtitle}
               </div>
 
-              {/* Main Title - Responsive Text Sizes */}
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl font-black text-white leading-tight">
+              {/* Main Title - Responsive Text Sizes with Shadow for Visibility */}
+              <h1
+                className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl font-black text-white leading-tight"
+                style={{
+                  textShadow:
+                    "0 2px 10px rgba(0,0,0,0.3), 0 4px 20px rgba(0,0,0,0.2)",
+                }}
+              >
                 <span className="block">
                   {currentSlideData.title.split(" ").slice(0, -1).join(" ")}
                 </span>
-                <span className="block bg-gradient-to-r from-yellow-300 via-orange-300 to-red-300 bg-clip-text text-transparent">
+                <span
+                  className="block bg-gradient-to-r from-yellow-300 via-orange-300 to-red-300 bg-clip-text text-transparent"
+                  style={{ textShadow: "none" }}
+                >
                   {currentSlideData.title.split(" ").slice(-1)}
                 </span>
               </h1>
 
-              {/* Description - Responsive Text and Spacing */}
-              <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/90 leading-relaxed max-w-3xl mx-auto px-4 sm:px-0">
+              {/* Description - Responsive Text and Spacing with Shadow */}
+              <p
+                className="text-base sm:text-lg md:text-xl lg:text-2xl text-white leading-relaxed max-w-3xl mx-auto px-4 sm:px-0"
+                style={{ textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}
+              >
                 {currentSlideData.description}
               </p>
 
-              {/* CTA Buttons - Responsive Layout */}
-              <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center px-4 sm:px-0">
+              {/* CTA Buttons - Responsive Layout with Proper Touch Targets */}
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 lg:gap-6 justify-center items-stretch sm:items-center px-4 sm:px-0">
                 {currentSlideData.primaryLink.startsWith("http") ? (
                   <a
                     href={currentSlideData.primaryLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group bg-white text-gray-800 px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 rounded-xl lg:rounded-2xl font-bold text-sm sm:text-base lg:text-lg hover:bg-gray-50 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl flex items-center min-w-[200px] justify-center w-full sm:w-auto"
+                    className="touch-target group bg-white text-gray-800 px-6 sm:px-8 lg:px-10 py-3.5 sm:py-4 lg:py-5 rounded-xl lg:rounded-2xl font-bold text-sm sm:text-base lg:text-lg hover:bg-gray-50 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-2xl flex items-center justify-center w-full sm:w-auto sm:min-w-[200px]"
                   >
                     <Phone className="w-5 sm:w-6 h-5 sm:h-6 mr-2 sm:mr-3 group-hover:scale-110 transition-transform duration-300" />
                     {currentSlideData.primaryCTA}
@@ -236,7 +248,7 @@ export function HeroBanner() {
                 ) : (
                   <Link
                     href={currentSlideData.primaryLink}
-                    className="group bg-white text-gray-800 px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 rounded-xl lg:rounded-2xl font-bold text-sm sm:text-base lg:text-lg hover:bg-gray-50 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl flex items-center min-w-[200px] justify-center w-full sm:w-auto"
+                    className="touch-target group bg-white text-gray-800 px-6 sm:px-8 lg:px-10 py-3.5 sm:py-4 lg:py-5 rounded-xl lg:rounded-2xl font-bold text-sm sm:text-base lg:text-lg hover:bg-gray-50 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-2xl flex items-center justify-center w-full sm:w-auto sm:min-w-[200px]"
                   >
                     <ShoppingBag className="w-5 sm:w-6 h-5 sm:h-6 mr-2 sm:mr-3 group-hover:scale-110 transition-transform duration-300" />
                     {currentSlideData.primaryCTA}
@@ -246,7 +258,7 @@ export function HeroBanner() {
 
                 <Link
                   href={currentSlideData.secondaryLink}
-                  className="group bg-transparent border-2 border-white text-white px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 rounded-xl lg:rounded-2xl font-bold text-sm sm:text-base lg:text-lg hover:bg-white hover:text-gray-800 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl flex items-center min-w-[200px] justify-center w-full sm:w-auto"
+                  className="touch-target group bg-transparent border-2 border-white text-white px-6 sm:px-8 lg:px-10 py-3.5 sm:py-4 lg:py-5 rounded-xl lg:rounded-2xl font-bold text-sm sm:text-base lg:text-lg hover:bg-white hover:text-gray-800 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-2xl flex items-center justify-center w-full sm:w-auto sm:min-w-[200px]"
                 >
                   <Play className="w-4 sm:w-5 h-4 sm:h-5 mr-2 sm:mr-3 group-hover:scale-110 transition-transform duration-300" />
                   {currentSlideData.secondaryCTA}

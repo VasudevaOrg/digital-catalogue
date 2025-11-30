@@ -8,6 +8,13 @@
   --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
   --gradient-success: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+
+  /* Text color utilities for proper contrast */
+  --text-dark: #1f2937;
+  --text-light: #ffffff;
+  --text-muted: #6b7280;
+  --text-on-white: #1f2937;
+  --text-on-dark: #ffffff;
 }
 
 @theme inline {
@@ -21,6 +28,8 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --text-on-white: #ffffff;
+    --text-on-dark: #1f2937;
   }
 }
 
@@ -31,6 +40,9 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Prevent layout shifts */
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
 /* Smooth scrolling */
@@ -63,6 +75,14 @@ html {
 * {
   scrollbar-width: thin;
   scrollbar-color: #3b82f6 #f1f5f9;
+}
+
+/* Mobile scrollbar - thinner for touch devices */
+@media (max-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
 }
 
 /* Text selection */
@@ -300,12 +320,13 @@ html {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Gradient text */
+/* Gradient text with fallbacks */
 .gradient-text {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  color: #667eea; /* Fallback color */
 }
 
 .gradient-text-primary {
@@ -313,6 +334,7 @@ html {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  color: #3b82f6; /* Fallback color */
 }
 
 .gradient-text-success {
@@ -320,6 +342,34 @@ html {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  color: #10b981; /* Fallback color */
+}
+
+/* Text color utilities for proper contrast */
+.text-dark {
+  color: var(--text-dark) !important;
+}
+
+.text-light {
+  color: var(--text-light) !important;
+}
+
+.text-on-white {
+  color: var(--text-on-white) !important;
+}
+
+.text-on-dark {
+  color: var(--text-on-dark) !important;
+}
+
+.text-readable {
+  color: #1f2937;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.1);
+}
+
+.text-readable-light {
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 /* Hover effects */
@@ -418,6 +468,41 @@ html {
   transform: translateY(-1px);
 }
 
+/* Layout stability utilities */
+.stable-layout {
+  contain: layout;
+  content-visibility: auto;
+}
+
+.prevent-cls {
+  min-height: 1px;
+  contain: layout;
+}
+
+.aspect-square {
+  aspect-ratio: 1 / 1;
+}
+
+.aspect-video {
+  aspect-ratio: 16 / 9;
+}
+
+/* Touch target utilities for mobile */
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.touch-target-lg {
+  min-width: 48px;
+  min-height: 48px;
+}
+
+.touch-target-sm {
+  min-height: 36px;
+  padding: 0.25rem 0;
+}
+
 /* Mobile optimizations */
 @media (max-width: 768px) {
   .animate-fadeInUp {
@@ -430,6 +515,28 @@ html {
 
   .hover-scale:hover {
     transform: none;
+  }
+
+  /* Improve tap targets on mobile */
+  button,
+  a {
+    min-height: 44px;
+    /* display: inline-flex; - Removed as it overrides hidden utility classes */
+    /* align-items: center; */
+    /* justify-content: center; */
+  }
+
+  /* Prevent text size adjustment on mobile */
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* Improve form inputs on mobile */
+  input,
+  textarea,
+  select {
+    font-size: 16px; /* Prevents zoom on iOS */
   }
 }
 
