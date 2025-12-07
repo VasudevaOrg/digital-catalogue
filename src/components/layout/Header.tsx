@@ -145,7 +145,7 @@ export function Header() {
               {/* Search - Hidden on mobile */}
               <button
                 onClick={() => setShowSearch(!showSearch)}
-                className="hidden sm:flex w-8 sm:w-9 md:w-10 h-8 sm:h-9 md:h-10 bg-gray-100 hover:bg-blue-100 text-gray-600 hover:text-blue-600 rounded-lg md:rounded-xl items-center justify-center transition-all duration-300"
+                className="flex w-8 sm:w-9 md:w-10 h-8 sm:h-9 md:h-10 bg-gray-100 hover:bg-blue-100 text-gray-600 hover:text-blue-600 rounded-lg md:rounded-xl items-center justify-center transition-all duration-300"
               >
                 <Search className="w-4 sm:w-5 h-4 sm:h-5" />
               </button>

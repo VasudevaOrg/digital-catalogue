@@ -1,7 +1,7 @@
 // src/components/cart/CartSidebar.tsx - Complete Updated with Free Delivery Info
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useAppDispatch, useAppSelector } from "@/store";
@@ -28,6 +28,52 @@ import {
   AlertCircle,
   CheckCircle,
 } from "lucide-react";
+
+const CartItemQuantityInput = ({
+  quantity,
+  stock,
+  onUpdate,
+}: {
+  quantity: number;
+  stock: number;
+  onUpdate: (val: number) => void;
+}) => {
+  const [value, setValue] = useState(quantity.toString());
+
+  useEffect(() => {
+    setValue(quantity.toString());
+  }, [quantity]);
+
+  const handleBlur = () => {
+    let val = parseInt(value);
+    if (isNaN(val) || val < 1) {
+      val = 1;
+    } else if (val > stock) {
+      val = stock;
+    }
+    setValue(val.toString());
+    if (val !== quantity) {
+      onUpdate(val);
+    }
+  };
+
+  return (
+    <input
+      type="number"
+      min="1"
+      max={stock}
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      onBlur={handleBlur}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.currentTarget.blur();
+        }
+      }}
+      className="w-12 text-center text-sm font-medium text-gray-900 border-none focus:ring-0 p-0 bg-transparent [-moz-appearance:_textfield] [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none"
+    />
+  );
+};
 
 export function CartSidebar() {
   const router = useRouter();
@@ -311,9 +357,13 @@ export function CartSidebar() {
                             >
                               <Minus className="w-3 h-3" />
                             </button>
-                            <span className="w-8 text-center text-sm font-medium text-gray-900">
-                              {item.quantity}
-                            </span>
+                            <CartItemQuantityInput
+                              quantity={item.quantity}
+                              stock={item.product.stock}
+                              onUpdate={(newQty) =>
+                                handleUpdateQuantity(item.product.id, newQty)
+                              }
+                            />
                             <button
                               onClick={() =>
                                 handleUpdateQuantity(
