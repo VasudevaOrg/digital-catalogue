@@ -53,7 +53,11 @@ export default function ProductDetailPage() {
   const { cart } = useAppSelector((state) => state.cart);
   const product = products.find((p) => p.id === productId);
 
+  // Main source of truth for calculations
   const [quantity, setQuantity] = useState(1);
+  // Local input state to allow transient empty/invalid values while typing
+  const [inputValue, setInputValue] = useState("1");
+
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
     null
@@ -64,6 +68,11 @@ export default function ProductDetailPage() {
       dispatch(fetchProductById(productId));
     }
   }, [dispatch, productId, product]);
+
+  // Sync inputValue when quantity changes externally (e.g. +/- buttons)
+  useEffect(() => {
+    setInputValue(quantity.toString());
+  }, [quantity]);
 
   // Don't auto-select variant - show base product by default
   // Helper functions to get current values based on selected variant or base product
@@ -143,6 +152,49 @@ export default function ProductDetailPage() {
     }
   };
 
+  // Handle input change: allows empty string, but valid numbers update quantity immediately
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setInputValue(val);
+
+    if (val === "") return;
+
+    const parsed = parseInt(val);
+    if (!isNaN(parsed) && parsed > 0) {
+      // Only update actual quantity if valid number > 0.
+      // We don't want to trigger "0" updates as they are invalid for quantity
+      // and might be transitional state (e.g. deleting and typing 0 then 5)
+      // But user requirement says "when he enter 0 then he converts to 1".
+      // We'll handle "0" validation on blur or specifically if needed.
+      // For now, only update valid quantities > 0.
+      // Note: we don't clamp here immediately to let user type large numbers if they want,
+      // but handleQuantityChange does clamp. If we want to allow typing "10" when max is "5"
+      // only to be clamped, handleQuantityChange will do it, but that forces inputValue->clamped
+      // via useEffect, which interrupts typing.
+      // BETTER: Check against max before updating quantity to avoid jarring jumps?
+      // Or just use handleQuantityChange which clamps.
+      // If user types "10" and max is "5", handleQuantityChange sets "5".
+      // Effect sets inputValue "5". User sees "10" turn into "5" instantly. That is acceptable validation.
+      handleQuantityChange(parsed);
+    }
+  };
+
+  // Handle blur: ensure valid state
+  const handleInputBlur = () => {
+    if (
+      inputValue === "" ||
+      parseInt(inputValue) === 0 ||
+      isNaN(parseInt(inputValue))
+    ) {
+      setQuantity(1);
+      setInputValue("1");
+    } else {
+      // Ensure specific cleanup if needed, but the useEffect([quantity]) mechanism
+      // generally keeps them in sync. If user typed "05", parseInt is 5, qty=5,
+      // effect sets input="5". So "05" cleans up to "5". Good.
+    }
+  };
+
   const handleAddToCart = () => {
     if (!product) return;
 
@@ -197,8 +249,28 @@ export default function ProductDetailPage() {
   }
 
   const hasDiscount = product.discount && isDiscountActive(product.discount);
-  const discountCalc = hasDiscount
-    ? calculateProductDiscount(product, quantity)
+
+  // Calculate effective discount based on variant selection
+  const currentDiscount =
+    selectedVariant?.discount && isDiscountActive(selectedVariant.discount)
+      ? selectedVariant.discount
+      : product.discount;
+
+  const hasActiveDiscount =
+    currentDiscount && isDiscountActive(currentDiscount);
+
+  // Create an effective product object for discount calculations
+  // This ensures all components use the correct price and discount data
+  const effectiveProduct = {
+    ...product,
+    price: getCurrentPrice(),
+    weight: getCurrentWeight(),
+    weightUnit: getCurrentWeightUnit() as any,
+    discount: currentDiscount,
+  };
+
+  const discountCalc = hasActiveDiscount
+    ? calculateProductDiscount(effectiveProduct, quantity)
     : null;
 
   // Format weight display
@@ -247,10 +319,10 @@ export default function ProductDetailPage() {
                     />
 
                     {/* Discount Badge on Image */}
-                    {hasDiscount && (
+                    {hasActiveDiscount && (
                       <div className="absolute top-4 right-4">
                         <DiscountBadge
-                          product={product}
+                          product={effectiveProduct}
                           quantity={quantity}
                           showSavings={true}
                         />
@@ -272,14 +344,16 @@ export default function ProductDetailPage() {
                     )}
 
                     {/* Recommended Badge on Image */}
-                    {product.isRecommended && !hasDiscount && !isOutOfStock && (
-                      <div className="absolute top-4 left-4">
-                        <span className="bg-yellow-500 text-white px-3 py-2 text-sm font-bold rounded-full flex items-center shadow-lg">
-                          <Trophy className="w-4 h-4 mr-2" />
-                          Recommended
-                        </span>
-                      </div>
-                    )}
+                    {product.isRecommended &&
+                      !hasActiveDiscount &&
+                      !isOutOfStock && (
+                        <div className="absolute top-4 left-4">
+                          <span className="bg-yellow-500 text-white px-3 py-2 text-sm font-bold rounded-full flex items-center shadow-lg">
+                            <Trophy className="w-4 h-4 mr-2" />
+                            Recommended
+                          </span>
+                        </div>
+                      )}
                   </div>
                 ) : (
                   <div className="flex items-center justify-center h-full text-gray-400">
@@ -398,12 +472,7 @@ export default function ProductDetailPage() {
               {/* Price and Discount */}
               <div className="mb-4 sm:mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
                 <DiscountPriceDisplay
-                  product={{
-                    ...product,
-                    price: getCurrentPrice(),
-                    weight: getCurrentWeight(),
-                    weightUnit: getCurrentWeightUnit() as any,
-                  }}
+                  product={effectiveProduct}
                   quantity={quantity}
                   showOriginalPrice={true}
                   className="mb-2"
@@ -411,7 +480,7 @@ export default function ProductDetailPage() {
                   originalPriceClassName="text-xl text-gray-500 line-through"
                 />
 
-                {hasDiscount &&
+                {hasActiveDiscount &&
                   discountCalc &&
                   discountCalc.discountAmount > 0 && (
                     <div className="text-sm text-green-700 font-medium flex items-center gap-2">
@@ -445,12 +514,12 @@ export default function ProductDetailPage() {
                 )}
 
               {/* Quantity Discount Tiers */}
-              {hasDiscount &&
-                product.discount?.type !== "simple" &&
+              {hasActiveDiscount &&
+                currentDiscount?.type !== "simple" &&
                 !isOutOfStock && (
                   <div className="mb-6">
                     <QuantityDiscountTiers
-                      product={product}
+                      product={effectiveProduct}
                       currentQuantity={quantity}
                       onQuantityClick={handleQuantityClick}
                     />
@@ -492,9 +561,15 @@ export default function ProductDetailPage() {
                       >
                         <Minus className="w-4 h-4" />
                       </button>
-                      <span className="px-4 sm:px-6 py-2 sm:py-3 min-w-[80px] text-center font-medium text-gray-900">
-                        {quantity}
-                      </span>
+                      <input
+                        type="number"
+                        min="1"
+                        max={availableStock}
+                        value={inputValue}
+                        onChange={handleInputChange}
+                        onBlur={handleInputBlur}
+                        className="w-16 h-full text-center font-medium text-gray-900 border-x border-transparent focus:outline-none focus:bg-gray-50 [-moz-appearance:_textfield] [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none"
+                      />
                       <button
                         onClick={() => handleQuantityChange(quantity + 1)}
                         className="p-2 sm:p-3 text-gray-600 hover:text-gray-800 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -564,7 +639,7 @@ export default function ProductDetailPage() {
                   </div>
                 </div>
 
-                {hasDiscount && product.discount?.endDate && (
+                {hasActiveDiscount && currentDiscount?.endDate && (
                   <div className="flex items-start">
                     <Clock className="w-5 h-5 text-orange-600 mr-3 mt-0.5" />
                     <div>
@@ -573,9 +648,7 @@ export default function ProductDetailPage() {
                       </p>
                       <p className="text-sm text-gray-600">
                         Offer ends on{" "}
-                        {new Date(
-                          product.discount.endDate
-                        ).toLocaleDateString()}
+                        {new Date(currentDiscount.endDate).toLocaleDateString()}
                       </p>
                     </div>
                   </div>

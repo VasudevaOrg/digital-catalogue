@@ -44,6 +44,7 @@ export interface ProductVariant {
   costPrice?: number;
   isActive: boolean;
   lowStockThreshold?: number;
+  discount?: ProductDiscount;
 }
 
 export interface Product {

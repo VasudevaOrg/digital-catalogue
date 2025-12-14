@@ -1,7 +1,10 @@
 // src/store/slices/cartSlice.ts - Fixed with Correct Free Delivery Logic and Variants Support
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { CartState, Cart, Product, CartItem, ProductVariant } from "@/types";
-import { calculateProductDiscount } from "@/lib/discountUtils";
+import {
+  calculateProductDiscount,
+  isDiscountActive,
+} from "@/lib/discountUtils";
 import {
   isDeltaProduct,
   calculateFreeDeliveryEligibility,
@@ -42,7 +45,15 @@ const calculateCartTotals = (
     // Use variant price if available, otherwise use product price
     const basePrice = item.selectedVariant?.price || item.product.price;
     const productForDiscount = item.selectedVariant
-      ? { ...item.product, price: item.selectedVariant.price }
+      ? {
+          ...item.product,
+          price: item.selectedVariant.price,
+          discount:
+            item.selectedVariant.discount &&
+            isDiscountActive(item.selectedVariant.discount)
+              ? item.selectedVariant.discount
+              : item.product.discount,
+        }
       : item.product;
 
     const discountCalc = calculateProductDiscount(
@@ -61,7 +72,15 @@ const calculateCartTotals = (
   const itemsWithPrices = items.map((item) => {
     const basePrice = item.selectedVariant?.price || item.product.price;
     const productForDiscount = item.selectedVariant
-      ? { ...item.product, price: item.selectedVariant.price }
+      ? {
+          ...item.product,
+          price: item.selectedVariant.price,
+          discount:
+            item.selectedVariant.discount &&
+            isDiscountActive(item.selectedVariant.discount)
+              ? item.selectedVariant.discount
+              : item.product.discount,
+        }
       : item.product;
 
     const discountCalc = calculateProductDiscount(
