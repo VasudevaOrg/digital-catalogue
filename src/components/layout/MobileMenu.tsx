@@ -189,7 +189,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                   <div className="flex items-center text-sm text-gray-700">
                     <Phone className="w-4 h-4 mr-2.5 text-blue-600 flex-shrink-0" />
                     <a
-                      href="tel:+918297137702"
+                      href="tel:+919448132930"
                       className="hover:text-blue-600 transition-colors"
                     >
                       +91 82971 37702
@@ -198,10 +198,10 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                   <p className="text-sm text-gray-700 flex items-center">
                     <span className="mr-2.5">📧</span>
                     <a
-                      href="mailto:info@digitalcatalogue.com"
+                      href="mailto:mrvstoresvps@gmail.com"
                       className="hover:text-blue-600 transition-colors break-all"
                     >
-                      info@digitalcatalogue.com
+                      mrvstoresvps@gmail.com
                     </a>
                   </p>
                   <p className="text-sm text-gray-700 flex items-start">
@@ -213,7 +213,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
 
               <button
                 onClick={() =>
-                  window.open("https://wa.me/918297137702", "_blank")
+                  window.open("https://wa.me/919448132930", "_blank")
                 }
                 className="touch-target w-full bg-green-500 hover:bg-green-600 text-white py-3 sm:py-3.5 px-4 font-semibold rounded-xl flex items-center justify-center space-x-2 transition-all duration-200 shadow-md hover:shadow-lg"
               >

@@ -49,7 +49,7 @@ const staticSlides: CarouselSlide[] = [
     description:
       "Browse our digital catalogue and place orders directly through WhatsApp for the most convenient shopping experience.",
     primaryCTA: "Chat Now",
-    primaryLink: "https://wa.me/919876543210",
+    primaryLink: "https://wa.me/919448132930",
     secondaryCTA: "View Products",
     secondaryLink: "/products",
     bgGradient: "from-orange-600 via-red-600 to-pink-600",

@@ -40,7 +40,7 @@ const heroSlides = [
       "Browse our digital catalogue and place orders directly through WhatsApp.",
     image: "/images/hero/hero-3.jpg",
     cta: "Contact Us",
-    ctaLink: "https://wa.me/919876543210",
+    ctaLink: "https://wa.me/919448132930",
   },
 ];
 

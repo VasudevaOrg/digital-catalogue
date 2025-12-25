@@ -203,7 +203,7 @@ export default function TermsOfServicePage() {
               If you have any questions about these Terms, please contact us at:
             </p>
             <div className="mt-2 ml-4">
-              <p>Email: support@digitalcatalogue.com</p>
+              <p>Email: mrvstoresvps@gmail.com</p>
               <p>Phone: +91 XXXXXXXXXX</p>
             </div>
           </section>

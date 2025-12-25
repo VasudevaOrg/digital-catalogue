@@ -1,43 +1,74 @@
 import { NextRequest, NextResponse } from "next/server";
+import twilio from "twilio";
 
 export async function POST(request: NextRequest) {
   try {
-    const { phoneNumber, message, messageType, senderId } =
-      await request.json();
+    const { phoneNumber, message } = await request.json();
 
-    // Integration with SMS service (Twilio, TextLocal, etc.)
-    // This is a placeholder - implement with your chosen SMS service
-
-    const response = await fetch("YOUR_SMS_API_ENDPOINT", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.SMS_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        to: phoneNumber,
-        message: message,
-        sender: senderId,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to send SMS");
+    if (!phoneNumber || !message) {
+      return NextResponse.json(
+        { success: false, message: "Phone number and message are required" },
+        { status: 400 }
+      );
     }
 
-    const result = await response.json();
+    const accountSid = process.env.TWILIO_ACCOUNT_SID;
+    const authToken = process.env.TWILIO_AUTH_TOKEN;
+    const fromNumber = process.env.TWILIO_PHONE_NUMBER;
+    const messagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID;
 
-    // Save message to database
-    // Implementation depends on your database
+    if (!accountSid || !authToken || (!fromNumber && !messagingServiceSid)) {
+      console.error("❌ Twilio credentials missing in env");
+      return NextResponse.json(
+        {
+          success: false,
+          message: "SMS service not configured (missing credentials)",
+        },
+        { status: 500 }
+      );
+    }
+
+    const client = twilio(accountSid, authToken);
+
+    // Ensure phone number has +91 prefix if not present
+    const formattedPhone = phoneNumber.startsWith("+")
+      ? phoneNumber
+      : `+91${phoneNumber.replace(/\D/g, "")}`;
+
+    console.log(
+      `📨 Sending SMS to ${formattedPhone} via ${
+        messagingServiceSid ? "Service" : "Number"
+      }...`
+    );
+
+    const messageData: any = {
+      body: message,
+      to: formattedPhone,
+    };
+
+    if (messagingServiceSid) {
+      messageData.messagingServiceSid = messagingServiceSid;
+    } else {
+      messageData.from = fromNumber;
+    }
+
+    const result = await client.messages.create(messageData);
+
+    console.log("✅ SMS sent successfully:", result.sid);
 
     return NextResponse.json({
       success: true,
-      messageId: result.messageId || "mock-sms-id",
+      sid: result.sid,
+      message: "SMS sent successfully",
     });
-  } catch (error) {
-    console.error("SMS send error:", error);
+  } catch (error: any) {
+    console.error("❌ SMS Send Error:", error);
     return NextResponse.json(
-      { success: false, message: "Failed to send SMS" },
+      {
+        success: false,
+        message: error.message || "Failed to send SMS",
+        error: error.message,
+      },
       { status: 500 }
     );
   }

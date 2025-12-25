@@ -310,6 +310,7 @@ export default function CheckoutPage() {
               price: discountCalc.discountedPrice / item.quantity,
               originalPrice: productData.price,
               weight: productData.weight,
+              weightUnit: productData.weightUnit || item.product.weightUnit, // Pass unit info
               category: item.product.category,
               images: item.product.images || [],
               discount: item.product.discount,
@@ -327,6 +328,7 @@ export default function CheckoutPage() {
               description: item.product.description || "",
               price: productData.price,
               weight: productData.weight,
+              weightUnit: productData.weightUnit || item.product.weightUnit, // Pass unit info
               category: item.product.category,
               images: item.product.images || [],
               selectedVariant: item.selectedVariant, // Pass variant info
@@ -431,52 +433,83 @@ export default function CheckoutPage() {
 
       const savedOrder = orderResult.order;
 
-      console.log("📱 Sending WhatsApp notification...");
+      // 5. Client-Side WhatsApp Redirect (Merchant Notification)
+      // Construct the detailed order message for the merchant
+      const itemsList = savedOrder.items
+        .map((item: any) => {
+          const variantText = item.product.selectedVariant
+            ? `(${item.product.selectedVariant.weight} ${item.product.selectedVariant.weightUnit})`
+            : "";
+          return `- ${item.product.name} ${variantText} x ${item.quantity}: ₹${item.totalPrice}`;
+        })
+        .join("\n");
 
+      const whatsappMessage = `*New Order: ${savedOrder.orderId}*
+----------------
+*Customer:* ${savedOrder.customerInfo.name}
+*Phone:* ${savedOrder.customerInfo.phoneNumber}
+----------------
+*Items:*
+${itemsList}
+----------------
+*Total Amount:* ₹${savedOrder.totalAmount}
+*Payment:* ${
+        savedOrder.paymentMethod === "prepaid" ? "Prepaid" : "Cash on Pickup"
+      }
+*Delivery:* ${
+        savedOrder.deliveryType === "delivery"
+          ? "Home Delivery"
+          : "Store Pickup"
+      }
+${
+  savedOrder.deliveryType === "delivery"
+    ? `*Address:* ${savedOrder.deliveryAddress?.street}, ${savedOrder.deliveryAddress?.city}`
+    : ""
+}
+----------------
+Please confirm my order.`;
+
+      // Redirect to WhatsApp
+      const merchantNumber = "9448132930";
+      const whatsappUrl = `https://wa.me/${merchantNumber}?text=${encodeURIComponent(
+        whatsappMessage
+      )}`;
+
+      // Open in new tab to allow the success screen to show in the background
+      window.open(whatsappUrl, "_blank");
+
+      /* 
+      // --- DISABLED SERVER-SIDE NOTIFICATIONS (SMS/WHATSAPP API) ---
       const whatsappController = new AbortController();
       const whatsappTimeout = setTimeout(
         () => whatsappController.abort(),
-        20000
+        8000
       );
 
-      let whatsappResult;
+      // Initialize result tracking
+      let whatsappResult = { success: false, error: null };
+      let smsResult = { success: false, error: null };
+
       try {
-        const whatsappResponse = await fetch("/api/whatsapp/send", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            phoneNumber: orderData.customerInfo.phoneNumber,
-            message: "",
-            messageType: "order_enquiry",
-            orderData: {
-              ...orderData,
-              orderId: savedOrder.orderId,
-              invoiceNumber: savedOrder.invoiceNumber,
-            },
-          }),
-          signal: whatsappController.signal,
-        });
+        console.log("📨 Sending notifications...");
 
-        clearTimeout(whatsappTimeout);
-        whatsappResult = await whatsappResponse.json();
-
-        console.log("📨 WhatsApp result:", whatsappResult);
+        // Execute notifications in parallel
+        const [whatsappRes, smsRes] = await Promise.allSettled([
+          // WhatsApp Attempt (Keep existing logic)
+          fetch("/api/whatsapp/send", { ... }).then(...),
+          // SMS Attempt (New Twilio Logic)
+          fetch("/api/sms/send", { ... }).then(...)
+        ]);
+        // ... handling results ...
       } catch (error) {
-        clearTimeout(whatsappTimeout);
-        console.warn("⚠️ WhatsApp notification failed:", error);
-
-        whatsappResult = {
-          success: false,
-          error:
-            error.name === "AbortError"
-              ? "WhatsApp notification timed out"
-              : "WhatsApp notification failed",
-        };
+        // ... handling errors ...
       }
+      */
 
       setWhatsappResult(whatsappResult);
+      // Ideally we'd have state for SMS result too, but for now we just log it.
+      // We can add setSmsResult later if we want to show it in UI.
+
       dispatch(clearCart());
       setOrderSuccess(true);
 

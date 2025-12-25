@@ -22,7 +22,7 @@ export function Footer() {
             </p>
             <button
               onClick={() =>
-                window.open("https://wa.me/919876543210", "_blank")
+                window.open("https://wa.me/919448132930", "_blank")
               }
               className="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-lg font-semibold text-sm sm:text-base transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-lg touch-target"
             >
@@ -54,20 +54,24 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/contact"
+                <a
+                  href="https://wa.me/919448132930"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-gray-700 hover:text-blue-600 text-sm sm:text-base transition-colors duration-200 inline-block py-1 touch-target-sm"
                 >
                   Contact
-                </Link>
+                </a>
               </li>
               <li>
-                <Link
-                  href="/delivery"
+                <a
+                  href="https://wa.me/919448132930"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-gray-700 hover:text-blue-600 text-sm sm:text-base transition-colors duration-200 inline-block py-1 touch-target-sm"
                 >
                   Delivery Info
-                </Link>
+                </a>
               </li>
             </ul>
           </div>
@@ -132,19 +136,21 @@ export function Footer() {
               <div className="flex items-center">
                 <Phone className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0 text-blue-600" />
                 <a
-                  href="tel:+919876543210"
+                  href="https://wa.me/919448132930"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="hover:text-blue-600 transition-colors duration-200 touch-target-sm"
                 >
-                  +91 91649 12323
+                  +91 94481 32930
                 </a>
               </div>
               <div className="flex items-center">
                 <Mail className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0 text-blue-600" />
                 <a
-                  href="mailto:info@digitalcatalogue.com"
+                  href="mailto:mrvstoresvps@gmail.com"
                   className="hover:text-blue-600 transition-colors duration-200 touch-target-sm break-all"
                 >
-                  info@digitalcatalogue.com
+                  mrvstoresvps@gmail.com
                 </a>
               </div>
             </div>

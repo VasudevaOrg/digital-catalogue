@@ -80,27 +80,31 @@ export interface IOrder extends Document {
   }>;
 }
 
-const OrderItemSchema = new Schema({
-  product: {
-    id: { type: String, required: true },
-    name: { type: String, required: true },
-    description: { type: String, required: true },
-    price: { type: Number, required: true }, // Discounted price
-    originalPrice: { type: Number }, // Original price before discount
+const OrderItemSchema = new Schema(
+  {
+    product: {
+      id: { type: String, required: true },
+      name: { type: String, required: true },
+      description: { type: String, required: true },
+      price: { type: Number, required: true }, // Discounted price
+      originalPrice: { type: Number }, // Original price before discount
+      weight: { type: Number, required: true },
+      weightUnit: { type: String }, // Store weight unit for non-variant products
+      category: { type: String, required: true },
+      images: [{ type: String }],
+      discount: { type: Schema.Types.Mixed }, // Store discount info
+      selectedVariant: { type: Schema.Types.Mixed }, // Store selected variant details
+    },
+    quantity: { type: Number, required: true, min: 1 },
+    price: { type: Number, required: true }, // Unit price (discounted)
+    totalPrice: { type: Number, required: true }, // Total (discounted)
     weight: { type: Number, required: true },
-    category: { type: String, required: true },
-    images: [{ type: String }],
-    discount: { type: Schema.Types.Mixed }, // Store discount info
-    selectedVariant: { type: Schema.Types.Mixed }, // Store selected variant details
+    totalWeight: { type: Number, required: true },
+    appliedDiscount: { type: Number, default: 0 }, // Discount amount
+    savings: { type: Number, default: 0 }, // Savings amount
   },
-  quantity: { type: Number, required: true, min: 1 },
-  price: { type: Number, required: true }, // Unit price (discounted)
-  totalPrice: { type: Number, required: true }, // Total (discounted)
-  weight: { type: Number, required: true },
-  totalWeight: { type: Number, required: true },
-  appliedDiscount: { type: Number, default: 0 }, // Discount amount
-  savings: { type: Number, default: 0 }, // Savings amount
-});
+  { strict: false }
+);
 
 const OrderSchema = new Schema<IOrder>(
   {

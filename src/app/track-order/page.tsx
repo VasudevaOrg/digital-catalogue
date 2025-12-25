@@ -833,7 +833,7 @@ export default function TrackOrderPage() {
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <button
                     onClick={() =>
-                      window.open("https://wa.me/918297137702", "_blank")
+                      window.open("https://wa.me/919448132930", "_blank")
                     }
                     className="inline-flex items-center justify-center bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
                   >
@@ -841,7 +841,7 @@ export default function TrackOrderPage() {
                     WhatsApp Support
                   </button>
                   <button
-                    onClick={() => window.open("tel:+918297137702", "_blank")}
+                    onClick={() => window.open("tel:+919448132930", "_blank")}
                     className="inline-flex items-center justify-center bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
                   >
                     <Phone className="w-5 h-5 mr-2" />
@@ -873,7 +873,7 @@ export default function TrackOrderPage() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button
                   onClick={() =>
-                    window.open("https://wa.me/918297137702", "_blank")
+                    window.open("https://wa.me/919448132930", "_blank")
                   }
                   className="inline-flex items-center justify-center bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
                 >
@@ -881,7 +881,7 @@ export default function TrackOrderPage() {
                   Contact on WhatsApp
                 </button>
                 <button
-                  onClick={() => window.open("tel:+918297137702", "_blank")}
+                  onClick={() => window.open("tel:+919448132930", "_blank")}
                   className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
                 >
                   <Phone className="w-5 h-5 mr-2" />

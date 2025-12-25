@@ -19,6 +19,20 @@ export async function POST(request: NextRequest) {
 
     // Prepare order items with DISCOUNTED prices
     const orderItems = orderData.items.map((item: any) => {
+      // DEBUG LOG: Check if selectedVariant exists in incoming item
+      if (item.product.selectedVariant) {
+        console.log(
+          "🔍 Found selectedVariant in incoming item:",
+          item.product.name,
+          item.product.selectedVariant
+        );
+      } else {
+        console.log(
+          "⚠️ NO selectedVariant in incoming item:",
+          item.product.name
+        );
+      }
+
       // Use the price already calculated in checkout (which includes discount)
       const unitPrice = item.product.price; // This is already the discounted price from checkout
       const totalPrice = unitPrice * item.quantity;
@@ -32,6 +46,7 @@ export async function POST(request: NextRequest) {
           price: unitPrice, // Store discounted unit price
           originalPrice: item.product.originalPrice || unitPrice, // Store original price if available
           weight: item.product.weight,
+          weightUnit: item.product.weightUnit, // Store weight unit
           category: item.product.category,
           images: item.product.images || [],
           discount: item.product.discount, // Store discount information

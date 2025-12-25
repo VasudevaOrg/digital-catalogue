@@ -230,7 +230,7 @@ export class WhatsAppFlowService {
         return {
           messages: [
             this.createTextMessage(
-              "📱 *Track by Phone Number*\n\nPlease enter the phone number used for the order:\n\n*Example:* 9876543210 or +91 9876543210\n\nType your phone number below:"
+              "📱 *Track by Phone Number*\n\nPlease enter the phone number used for the order:\n\n*Example:* 9448132930 or +91 9448132930\n\nType your phone number below:"
             ),
           ],
           nextState: "awaiting_phone_number",
@@ -780,7 +780,7 @@ Happy Shopping! 🙏`;
 📞 *Contact Support:*
 • Phone: +91 82971 37702
 • WhatsApp: This number
-• Email: support@digitalcatalogue.com
+• Email: mrvstoresvps@gmail.com
 
 🏪 *Store Information:*
 • Address: SHOP No. 11, APMC Yard, Karnataka 573103
@@ -802,7 +802,7 @@ Just type your question and I'll help you! 😊`;
 
 📱 *Phone:* +91 82971 37702
 💬 *WhatsApp:* +91 82971 37702
-📧 *Email:* support@digitalcatalogue.com
+📧 *Email:* mrvstoresvps@gmail.com
 
 📍 *Store Address:*
 SHOP No. 11, APMC Yard

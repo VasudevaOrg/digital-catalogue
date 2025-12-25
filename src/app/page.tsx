@@ -400,7 +400,7 @@ export default function HomePage() {
 
                 <button
                   onClick={() =>
-                    window.open("https://wa.me/918297137702", "_blank")
+                    window.open("https://wa.me/919448132930", "_blank")
                   }
                   className="group bg-transparent border-2 border-white text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg hover:bg-white hover:text-blue-600 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-2xl flex items-center w-full sm:w-auto justify-center"
                 >
@@ -418,7 +418,7 @@ export default function HomePage() {
                     <h4 className="font-semibold mb-2 text-sm sm:text-base">
                       Call Us
                     </h4>
-                    <p className="text-blue-100 text-sm">+91 82971 37702</p>
+                    <p className="text-blue-100 text-sm">+91 94481 32930</p>
                   </div>
 
                   <div className="flex flex-col items-center">

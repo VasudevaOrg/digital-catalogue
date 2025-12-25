@@ -444,7 +444,7 @@ export default function CategoriesPage() {
               </Link>
               <button
                 onClick={() =>
-                  window.open("https://wa.me/919876543210", "_blank")
+                  window.open("https://wa.me/919448132930", "_blank")
                 }
                 className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold"
               >

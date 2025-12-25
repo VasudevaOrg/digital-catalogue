@@ -187,7 +187,7 @@ export function DeliveryInfo() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
               onClick={() =>
-                window.open("https://wa.me/919876543210", "_blank")
+                window.open("https://wa.me/919448132930", "_blank")
               }
               className="inline-flex items-center justify-center px-8 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors duration-200"
             >
@@ -196,8 +196,8 @@ export function DeliveryInfo() {
             </button>
 
             <div className="text-primary-100">
-              <p className="text-sm">Call us: +91 91649 12323</p>
-              <p className="text-sm">Email: support@digitalcatalogue.com</p>
+              <p className="text-sm">Call us: +91 94481 32930</p>
+              <p className="text-sm">Email: mrvstoresvps@gmail.com</p>
             </div>
           </div>
         </div>

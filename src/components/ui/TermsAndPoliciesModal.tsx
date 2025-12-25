@@ -267,8 +267,8 @@ export function TermsAndPoliciesModal({
                     </h4>
                     <p>To initiate a return:</p>
                     <p>
-                      • Contact us via WhatsApp (+91 9164912323) or phone
-                      within the return window.
+                      • Contact us via WhatsApp (+91 9164912323) or phone within
+                      the return window.
                     </p>
                     <p>• Provide your Order ID and reason for return.</p>
                     <p>• Our team will guide you through the return process.</p>
@@ -352,8 +352,10 @@ export function TermsAndPoliciesModal({
                     <p>For returns, refunds, or any questions:</p>
                     <p>• Phone: +91 91649 12323</p>
                     <p>• WhatsApp: +91 91649 12323</p>
-                    <p>• Email: support@digitalcatalogue.com</p>
-                    <p>• Store Address: SHOP No. 11, APMC Yard, Karnataka 573103</p>
+                    <p>• Email: mrvstoresvps@gmail.com</p>
+                    <p>
+                      • Store Address: SHOP No. 11, APMC Yard, Karnataka 573103
+                    </p>
                   </div>
                 </div>
               </div>
