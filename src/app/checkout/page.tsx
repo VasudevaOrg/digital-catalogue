@@ -142,6 +142,56 @@ export default function CheckoutPage() {
   const deliveryFee = calculateDeliveryFee();
   const totalAmount = cart.totalAmount + deliveryFee;
 
+  // Calculate grouped measurements
+  const calculateMeasurements = () => {
+    const totals: Record<string, number> = {
+      mass: 0, // stored in grams
+      volume: 0, // stored in ml
+      box: 0,
+      bags: 0,
+      pieces: 0,
+      other: 0,
+    };
+
+    cart.items.forEach((item) => {
+      const variant = item.selectedVariant;
+      const weight = variant ? variant.weight : item.product.weight;
+      const unit = variant ? variant.weightUnit : item.product.weightUnit;
+      const quantity = item.quantity;
+      const totalValue = weight * quantity;
+
+      switch (unit) {
+        case "kg":
+          totals.mass += totalValue * 1000;
+          break;
+        case "grams":
+          totals.mass += totalValue;
+          break;
+        case "ltr":
+          totals.volume += totalValue * 1000;
+          break;
+        case "ml":
+          totals.volume += totalValue;
+          break;
+        case "box":
+          totals.box += totalValue; // Assuming value implies count/weight abstractly, but usually matches quantity x weight if weight is '1 box'
+          break;
+        case "bags":
+          totals.bags += totalValue;
+          break;
+        case "pieces":
+          totals.pieces += totalValue;
+          break;
+        default:
+          totals.other += totalValue;
+      }
+    });
+
+    return totals;
+  };
+
+  const measurementTotals = calculateMeasurements();
+
   const handleInputChange = (field: string, value: string) => {
     if (field.startsWith("address.")) {
       const addressField = field.split(".")[1];
@@ -1254,11 +1304,78 @@ Please call us at +91 82971 37702 for order confirmation.`;
                       ₹{cart.totalAmount.toFixed(2)}
                     </span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Total Weight:</span>
-                    <span className="text-gray-900">
-                      {cart.totalWeight.toFixed(2)}kg
+
+                  {/* Total Measurements Display */}
+                  <div className="flex flex-col space-y-1 text-sm border-t border-dashed pt-2 mt-2">
+                    <span className="text-gray-600 font-medium pb-1">
+                      Total Quantities:
                     </span>
+
+                    {measurementTotals.mass > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500 pl-2">
+                          Total Weight:
+                        </span>
+                        <span className="text-gray-900">
+                          {measurementTotals.mass >= 1000
+                            ? `${(measurementTotals.mass / 1000).toFixed(2)} kg`
+                            : `${measurementTotals.mass} g`}
+                        </span>
+                      </div>
+                    )}
+
+                    {measurementTotals.volume > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500 pl-2">
+                          Total Volume:
+                        </span>
+                        <span className="text-gray-900">
+                          {measurementTotals.volume >= 1000
+                            ? `${(measurementTotals.volume / 1000).toFixed(
+                                2
+                              )} L`
+                            : `${measurementTotals.volume} ml`}
+                        </span>
+                      </div>
+                    )}
+
+                    {measurementTotals.box > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500 pl-2">Total Boxes:</span>
+                        <span className="text-gray-900">
+                          {measurementTotals.box}
+                        </span>
+                      </div>
+                    )}
+
+                    {measurementTotals.bags > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500 pl-2">Total Bags:</span>
+                        <span className="text-gray-900">
+                          {measurementTotals.bags}
+                        </span>
+                      </div>
+                    )}
+
+                    {measurementTotals.pieces > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500 pl-2">
+                          Total Pieces:
+                        </span>
+                        <span className="text-gray-900">
+                          {measurementTotals.pieces}
+                        </span>
+                      </div>
+                    )}
+
+                    {measurementTotals.other > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500 pl-2">Other Items:</span>
+                        <span className="text-gray-900">
+                          {measurementTotals.other}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Delivery:</span>
