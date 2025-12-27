@@ -382,7 +382,7 @@ export default function CheckoutPage() {
         subtotal: subtotal,
         isEligibleForFreeDelivery: isEligibleForFreeDelivery,
         orderDate: new Date().toISOString(),
-        orderNotes: `Order placed via Digital Catalogue website. ${
+        orderNotes: `Order placed via MRV Stores website. ${
           deliveryType === "delivery" ? "Home delivery" : "Store pickup"
         } requested.${
           totalSavings > 0
@@ -423,7 +423,7 @@ export default function CheckoutPage() {
         }
 
         console.log("✅ Order saved:", orderResult.order.orderId);
-      } catch (error) {
+      } catch (error: any) {
         clearTimeout(orderTimeout);
         if (error.name === "AbortError") {
           throw new Error("Order creation timed out. Please try again.");
@@ -433,26 +433,11 @@ export default function CheckoutPage() {
 
       const savedOrder = orderResult.order;
 
-      // 5. Client-Side WhatsApp Redirect (Merchant Notification)
-      // Construct the detailed order message for the merchant
-      const itemsList = savedOrder.items
-        .map((item: any) => {
-          const variantText = item.product.selectedVariant
-            ? `(${item.product.selectedVariant.weight} ${item.product.selectedVariant.weightUnit})`
-            : "";
-          return `- ${item.product.name} ${variantText} x ${item.quantity}: ₹${item.totalPrice}`;
-        })
-        .join("\n");
-
       const whatsappMessage = `*New Order: ${savedOrder.orderId}*
 ----------------
 *Customer:* ${savedOrder.customerInfo.name}
 *Phone:* ${savedOrder.customerInfo.phoneNumber}
 ----------------
-*Items:*
-${itemsList}
-----------------
-*Total Amount:* ₹${savedOrder.totalAmount}
 *Payment:* ${
         savedOrder.paymentMethod === "prepaid" ? "Prepaid" : "Cash on Pickup"
       }
@@ -595,7 +580,7 @@ Please call us at +91 82971 37702 for order confirmation.`;
 
   if (cart.items.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8 sm:py-12">
+      <div className="min-h-screen bg-gray-50 text-gray-900 py-8 sm:py-12">
         <div className="max-w-md mx-auto px-4">
           <div className="bg-white rounded-lg shadow-sm border p-6 sm:p-8 text-center">
             <div className="w-12 sm:w-16 h-12 sm:h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
@@ -622,7 +607,7 @@ Please call us at +91 82971 37702 for order confirmation.`;
   // Order Success Screen
   if (orderSuccess) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8 sm:py-12">
+      <div className="min-h-screen bg-gray-50 text-gray-900 py-8 sm:py-12">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-6 sm:mb-8">
             <div className="w-12 sm:w-16 h-12 sm:h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -736,7 +721,7 @@ Please call us at +91 82971 37702 for order confirmation.`;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-4 sm:py-6 lg:py-8">
+    <div className="min-h-screen bg-gray-50 text-gray-900 py-4 sm:py-6 lg:py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-6 sm:mb-8">
@@ -813,7 +798,8 @@ Please call us at +91 82971 37702 for order confirmation.`;
                       onChange={(e) =>
                         handleInputChange("name", e.target.value)
                       }
-                      className="w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors text-sm sm:text-base"
+                      placeholder="Enter your full name"
+                      className="w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors text-sm sm:text-base placeholder-gray-400"
                       required
                       disabled={isPlacingOrder}
                     />
@@ -829,7 +815,7 @@ Please call us at +91 82971 37702 for order confirmation.`;
                         handleInputChange("phoneNumber", e.target.value)
                       }
                       placeholder="Enter 10-digit mobile number"
-                      className="w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors text-sm sm:text-base"
+                      className="w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors text-sm sm:text-base placeholder-gray-400"
                       required
                       disabled={isPlacingOrder}
                     />
@@ -879,7 +865,7 @@ Please call us at +91 82971 37702 for order confirmation.`;
                     <div className="text-xs sm:text-sm text-gray-600 space-y-1">
                       <div className="flex items-center">
                         <Clock className="w-3 sm:w-4 h-3 sm:h-4 mr-2" />
-                        <span>2-4 hours delivery</span>
+                        <span>24 hours delivery</span>
                       </div>
                       <div className="flex items-center">
                         <Star className="w-3 sm:w-4 h-3 sm:h-4 mr-2" />
@@ -970,7 +956,7 @@ Please call us at +91 82971 37702 for order confirmation.`;
                           handleInputChange("address.street", e.target.value)
                         }
                         placeholder="Enter your complete street address"
-                        className="w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors text-sm sm:text-base"
+                        className="w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors text-sm sm:text-base placeholder-gray-400"
                         required
                         disabled={isPlacingOrder}
                       />
@@ -986,7 +972,8 @@ Please call us at +91 82971 37702 for order confirmation.`;
                           onChange={(e) =>
                             handleInputChange("address.city", e.target.value)
                           }
-                          className="w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors text-sm sm:text-base"
+                          placeholder="Enter your city"
+                          className="w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors text-sm sm:text-base placeholder-gray-400"
                           required
                           disabled={isPlacingOrder}
                         />
@@ -1001,7 +988,8 @@ Please call us at +91 82971 37702 for order confirmation.`;
                           onChange={(e) =>
                             handleInputChange("address.pincode", e.target.value)
                           }
-                          className="w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors text-sm sm:text-base"
+                          placeholder="Enter pincode"
+                          className="w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors text-sm sm:text-base placeholder-gray-400"
                           required
                           disabled={isPlacingOrder}
                         />

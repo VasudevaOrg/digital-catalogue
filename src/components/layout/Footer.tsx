@@ -15,7 +15,7 @@ export function Footer() {
           {/* Company Info */}
           <div>
             <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4">
-              Digital Catalogue
+              MRV Stores
             </h3>
             <p className="text-gray-700 text-sm sm:text-base mb-4 leading-relaxed">
               Your trusted partner for quality groceries and daily essentials.
@@ -163,7 +163,7 @@ export function Footer() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center text-sm sm:text-base text-gray-700 gap-3 sm:gap-4">
             <p className="text-center md:text-left">
-              © {currentYear} Digital Catalogue. All rights reserved.
+              © {currentYear} MRV Stores. All rights reserved.
             </p>
             <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
               <Link

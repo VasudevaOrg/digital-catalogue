@@ -109,9 +109,9 @@ export function TermsAndPoliciesModal({
                       1. Order Acceptance
                     </h4>
                     <p>
-                      All orders placed through our Digital Catalogue are
-                      subject to acceptance and availability. We reserve the
-                      right to refuse or cancel any order at our discretion.
+                      All orders placed through MRV Stores are subject to
+                      acceptance and availability. We reserve the right to
+                      refuse or cancel any order at our discretion.
                     </p>
                   </div>
 
@@ -210,7 +210,7 @@ export function TermsAndPoliciesModal({
                       8. Limitation of Liability
                     </h4>
                     <p>
-                      Digital Catalogue shall not be liable for any indirect,
+                      MRV Stores shall not be liable for any indirect,
                       incidental, or consequential damages arising from the use
                       of our products or services.
                     </p>

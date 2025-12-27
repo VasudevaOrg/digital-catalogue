@@ -18,7 +18,6 @@ import {
   Clock,
   Truck,
   Star,
-  User,
   Heart,
   Grid3X3,
   X,
@@ -92,16 +91,16 @@ export function Header() {
                 </div>
                 <div className="hidden sm:block">
                   <span className="text-lg sm:text-xl md:text-2xl font-black text-gray-800 group-hover:text-blue-600 transition-colors duration-300">
-                    DIGITAL
+                    MRV
                   </span>
                   <div className="text-sm sm:text-base md:text-lg font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                    CATALOGUE
+                    STORES
                   </div>
                 </div>
                 {/* Mobile Logo Text */}
                 <div className="sm:hidden">
                   <span className="text-base font-black text-gray-800 group-hover:text-blue-600 transition-colors duration-300">
-                    DC
+                    MRV
                   </span>
                 </div>
               </div>
@@ -112,8 +111,6 @@ export function Header() {
               {[
                 { name: "Products", href: "/products" },
                 { name: "Categories", href: "/categories" },
-                { name: "About", href: "/about" },
-                { name: "Contact", href: "/contact" },
               ].map((item, index) => (
                 <div key={item.name}>
                   <Link
@@ -158,10 +155,10 @@ export function Header() {
                 </span>
               </button>
 
-              {/* Cart - Hidden on mobile */}
+              {/* Cart */}
               <button
                 onClick={() => dispatch(openCart())}
-                className="hidden sm:flex relative w-8 sm:w-9 md:w-10 h-8 sm:h-9 md:h-10 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-lg md:rounded-xl items-center justify-center transition-all duration-300"
+                className="flex relative w-8 sm:w-9 md:w-10 h-8 sm:h-9 md:h-10 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-lg md:rounded-xl items-center justify-center transition-all duration-300"
               >
                 <ShoppingCart className="w-4 sm:w-5 h-4 sm:h-5" />
                 {isClient && cartItemsCount > 0 && (
@@ -169,11 +166,6 @@ export function Header() {
                     {cartItemsCount > 99 ? "99+" : cartItemsCount}
                   </span>
                 )}
-              </button>
-
-              {/* User Account - Hidden on mobile */}
-              <button className="hidden md:flex w-8 sm:w-9 md:w-10 h-8 sm:h-9 md:h-10 bg-gray-100 hover:bg-green-100 text-gray-600 hover:text-green-600 rounded-lg md:rounded-xl items-center justify-center transition-all duration-300">
-                <User className="w-4 sm:w-5 h-4 sm:h-5" />
               </button>
 
               {/* Mobile Menu */}

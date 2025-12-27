@@ -424,7 +424,7 @@ export default function ProductDetailPage() {
               {/* Variant Selector moved below price */}
 
               {/* Stock Status - Prominent Display */}
-              <div className="mb-4 sm:mb-6">
+              {/* <div className="mb-4 sm:mb-6">
                 {isOutOfStock ? (
                   <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4">
                     <div className="flex items-center">
@@ -467,7 +467,7 @@ export default function ProductDetailPage() {
                     </div>
                   </div>
                 )}
-              </div>
+              </div> */}
 
               {/* Price and Discount */}
               <div className="mb-4 sm:mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
@@ -600,7 +600,7 @@ export default function ProductDetailPage() {
               )}
 
               {/* Out of Stock Message */}
-              {isOutOfStock && (
+              {/* {isOutOfStock && (
                 <div className="mb-6 bg-gray-100 border border-gray-300 rounded-lg p-4">
                   <p className="text-gray-700 font-medium mb-2">
                     This product is currently out of stock
@@ -609,7 +609,7 @@ export default function ProductDetailPage() {
                     Check back soon or contact us for restocking information
                   </p>
                 </div>
-              )}
+              )} */}
 
               {/* Product Features */}
               <div className="border-t pt-4 sm:pt-6 space-y-4">
@@ -664,9 +664,9 @@ export default function ProductDetailPage() {
                     <p className="text-sm text-gray-600">
                       Category: {product.category}
                     </p>
-                    <p className="text-sm text-gray-600">
+                    {/* <p className="text-sm text-gray-600">
                       Available Stock: {availableStock} units
-                    </p>
+                    </p> */}
                     {product.tags && product.tags.length > 0 && (
                       <p className="text-sm text-gray-600">
                         Tags:{" "}

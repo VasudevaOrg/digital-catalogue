@@ -257,7 +257,7 @@ export function ProductCard({
                   </div>
 
                   {/* Stock Status */}
-                  <div className="mt-1">
+                  {/* <div className="mt-1">
                     {isOutOfStock ? (
                       <span className="text-xs text-red-600 font-medium flex items-center">
                         <AlertCircle className="w-3 h-3 mr-1" />
@@ -274,7 +274,7 @@ export function ProductCard({
                         {availableStock} available
                       </span>
                     )}
-                  </div>
+                  </div> */}
                 </div>
 
                 {showAddToCart && (
@@ -437,7 +437,7 @@ export function ProductCard({
             </div>
 
             {/* Stock Status */}
-            <div className="mt-2">
+            {/* <div className="mt-2">
               {isOutOfStock ? (
                 <span className="text-xs text-red-600 font-medium flex items-center">
                   <AlertCircle className="w-3 h-3 mr-1" />
@@ -454,7 +454,7 @@ export function ProductCard({
                   {availableStock} available
                 </span>
               )}
-            </div>
+            </div> */}
           </div>
 
           {/* Add to Cart Button */}

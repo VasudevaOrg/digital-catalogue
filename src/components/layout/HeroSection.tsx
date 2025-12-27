@@ -37,7 +37,7 @@ const heroSlides = [
     title: "WhatsApp Ordering",
     subtitle: "Order via WhatsApp for convenience",
     description:
-      "Browse our digital catalogue and place orders directly through WhatsApp.",
+      "Browse our MRV Stores and place orders directly through WhatsApp.",
     image: "/images/hero/hero-3.jpg",
     cta: "Contact Us",
     ctaLink: "https://wa.me/919448132930",

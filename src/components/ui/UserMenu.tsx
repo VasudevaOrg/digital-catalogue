@@ -54,14 +54,14 @@ export function UserMenu() {
 
       {isOpen && (
         <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg py-2 border border-gray-200 z-50">
-          <Link
+          {/* <Link
             href="/profile"
             onClick={() => setIsOpen(false)}
             className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
           >
             <Settings className="w-4 h-4 mr-2" />
             Profile Settings
-          </Link>
+          </Link> */}
           <Link
             href="/orders"
             onClick={() => setIsOpen(false)}
