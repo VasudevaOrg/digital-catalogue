@@ -433,14 +433,33 @@ export default function CheckoutPage() {
 
       const savedOrder = orderResult.order;
 
+      // 5. Client-Side WhatsApp Redirect (Merchant Notification)
+      // Clean and prefix customer phone
+      const customerPhone = savedOrder.customerInfo.phoneNumber.replace(
+        /\D/g,
+        ""
+      );
+      const formattedCustomerPhone = customerPhone.startsWith("91")
+        ? customerPhone
+        : `91${customerPhone}`;
+
       const whatsappMessage = `*New Order: ${savedOrder.orderId}*
 ----------------
 *Customer:* ${savedOrder.customerInfo.name}
-*Phone:* ${savedOrder.customerInfo.phoneNumber}
+*Phone:* ${formattedCustomerPhone}
 ----------------
 *Payment:* ${
-        savedOrder.paymentMethod === "prepaid" ? "Prepaid" : "Cash on Pickup"
+        savedOrder.paymentMethod === "prepaid"
+          ? "Prepaid"
+          : savedOrder.deliveryType === "delivery"
+          ? "Cash on Delivery"
+          : "Cash on Pickup"
+      }${
+        savedOrder.deliveryType === "delivery"
+          ? `\n*Store UPI (Pay here):* 9448132930@hdfcbank`
+          : ""
       }
+----------------
 *Delivery:* ${
         savedOrder.deliveryType === "delivery"
           ? "Home Delivery"
@@ -455,7 +474,7 @@ ${
 Please confirm my order.`;
 
       // Redirect to WhatsApp
-      const merchantNumber = "9448132930";
+      const merchantNumber = "919448132930";
       const whatsappUrl = `https://wa.me/${merchantNumber}?text=${encodeURIComponent(
         whatsappMessage
       )}`;
@@ -533,7 +552,7 @@ ${
 
 WhatsApp notification: ${whatsappResult.error || "Failed to send"}
 
-Please call us at +91 82971 37702 for order confirmation.`;
+Please call us at +91 91649 12322 for order confirmation.`;
 
       dispatch(showSuccessNotification(successMessage));
 

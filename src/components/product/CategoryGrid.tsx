@@ -134,36 +134,37 @@ export function CategoryGrid({
   }
 
   return (
-    <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
+    <div className="flex flex-row sm:gap-8 md:gap-10 overflow-x-auto pb-4 scrollbar-hide flex-nowrap -mx-4 px-4 sm:mx-0 sm:px-0">
       {categories.map((category, index) => {
         const config = getCategoryConfig(category);
 
         return (
           <motion.div
             key={category}
+            className="flex-shrink-0 w-24 sm:w-28"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{
-              duration: 0.5,
-              delay: index * 0.1,
-              ease: "easeOut",
-            }}
-            whileHover={{ y: -8, scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            // transition={{
+            //   duration: 0.5,
+            //   delay: index * 0.1,
+            //   ease: "easeOut",
+            // }}
+            // whileHover={{ y: -8, scale: 1.02 }}
+            // whileTap={{ scale: 0.98 }}
           >
             <Link
               href={`/products?category=${encodeURIComponent(category)}`}
               className="group block h-full touch-target"
             >
-              <div className="relative bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden h-full flex flex-col min-h-[180px] sm:min-h-[200px]">
+              <div className="relative h-full flex flex-col">
                 {/* Background Gradient */}
                 <div
-                  className={`absolute inset-0 bg-gradient-to-br ${config.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}
+                  className={`absolute inset-0 bg-gradient-to-br ${config.gradient} opacity-0`}
                 ></div>
 
                 {/* Icon Background */}
                 <div
-                  className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-br ${config.gradient} rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4 mx-auto group-hover:scale-110 transition-all duration-300 shadow-lg`}
+                  className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-br ${config.gradient} rounded-[100px] sm:rounded-[100px] flex items-center justify-center mb-3 sm:mb-4 mx-auto shadow-lg`}
                 >
                   <span className="text-xl sm:text-2xl md:text-3xl filter drop-shadow-sm">
                     {config.icon}
@@ -171,17 +172,12 @@ export function CategoryGrid({
                 </div>
 
                 {/* Category Name */}
-                <h3 className="text-sm sm:text-base md:text-lg font-bold text-gray-900 text-center mb-2 group-hover:text-blue-600 transition-colors duration-300 leading-tight flex-grow">
+                <p className="text-gray-900 text-center mb-2 group-hover:text-blue-600 transition-colors duration-300 leading-tight flex-grow truncate w-full px-1 text-xs sm:text-sm">
                   {category}
-                </h3>
-
-                {/* Description */}
-                <p className="text-xs sm:text-sm text-gray-600 text-center leading-relaxed group-hover:text-gray-700 transition-colors duration-300 mb-3 sm:mb-4">
-                  {config.description}
                 </p>
 
                 {/* Shop Now Button */}
-                <div className="text-center mt-auto">
+                {/* <div className="text-center mt-auto">
                   <div className="inline-flex items-center text-xs sm:text-sm font-semibold text-blue-600 group-hover:text-blue-700 transition-colors duration-300">
                     <span>Shop Now</span>
                     <svg
@@ -198,10 +194,10 @@ export function CategoryGrid({
                       />
                     </svg>
                   </div>
-                </div>
+                </div> */}
 
                 {/* Hover Arrow */}
-                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0 transition-all duration-300">
+                {/* <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0 transition-all duration-300">
                   <div className="w-6 h-6 bg-white rounded-full shadow-md flex items-center justify-center">
                     <svg
                       className="w-3 h-3 text-gray-600"
@@ -217,7 +213,7 @@ export function CategoryGrid({
                       />
                     </svg>
                   </div>
-                </div>
+                </div> */}
 
                 {/* Shine Effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-all duration-700"></div>

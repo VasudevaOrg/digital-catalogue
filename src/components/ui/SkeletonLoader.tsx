@@ -138,39 +138,23 @@ export function CategoriesGridSkeleton() {
 // Hero Banner Skeleton
 export function HeroBannerSkeleton() {
   return (
-    <div className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-gray-200 to-gray-300">
-      <div className="relative z-10 w-full">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center space-y-8">
-            {/* Badge Skeleton */}
-            <Skeleton className="inline-block h-12 w-64 rounded-full" />
-
-            {/* Title Skeleton */}
-            <div className="space-y-4">
-              <Skeleton className="h-16 w-full max-w-2xl mx-auto" />
-              <Skeleton className="h-16 w-3/4 mx-auto" />
-            </div>
-
-            {/* Description Skeleton */}
-            <div className="space-y-2">
-              <Skeleton className="h-6 w-full max-w-3xl mx-auto" />
-              <Skeleton className="h-6 w-2/3 mx-auto" />
-            </div>
-
-            {/* CTA Buttons Skeleton */}
-            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-              <Skeleton className="h-14 w-48 rounded-2xl" />
-              <Skeleton className="h-14 w-48 rounded-2xl" />
-            </div>
-          </div>
+    <div className="bg-blue-600/5 py-4 sm:py-6 lg:py-8 overflow-hidden">
+      <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Carousel Card Skeleton */}
+        <div className="relative bg-[#f2ebe1] rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden aspect-[16/9] sm:aspect-[21/9] lg:aspect-[3/1] max-h-[400px] sm:max-h-[600px] lg:max-h-[800px] flex flex-col items-center justify-end pb-8 sm:pb-12 animate-pulse shadow-sm border-4 border-white/50">
+          <div className="h-10 w-32 bg-white/60 backdrop-blur-sm rounded-lg mx-auto shadow-sm"></div>
         </div>
-      </div>
 
-      {/* Slide Indicators Skeleton */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-4">
-        {Array.from({ length: 3 }).map((_, index) => (
-          <Skeleton key={index} className="w-3 h-3 rounded-full" />
-        ))}
+        {/* Navigation Bar Skeleton */}
+        <div className="mt-6 sm:mt-8 flex items-center justify-between px-2 sm:px-6 max-w-4xl mx-auto">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-100 shadow-sm"></div>
+          <div className="hidden sm:flex space-x-3">
+            <div className="w-2 h-2 sm:w-10 sm:h-3 rounded-full bg-blue-200"></div>
+            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-blue-200"></div>
+            <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-blue-200"></div>
+          </div>
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-100 shadow-sm"></div>
+        </div>
       </div>
     </div>
   );

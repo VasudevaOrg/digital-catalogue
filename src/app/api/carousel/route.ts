@@ -67,11 +67,13 @@ export async function GET(request: NextRequest) {
           const parts = filename.split("-");
           let title = "Premium Quality Products";
           let description = "Discover our premium collection";
+          let category = "";
 
-          // Find title and description parts
+          // Find title, description, and category parts
           const titleIndex = parts.findIndex((part) => part === "title");
           const descIndex = parts.findIndex((part) => part === "desc");
           const orderIndex = parts.findIndex((part) => part === "order");
+          const catIndex = parts.findIndex((part) => part === "cat");
 
           if (titleIndex >= 0 && titleIndex + 1 < parts.length) {
             const titleEnd =
@@ -79,6 +81,8 @@ export async function GET(request: NextRequest) {
                 ? descIndex
                 : orderIndex > titleIndex
                 ? orderIndex
+                : catIndex > titleIndex
+                ? catIndex
                 : parts.length;
             title = parts
               .slice(titleIndex + 1, titleEnd)
@@ -87,11 +91,37 @@ export async function GET(request: NextRequest) {
           }
 
           if (descIndex >= 0 && descIndex + 1 < parts.length) {
-            const descEnd = orderIndex > descIndex ? orderIndex : parts.length;
+            const descEnd =
+              orderIndex > descIndex
+                ? orderIndex
+                : catIndex > descIndex
+                ? catIndex
+                : parts.length;
             description = parts
               .slice(descIndex + 1, descEnd)
               .join(" ")
               .replace(/[_]/g, " ");
+          }
+
+          if (catIndex >= 0 && catIndex + 1 < parts.length) {
+            // Category goes until the file extension dot
+            const lastPart = parts[parts.length - 1];
+            const catEnd = parts.length - 1;
+
+            category = parts.slice(catIndex + 1, catEnd).join(" ");
+
+            // Add the name part before the dot if it exists
+            const nameBeforeDot = lastPart.split(".")[0];
+            if (
+              nameBeforeDot &&
+              nameBeforeDot !== "jpg" &&
+              nameBeforeDot !== "png" &&
+              nameBeforeDot !== "webp"
+            ) {
+              category = category
+                ? `${category} ${nameBeforeDot}`
+                : nameBeforeDot;
+            }
           }
 
           // Clean up empty values
@@ -102,10 +132,11 @@ export async function GET(request: NextRequest) {
             description = "Discover our premium collection of quality products";
           }
 
-          return { title, description };
+          return { title, description, category };
         };
 
-        const { title, description } = extractInfoFromFilename(filename);
+        const { title, description, category } =
+          extractInfoFromFilename(filename);
 
         console.log(`✨ Creating carousel item ${index + 1}:`, {
           title,
@@ -120,7 +151,9 @@ export async function GET(request: NextRequest) {
           subtitle: "Farm Fresh • Hand Picked • Quality Assured",
           description: description,
           cta: "Shop Now",
-          ctaLink: "/products",
+          ctaLink: category
+            ? `/products?category=${encodeURIComponent(category)}`
+            : "/products",
           bgGradient: getGradientForIndex(index),
           accentColor: getAccentColorForIndex(index),
         };

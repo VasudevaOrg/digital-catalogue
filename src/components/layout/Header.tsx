@@ -86,22 +86,15 @@ export function Header() {
             {/* Logo */}
             <Link href="/" className="flex items-center group flex-shrink-0">
               <div className="flex items-center">
-                <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg md:rounded-xl flex items-center justify-center mr-2 md:mr-3 group-hover:shadow-lg transition-shadow duration-300">
-                  <ShoppingCart className="w-4 sm:w-5 md:w-6 h-4 sm:h-5 md:h-6 text-white" />
-                </div>
-                <div className="hidden sm:block">
-                  <span className="text-lg sm:text-xl md:text-2xl font-black text-gray-800 group-hover:text-blue-600 transition-colors duration-300">
-                    MRV
-                  </span>
-                  <div className="text-sm sm:text-base md:text-lg font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                    STORES
-                  </div>
-                </div>
-                {/* Mobile Logo Text */}
-                <div className="sm:hidden">
-                  <span className="text-base font-black text-gray-800 group-hover:text-blue-600 transition-colors duration-300">
-                    MRV
-                  </span>
+                <div className="relative w-10 sm:w-12 md:w-16 h-10 sm:h-12 md:h-16 flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
+                  <img
+                    src="/mainLogo.png"
+                    alt="MRV Stores Logo"
+                    className="w-full h-full object-contain"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = "none";
+                    }}
+                  />
                 </div>
               </div>
             </Link>

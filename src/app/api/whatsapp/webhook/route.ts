@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
       // ⭐ CORRECT LOOP PREVENTION ⭐
       // The key insight: customer messages will ALWAYS have your phone_number_id in metadata
       // We should only ignore messages that are FROM your business number
-      // A real customer message from 918985346102 should be processed!
+      // A real customer message from 919164912322 should be processed!
 
       // Method 1: Check if message is FROM our business phone number
       if (
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Method 3: Customer messages from test numbers should be processed
-      // Your test number 918985346102 sending "hi" should reach here
+      // Your test number 919164912322 sending "hi" should reach here
       console.log("✅ This is a customer message - processing...");
 
       try {
@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
           to: fromPhone,
           type: "text",
           text: {
-            body: "Sorry, I encountered an error. Please try again or contact our support team at +91 82971 37702.",
+            body: "Sorry, I encountered an error. Please try again or contact our support team at +91 91649 12322.",
           },
         });
       }

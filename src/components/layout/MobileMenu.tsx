@@ -70,8 +70,15 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
           {/* Header */}
           <div className="flex items-center justify-between p-4 sm:p-5 border-b bg-gradient-to-r from-blue-600 to-indigo-600">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-md">
-                <Package className="w-6 h-6 text-blue-600" />
+              <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-md p-1">
+                <img
+                  src="/mainLogo.png"
+                  alt="MRV Stores"
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = "none";
+                  }}
+                />
               </div>
               <div>
                 <h2 className="font-bold text-white text-base sm:text-lg">
@@ -169,7 +176,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                       href="tel:+919448132930"
                       className="hover:text-blue-600 transition-colors"
                     >
-                      +91 82971 37702
+                      +91 91649 12322
                     </a>
                   </div>
                   <p className="text-sm text-gray-700 flex items-center">

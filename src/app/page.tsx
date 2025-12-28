@@ -172,16 +172,20 @@ export default function HomePage() {
         <div className="absolute bottom-0 right-0 w-32 sm:w-40 h-32 sm:h-40 bg-gradient-to-tl from-orange-100 to-transparent rounded-full blur-2xl opacity-60"></div>
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-6 sm:mb-8 md:mb-12">
+          <div className="mb-6 sm:mb-8 md:mb-12 flex flex-row items-center justify-between">
             <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 mb-2 sm:mb-3 md:mb-4">
               <span className="bg-gradient-to-r from-gray-800 via-blue-600 to-gray-800 bg-clip-text text-transparent">
                 Shop by Category
               </span>
             </h2>
-            <p className="text-sm sm:text-base md:text-lg text-gray-700 max-w-2xl mx-auto mb-3 sm:mb-4 md:mb-6 px-4 sm:px-0">
-              Discover our premium collection of quality groceries and daily
-              essentials
-            </p>
+            <Link href="/categories">
+              <div className="flex flex-row items-center">
+                <p className="text-[#797979] bg-clip-text text-xl">View all</p>
+                <p>
+                  <ArrowRight className="w-8" color="#000" size={20} />
+                </p>
+              </div>
+            </Link>
           </div>
 
           <div className="transition-opacity duration-500 opacity-100">
@@ -190,7 +194,7 @@ export default function HomePage() {
                 <CategoryGrid categories={displayCategories} />
 
                 {/* Show More Button */}
-                {categories.length > 6 && (
+                {/* {categories.length > 6 && (
                   <div className="text-center mt-8 sm:mt-12">
                     <Link
                       href="/categories"
@@ -201,7 +205,7 @@ export default function HomePage() {
                       <ArrowRight className="w-4 sm:w-5 h-4 sm:h-5 ml-2 sm:ml-3 group-hover:translate-x-1 transition-transform duration-300" />
                     </Link>
                   </div>
-                )}
+                )} */}
               </>
             ) : (
               <div className="text-center py-8 sm:py-12">
@@ -235,7 +239,7 @@ export default function HomePage() {
         </div>
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-8 sm:mb-12 md:mb-16">
+          {/* <div className="text-center mb-8 sm:mb-12 md:mb-16">
             <div className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 bg-yellow-100 text-yellow-800 rounded-full text-xs sm:text-sm font-medium mb-2 sm:mb-3 md:mb-4">
               <Trophy className="w-3 sm:w-4 h-3 sm:h-4 mr-1.5 sm:mr-2" />
               Specially Recommended for You
@@ -248,7 +252,7 @@ export default function HomePage() {
             <p className="text-sm sm:text-base md:text-lg text-gray-700 max-w-2xl mx-auto px-4 sm:px-0">
               Handpicked quality items specially recommended by our team
             </p>
-          </div>
+          </div> */}
 
           <div className="transition-opacity duration-500 opacity-100">
             {recommendedProducts.length > 0 ? (
@@ -256,7 +260,7 @@ export default function HomePage() {
                 <FeaturedProducts products={recommendedProducts} />
 
                 {/* View More Recommended Button */}
-                <div className="text-center mt-12">
+                {/* <div className="text-center">
                   <Link
                     href="/products?recommended=true"
                     className="inline-flex items-center bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg hover:from-yellow-600 hover:to-orange-600 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-2xl group"
@@ -265,7 +269,7 @@ export default function HomePage() {
                     <span>View All Recommended</span>
                     <ArrowRight className="w-4 sm:w-5 h-4 sm:h-5 ml-2 sm:ml-3 group-hover:translate-x-1 transition-transform duration-300" />
                   </Link>
-                </div>
+                </div> */}
               </>
             ) : (
               <div className="text-center py-8 sm:py-12">

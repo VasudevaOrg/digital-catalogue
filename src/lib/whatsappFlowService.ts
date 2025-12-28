@@ -778,7 +778,7 @@ Happy Shopping! 🙏`;
 • Check recent order history
 
 📞 *Contact Support:*
-• Phone: +91 82971 37702
+• Phone: +91 91649 12322
 • WhatsApp: This number
 • Email: mrvstoresvps@gmail.com
 
@@ -800,8 +800,8 @@ Just type your question and I'll help you! 😊`;
 
 🏪 *Digital Catalogue Store*
 
-📱 *Phone:* +91 82971 37702
-💬 *WhatsApp:* +91 82971 37702
+📱 *Phone:* +91 91649 12322
+💬 *WhatsApp:* +91 91649 12322
 📧 *Email:* mrvstoresvps@gmail.com
 
 📍 *Store Address:*
@@ -865,7 +865,7 @@ What would you like to modify?
 • Change delivery address
 • Change delivery time
 
-Please call us at +91 82971 37702 or our team will contact you within 10 minutes.
+Please call us at +91 91649 12322 or our team will contact you within 10 minutes.
 
 Order modifications are subject to availability and may affect the total amount.`;
 
@@ -913,7 +913,7 @@ Are you sure you want to cancel this order?
 • Prepaid orders will be refunded within 5-7 business days
 • No cancellation fees for confirmed orders
 
-To confirm cancellation, please call us at +91 82971 37702 
+To confirm cancellation, please call us at +91 91649 12322 
 
 Our team will process your request immediately.`;
 
@@ -954,7 +954,7 @@ ${order.items
 🛒 *To Reorder:*
 Visit our website: https://digital-catalogue-red.vercel.app
 
-Or call us at +91 82971 37702 and mention this Order ID.
+Or call us at +91 91649 12322 and mention this Order ID.
 
 Our team can help you place the same order with current prices and availability.`;
 

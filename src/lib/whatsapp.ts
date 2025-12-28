@@ -62,7 +62,7 @@ Reply to this message with:
 
 Our team will process your order within 15 minutes after confirmation.
 
-📞 Need help? Call us: +91 82971 37702
+📞 Need help? Call us: +91 91649 12322
 
 Thank you for choosing Digital Catalogue! 🙏`;
   },
@@ -109,7 +109,7 @@ We'll send you updates as your order progresses:
 • Ready ${order.deliveryType === "pickup" ? "for Pickup 🏪" : "for Delivery 🚚"}
 • Completed 🎉
 
-Need assistance? Reply to this message or call +91 82971 37702
+Need assistance? Reply to this message or call +91 91649 12322
 
 Thank you for shopping with Digital Catalogue! 🙏`;
   },

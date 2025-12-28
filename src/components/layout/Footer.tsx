@@ -14,9 +14,18 @@ export function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
           {/* Company Info */}
           <div>
-            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4">
-              MRV Stores
-            </h3>
+            <div className="flex items-center mb-4">
+              <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-sm p-1 mr-3 border border-gray-100">
+                <img
+                  src="/mainLogo.png"
+                  alt="MRV Stores"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900">
+                MRV Stores
+              </h3>
+            </div>
             <p className="text-gray-700 text-sm sm:text-base mb-4 leading-relaxed">
               Your trusted partner for quality groceries and daily essentials.
             </p>

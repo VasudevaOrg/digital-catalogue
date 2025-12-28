@@ -42,7 +42,7 @@ export function FeaturedProducts({ products }: FeaturedProductsProps) {
   const remainingProducts = products.slice(3);
 
   return (
-    <div className="space-y-12">
+    <div className="">
       {/* Top 3 Featured Products - Larger Cards */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -66,7 +66,7 @@ export function FeaturedProducts({ products }: FeaturedProductsProps) {
               </div>
               <div>
                 <h3 className="text-2xl font-bold text-gray-800">
-                  More Products
+                  Recommended Products
                 </h3>
                 <p className="text-gray-600">Discover our complete range</p>
               </div>
@@ -122,7 +122,7 @@ export function FeaturedProducts({ products }: FeaturedProductsProps) {
       </motion.div>
 
       {/* Product Categories Quick Links */}
-      <motion.div
+      {/* <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 1 }}
@@ -169,7 +169,7 @@ export function FeaturedProducts({ products }: FeaturedProductsProps) {
             </Link>
           </motion.div>
         ))}
-      </motion.div>
+      </motion.div> */}
     </div>
   );
 }
