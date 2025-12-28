@@ -1,211 +1,206 @@
+import React from "react";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Terms of Service | Digital Catalogue",
+  title: "Terms & Conditions | MRV Grocery Store",
   description:
-    "Terms of Service for Digital Catalogue - Read our terms and conditions for using our services.",
+    "Terms and conditions for using MRV Grocery Store digital catalogue services.",
 };
 
 export default function TermsOfServicePage() {
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto bg-white shadow-sm rounded-lg p-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">
-          Terms of Service
+    <div className="min-h-screen bg-white text-gray-900">
+      <div className="container mx-auto px-4 py-8 md:py-12 max-w-4xl">
+        <h1 className="text-3xl md:text-4xl font-bold mb-8 text-gray-900 border-b pb-4">
+          Terms & Conditions – MRV Grocery Store (Arsikere, Karnataka)
         </h1>
-        <p className="text-sm text-gray-600 mb-8">
-          Last updated: {new Date().toLocaleDateString()}
-        </p>
 
-        <div className="space-y-6 text-gray-700">
+        <div className="prose prose-lg max-w-none text-gray-700 space-y-8">
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-3">
-              1. Agreement to Terms
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              1. Introduction
             </h2>
             <p>
-              By accessing and using Digital Catalogue, you accept and agree to
-              be bound by the terms and provisions of this agreement. If you do
-              not agree to these terms, please do not use our services.
+              Welcome to <strong>MRV Grocery Store</strong>, your trusted grocer
+              and one stop destination for quality products. By accessing or
+              using our digital catalogue and placing an order via WhatsApp, you
+              agree to comply with the following Terms & Conditions governed
+              under Indian law.
+            </p>
+            <p className="mt-2">
+              This digital catalogue is provided for informational and enquiry
+              purposes only. We display our available grocery products,
+              approximate prices, and delivery options. We are not an e-commerce
+              platform and do not process automated online transactions.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-3">
-              2. Use of Our Service
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              2. User Account
             </h2>
-            <p className="mb-2">
-              You agree to use our service only for lawful purposes and in
-              accordance with these Terms. You agree not to:
-            </p>
-            <ul className="list-disc list-inside space-y-1 ml-4">
+            <ul className="list-disc pl-5 space-y-2">
               <li>
-                Use the service in any way that violates any applicable law or
-                regulation
+                An account with a valid mobile number and delivery address is
+                required for precise estimation/quotation.
               </li>
               <li>
-                Impersonate or attempt to impersonate the company, another user,
-                or any other person or entity
+                You are responsible for maintaining the confidentiality of your
+                login credentials.
               </li>
               <li>
-                Engage in any conduct that restricts or inhibits anyone's use or
-                enjoyment of the service
-              </li>
-              <li>
-                Use any robot, spider, or other automatic device to access the
-                service
+                Please ensure that all personal details entered are accurate and
+                updated regularly.
               </li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-3">
-              3. Account Registration
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              3. Product Information
             </h2>
-            <p>
-              To access certain features of our service, you may be required to
-              create an account. You are responsible for maintaining the
-              confidentiality of your account credentials and for all activities
-              that occur under your account.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-3">
-              4. Products and Services
-            </h2>
-            <p>
-              All products and services are subject to availability. We reserve
-              the right to discontinue any product or service at any time.
-              Prices for our products are subject to change without notice.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-3">
-              5. Orders and Payments
-            </h2>
-            <p className="mb-2">When you place an order:</p>
-            <ul className="list-disc list-inside space-y-1 ml-4">
+            <ul className="list-disc pl-5 space-y-2">
               <li>
-                You agree to provide current, complete, and accurate purchase
-                and account information
+                We strive to ensure each and every product’s description;
+                images, pricing, and availability are subjected to reference
+                only.
               </li>
               <li>
-                You agree to promptly update your account and payment
-                information
+                Product images are for reference only and may differ slightly
+                from the actual product.
               </li>
               <li>
-                We reserve the right to refuse or cancel any order for any
-                reason
+                Availability of items may change depending on stock levels.
               </li>
-              <li>Payment must be received before we process your order</li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-3">
-              6. Shipping and Delivery
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              4. Orders & Payments
+            </h2>
+            <p className="mb-4">
+              Product prices, availability, and offers are subject to change
+              without prior notice. All images in the catalogue are for
+              reference; actual products may vary slightly in packaging or
+              appearance.
+            </p>
+            <ul className="list-disc pl-5 space-y-2">
+              <li>
+                Orders are only confirmed off-line (via WhatsApp or walk-in),
+                after successful payment or valid COD confirmation.
+              </li>
+              <li>
+                We do not use online payment gateways or automated checkout
+                systems.
+              </li>
+              <li>No partial payments are accepted.</li>
+              <li>
+                Orders above ₹10,000 require a valid KYC (government-issued ID).
+              </li>
+              <li>
+                Accepted payment modes: UPI, Cards, Net Banking, Wallets, and
+                Cash on Delivery.
+              </li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              5. Delivery Policy
+            </h2>
+            <ul className="list-disc pl-5 space-y-2">
+              <li>
+                Free home delivery is available on orders of ₹1,000 or more.
+              </li>
+              <li>Delivery charges may apply to orders below ₹1,000.</li>
+              <li>
+                Please ensure someone is present to receive the order at the
+                delivery address.
+              </li>
+              <li>
+                Refusal to accept an order upon delivery will result in a 10%
+                cancellation charge.
+              </li>
+              <li>
+                Delivery timelines are indicative (estimation) and subject to
+                location and stock availability.
+              </li>
+              <li>
+                Delivery is only available within our specified serviceable
+                area.
+              </li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              6. Cancellation Policy
+            </h2>
+            <ul className="list-disc pl-5 space-y-2">
+              <li>Orders cannot be canceled once they are out for delivery.</li>
+              <li>
+                Cancellations before dispatch may be permitted on a case-by-case
+                basis.
+              </li>
+              <li>
+                Refunds for cancelled orders (if applicable) are processed as
+                per our refund policy.
+              </li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              7. Intellectual Property
             </h2>
             <p>
-              We will make reasonable efforts to deliver products within the
-              estimated timeframe. However, we are not responsible for delays
-              caused by circumstances beyond our control.
+              All content on our platforms—including text, product images, and
+              store branding—belongs to <strong>MRV Grocery Store</strong> and
+              cannot be reused without permission.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-3">
-              7. Returns and Refunds
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              8. Governing Law
             </h2>
             <p>
-              Our return and refund policy allows you to return products within
-              a specified period. Please contact our customer service for
-              detailed information about returns and refunds.
+              These Terms are governed by the Consumer Protection Act, 2019, and
+              other applicable laws of India. All legal matters shall fall under
+              the jurisdiction of the courts in Arsikere, Hassan District,
+              Karnataka.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-3">
-              8. WhatsApp Communications
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              Changes to Terms
             </h2>
             <p>
-              By providing your phone number and placing an order, you consent
-              to receive transactional messages via WhatsApp, including order
-              confirmations, shipping updates, and delivery notifications. You
-              may opt out at any time.
+              We may update these Terms at any time. Continued use of our
+              service means you accept the updated Terms.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-3">
-              9. Intellectual Property
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              Limitations of Liability
             </h2>
-            <p>
-              The service and its original content, features, and functionality
-              are owned by Digital Catalogue and are protected by international
-              copyright, trademark, patent, trade secret, and other intellectual
-              property laws.
-            </p>
+            <ul className="list-disc pl-5 space-y-2">
+              <li>
+                We are not responsible for delays caused by unforeseen
+                circumstances (e.g., weather, strikes, supply shortages).
+              </li>
+              <li>
+                Our liability is limited to the replacement of the product or
+                refund of the amount paid.
+              </li>
+            </ul>
           </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-3">
-              10. Limitation of Liability
-            </h2>
-            <p>
-              In no event shall Digital Catalogue, nor its directors, employees,
-              partners, agents, suppliers, or affiliates, be liable for any
-              indirect, incidental, special, consequential, or punitive damages,
-              including without limitation, loss of profits, data, use,
-              goodwill, or other intangible losses.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-3">
-              11. Disclaimer
-            </h2>
-            <p>
-              Your use of the service is at your sole risk. The service is
-              provided on an "AS IS" and "AS AVAILABLE" basis. The service is
-              provided without warranties of any kind, whether express or
-              implied.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-3">
-              12. Governing Law
-            </h2>
-            <p>
-              These Terms shall be governed and construed in accordance with the
-              laws of your jurisdiction, without regard to its conflict of law
-              provisions.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-3">
-              13. Changes to Terms
-            </h2>
-            <p>
-              We reserve the right to modify or replace these Terms at any time.
-              If a revision is material, we will provide at least 30 days'
-              notice prior to any new terms taking effect.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-3">
-              14. Contact Us
-            </h2>
-            <p>
-              If you have any questions about these Terms, please contact us at:
-            </p>
-            <div className="mt-2 ml-4">
-              <p>Email: mrvstoresvps@gmail.com</p>
-              <p>Phone: +91 XXXXXXXXXX</p>
-            </div>
+          <section className="mt-12 pt-8 border-t border-gray-200 text-sm text-gray-500">
+            <p>Last Updated: December 28, 2025</p>
           </section>
         </div>
       </div>

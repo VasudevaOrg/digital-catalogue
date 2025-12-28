@@ -166,13 +166,13 @@ export default function RefundPage() {
             </p>
             <ul className="space-y-2">
               <li>
-                <strong>Phone/WhatsApp:</strong> +91 94481 32930
+                <strong>Phone:</strong> [Enter Customer Support Number]
               </li>
               <li>
-                <strong>Email:</strong> mrvstoresvps@gmail.com
+                <strong>Email:</strong> [Enter Customer Support Email]
               </li>
               <li>
-                <strong>Store Hours:</strong> Mon-Sat 9AM-8PM, Sun 10AM-6PM
+                <strong>Hours:</strong> [Enter Working Hours]
               </li>
             </ul>
           </section>
@@ -201,6 +201,10 @@ export default function RefundPage() {
               provide clear unboxing video proof recorded before the product is
               opened or consumed.
             </p>
+          </section>
+
+          <section className="mt-12 pt-8 border-t border-gray-200 text-sm text-gray-500">
+            <p>Last Updated: December 28, 2025</p>
           </section>
         </div>
       </div>

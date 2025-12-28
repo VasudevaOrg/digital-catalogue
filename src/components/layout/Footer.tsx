@@ -54,14 +54,14 @@ export function Footer() {
                   Products
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link
                   href="/about"
                   className="text-gray-700 hover:text-blue-600 text-sm sm:text-base transition-colors duration-200 inline-block py-1 touch-target-sm"
                 >
                   About Us
                 </Link>
-              </li>
+              </li> */}
               <li>
                 <a
                   href="https://wa.me/919448132930"

@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAppSelector, useAppDispatch } from "@/store";
 import { clearCart } from "@/store/slices/cartSlice";
 import {
@@ -1506,9 +1507,13 @@ Please confirm your order on WhatsApp. Redirecting now...`;
                     className="text-xs sm:text-sm text-gray-700 cursor-pointer"
                   >
                     I agree to the{" "}
-                    <span className="text-blue-600 hover:underline">
+                    <Link
+                      href="/terms"
+                      target="_blank"
+                      className="text-blue-600 hover:underline"
+                    >
                       Terms and Conditions
-                    </span>{" "}
+                    </Link>{" "}
                     *
                   </label>
                 </div>
@@ -1527,9 +1532,13 @@ Please confirm your order on WhatsApp. Redirecting now...`;
                     className="text-xs sm:text-sm text-gray-700 cursor-pointer"
                   >
                     I agree to the{" "}
-                    <span className="text-blue-600 hover:underline">
+                    <Link
+                      href="/privacy"
+                      target="_blank"
+                      className="text-blue-600 hover:underline"
+                    >
                       Privacy Policy
-                    </span>{" "}
+                    </Link>{" "}
                     *
                   </label>
                 </div>
