@@ -65,7 +65,6 @@ export default function CheckoutPage() {
 
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
-  const [whatsappResult, setWhatsappResult] = useState<any>(null);
   const [isDeliveryAvailable, setIsDeliveryAvailable] = useState(true);
   const [deliveryRadius] = useState(10);
 
@@ -447,6 +446,7 @@ export default function CheckoutPage() {
 ----------------
 *Customer:* ${savedOrder.customerInfo.name}
 *Phone:* ${formattedCustomerPhone}
+*Total Amount:* ₹${savedOrder.totalAmount.toFixed(2)}
 ----------------
 *Payment:* ${
         savedOrder.paymentMethod === "prepaid"
@@ -510,15 +510,10 @@ Please confirm my order.`;
       }
       */
 
-      setWhatsappResult(whatsappResult);
-      // Ideally we'd have state for SMS result too, but for now we just log it.
-      // We can add setSmsResult later if we want to show it in UI.
-
       dispatch(clearCart());
       setOrderSuccess(true);
 
-      const successMessage = whatsappResult.success
-        ? `Order placed successfully! 
+      const successMessage = `Order placed successfully! 
 
 Order Details:
 • Order ID: ${savedOrder.orderId}
@@ -530,29 +525,10 @@ ${
     : `• Delivery Fee: ₹${deliveryFee}`
 }
 • Payment: ${
-            paymentMethod === "prepaid" ? "Prepaid (Online)" : "Cash on Pickup"
-          }
-• WhatsApp confirmation sent to +91${orderData.customerInfo.phoneNumber}
+        paymentMethod === "prepaid" ? "Prepaid (Online)" : "Cash on Pickup"
+      }
 
-Please check your WhatsApp for complete order details and next steps.`
-        : `Order placed successfully! 
-
-Order Details:
-• Order ID: ${savedOrder.orderId}
-• Invoice: ${savedOrder.invoiceNumber}
-${totalSavings > 0 ? `• You saved: ₹${totalSavings.toFixed(2)}` : ""}
-${
-  isEligibleForFreeDelivery
-    ? "• FREE Delivery Applied! ✅"
-    : `• Delivery Fee: ₹${deliveryFee}`
-}
-• Payment: ${
-            paymentMethod === "prepaid" ? "Prepaid (Online)" : "Cash on Pickup"
-          }
-
-WhatsApp notification: ${whatsappResult.error || "Failed to send"}
-
-Please call us at +91 91649 12322 for order confirmation.`;
+Please confirm your order on WhatsApp. Redirecting now...`;
 
       dispatch(showSuccessNotification(successMessage));
 
@@ -636,7 +612,7 @@ Please call us at +91 91649 12322 for order confirmation.`;
               Order Placed Successfully!
             </h1>
             <p className="text-gray-600 text-sm sm:text-base">
-              Your order has been processed and WhatsApp confirmation sent.
+              Your order has been placed. Please confirm on WhatsApp.
             </p>
           </div>
 
@@ -657,24 +633,20 @@ Please call us at +91 91649 12322 for order confirmation.`;
             </div>
 
             <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-              {whatsappResult?.success && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
-                  <div className="flex items-start">
-                    <MessageCircle className="w-5 h-5 text-green-600 mt-0.5 mr-3" />
-                    <div className="flex-1">
-                      <h4 className="font-medium text-green-900 text-sm sm:text-base">
-                        WhatsApp Confirmation Sent
-                      </h4>
-                      <p className="text-green-800 text-xs sm:text-sm mt-1">
-                        Sent to:{" "}
-                        <span className="font-mono">
-                          +91{customerInfo.phoneNumber}
-                        </span>
-                      </p>
-                    </div>
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
+                <div className="flex items-start">
+                  <MessageCircle className="w-5 h-5 text-green-600 mt-0.5 mr-3" />
+                  <div className="flex-1">
+                    <h4 className="font-medium text-green-900 text-sm sm:text-base">
+                      Final Confirmation Needed
+                    </h4>
+                    <p className="text-green-800 text-xs sm:text-sm mt-1">
+                      Please confirm your order on WhatsApp to proceed with
+                      delivery.
+                    </p>
                   </div>
                 </div>
-              )}
+              </div>
 
               {isEligibleForFreeDelivery && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
