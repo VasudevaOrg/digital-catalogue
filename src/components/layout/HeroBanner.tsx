@@ -114,7 +114,7 @@ export function HeroBanner() {
         {/* Carousel Card Container */}
         <Link
           href={currentSlideData.primaryLink}
-          className="relative block bg-black rounded-[1rem] sm:rounded-[2.5rem] overflow-hidden shadow-2xl aspect-[16/9] sm:aspect-[21/9] lg:aspect-[3/1] max-h-[400px] sm:max-h-[600px] lg:max-h-[800px] cursor-pointer group"
+          className="relative block rounded-[1rem] sm:rounded-[1rem] overflow-hidden shadow-2xl aspect-[16/9] sm:aspect-[21/9] lg:aspect-[3/1] max-h-[400px] sm:max-h-[600px] lg:max-h-[800px] cursor-pointer group"
         >
           {/* Background Image or Gradient */}
           {currentSlideData.image ? (
