@@ -176,7 +176,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                       href="tel:+919448132930"
                       className="hover:text-blue-600 transition-colors"
                     >
-                      +91 91649 12322
+                      +91 9448132930
                     </a>
                   </div>
                   <p className="text-sm text-gray-700 flex items-center">

@@ -251,14 +251,14 @@ export default function ProductsPage() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Page Header */}
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-light text-gray-800 mb-2 sm:mb-4">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2 sm:mb-4">
             {localFilters.isRecommended
               ? "Recommended Products"
               : "All Products"}
           </h1>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="space-y-2">
-              <p className="text-gray-600 text-sm sm:text-base">
+              <p className="text-gray-900 font-medium text-sm sm:text-base">
                 {localFilters.category
                   ? `Category: ${localFilters.category}`
                   : localFilters.searchQuery
@@ -348,7 +348,7 @@ export default function ProductsPage() {
                 {/* Filter Button */}
                 <button
                   onClick={() => setShowFilters(!showFilters)}
-                  className="flex items-center justify-center bg-white border border-gray-300 text-gray-700 px-4 py-2.5 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
+                  className="flex items-center justify-center bg-white border border-gray-300 text-gray-900 px-4 py-2.5 rounded-lg hover:bg-gray-50 transition-colors text-sm font-bold shadow-sm"
                 >
                   <SlidersHorizontal className="w-4 h-4 mr-2" />
                   Filters
@@ -367,7 +367,7 @@ export default function ProductsPage() {
                   <select
                     value={`${localFilters.sortBy}-${localFilters.sortOrder}`}
                     onChange={(e) => handleSortChange(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                    className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 font-medium focus:outline-none focus:border-blue-500 shadow-sm"
                   >
                     <option value="name-asc">Name (A-Z)</option>
                     <option value="name-desc">Name (Z-A)</option>
@@ -408,18 +408,18 @@ export default function ProductsPage() {
             <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div className="text-sm text-gray-600">
                 {isLoading ? (
-                  <div className="flex items-center">
+                  <div className="flex items-center text-gray-900 font-medium">
                     <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2"></div>
                     Loading products...
                   </div>
                 ) : (
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-gray-900 font-medium">
                     <span>
                       Showing {(currentPage - 1) * productsPerPage + 1} -{" "}
                       {Math.min(currentPage * productsPerPage, totalProducts)}{" "}
                       of {totalProducts} products
                     </span>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-gray-600 font-inter">
                       Page {currentPage} of {totalPages}
                     </span>
                   </div>

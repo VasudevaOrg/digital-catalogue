@@ -112,7 +112,10 @@ export function HeroBanner() {
     <section className="bg-blue-600/5 py-4 sm:py-6 lg:py-8 overflow-hidden">
       <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* Carousel Card Container */}
-        <div className="relative bg-black rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden shadow-2xl aspect-[16/9] sm:aspect-[21/9] lg:aspect-[3/1] max-h-[400px] sm:max-h-[600px] lg:max-h-[800px] flex items-center justify-center border-4 border-white/50">
+        <Link
+          href={currentSlideData.primaryLink}
+          className="relative block bg-black rounded-[1rem] sm:rounded-[2.5rem] overflow-hidden shadow-2xl aspect-[16/9] sm:aspect-[21/9] lg:aspect-[3/1] max-h-[400px] sm:max-h-[600px] lg:max-h-[800px] cursor-pointer group"
+        >
           {/* Background Image or Gradient */}
           {currentSlideData.image ? (
             <div className="absolute inset-0">
@@ -144,19 +147,7 @@ export function HeroBanner() {
               className={`absolute inset-0 bg-gradient-to-br ${currentSlideData.bgGradient} transition-all duration-1000`}
             ></div>
           )}
-
-          {/* Content Overlay - Centered horizontally, at the bottom vertically */}
-          <div className="relative z-10 w-full px-6 sm:px-12 h-full flex flex-col items-center justify-end pb-8 sm:pb-12">
-            {/* Minimal Shop Now button at the bottom */}
-            <Link
-              href={currentSlideData.primaryLink}
-              className="inline-flex items-center bg-white/40 backdrop-blur-md text-gray-900 px-5 sm:px-8 py-2.5 sm:py-3 rounded-lg font-bold text-sm sm:text-base hover:bg-white/60 transition-all shadow-lg transform hover:scale-105 active:scale-95 border border-white/50"
-            >
-              <ShoppingBag className="w-5 h-5 mr-2" />
-              Shop Now
-            </Link>
-          </div>
-        </div>
+        </Link>
 
         {/* Navigation Bar Below Card */}
         <div className="mt-6 sm:mt-8 flex items-center justify-between px-2 sm:px-6 max-w-4xl mx-auto">
@@ -169,19 +160,33 @@ export function HeroBanner() {
             <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
 
-          {/* Indicators - Hidden on mobile */}
-          <div className="hidden sm:flex items-center space-x-3">
+          {/* Indicators - Mobile: Dots, Desktop: Bars */}
+          <div className="flex items-center space-x-2 sm:space-x-3">
             {slides.map((_, index) => (
               <button
                 key={index}
                 onClick={() => goToSlide(index)}
-                className={`transition-all duration-300 ${
-                  index === currentSlide
-                    ? "w-2.5 h-2.5 sm:w-12 sm:h-3 bg-blue-600 rounded-full shadow-md"
-                    : "w-2 h-2 sm:w-3 sm:h-3 bg-blue-200 hover:bg-blue-300 rounded-full"
-                }`}
+                className="transition-all duration-300 relative group"
                 aria-label={`Go to slide ${index + 1}`}
-              />
+              >
+                {/* Mobile version - active is pill, inactive is dot */}
+                <div
+                  className={`sm:hidden rounded-full transition-all duration-300 ${
+                    index === currentSlide
+                      ? "w-8 h-2 bg-blue-600 shadow-sm"
+                      : "w-1.5 h-1.5 bg-blue-200 hover:bg-blue-300"
+                  }`}
+                />
+
+                {/* Desktop version - existing bar style */}
+                <div
+                  className={`hidden sm:block transition-all duration-300 ${
+                    index === currentSlide
+                      ? "w-12 h-3 bg-blue-600 rounded-full shadow-md"
+                      : "w-3 h-3 bg-blue-200 hover:bg-blue-300 rounded-full"
+                  }`}
+                />
+              </button>
             ))}
           </div>
 

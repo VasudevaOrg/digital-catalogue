@@ -193,7 +193,7 @@ export function ProductFilters({
               />
               <div className="flex items-center">
                 <Trophy className="w-4 h-4 mr-2 text-yellow-600" />
-                <span className="text-gray-700 font-medium">
+                <span className="text-gray-900 font-bold">
                   Show only recommended products
                 </span>
               </div>
@@ -223,7 +223,7 @@ export function ProductFilters({
               className={`block w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${
                 !currentFilters.category
                   ? "bg-blue-100 text-blue-800 font-medium"
-                  : "hover:bg-gray-50 text-gray-700"
+                  : "hover:bg-gray-50 text-gray-900 font-medium"
               }`}
             >
               All Categories
@@ -235,7 +235,7 @@ export function ProductFilters({
                 className={`block w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${
                   currentFilters.category === category
                     ? "bg-blue-100 text-blue-800 font-medium"
-                    : "hover:bg-gray-50 text-gray-700"
+                    : "hover:bg-gray-50 text-gray-900 font-medium"
                 }`}
               >
                 {category}
@@ -275,7 +275,7 @@ export function ProductFilters({
                   onChange={() => handleTagToggle(tag)}
                   className="mr-3 w-4 h-4 text-green-600 rounded focus:ring-green-500"
                 />
-                <span className="text-gray-700 capitalize">
+                <span className="text-gray-900 font-medium capitalize">
                   {tag.replace("-", " ")}
                 </span>
                 {tag === "recommended" && (
@@ -307,7 +307,7 @@ export function ProductFilters({
         {expandedSections.price && (
           <div className="p-4 space-y-4">
             <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm text-gray-600">
+              <div className="flex items-center justify-between text-sm text-gray-900 font-bold">
                 <span>₹{localPriceRange[0]}</span>
                 <span>₹{localPriceRange[1]}</span>
               </div>
@@ -471,7 +471,7 @@ export function ProductFilters({
                   currentFilters.sortBy === option.sortBy &&
                   currentFilters.sortOrder === option.sortOrder
                     ? "bg-blue-100 text-blue-800 font-medium"
-                    : "hover:bg-gray-50 text-gray-700"
+                    : "hover:bg-gray-50 text-gray-900 font-medium"
                 }`}
               >
                 {option.label}

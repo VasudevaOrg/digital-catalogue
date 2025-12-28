@@ -141,17 +141,28 @@ export function HeroBannerSkeleton() {
     <div className="bg-blue-600/5 py-4 sm:py-6 lg:py-8 overflow-hidden">
       <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* Carousel Card Skeleton */}
-        <div className="relative bg-[#f2ebe1] rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden aspect-[16/9] sm:aspect-[21/9] lg:aspect-[3/1] max-h-[400px] sm:max-h-[600px] lg:max-h-[800px] flex flex-col items-center justify-end pb-8 sm:pb-12 animate-pulse shadow-sm border-4 border-white/50">
-          <div className="h-10 w-32 bg-white/60 backdrop-blur-sm rounded-lg mx-auto shadow-sm"></div>
-        </div>
+        <div className="relative bg-[#f2ebe1] rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden aspect-[16/9] sm:aspect-[21/9] lg:aspect-[3/1] max-h-[400px] sm:max-h-[600px] lg:max-h-[800px] animate-pulse shadow-sm border-4 border-white/50"></div>
 
         {/* Navigation Bar Skeleton */}
         <div className="mt-6 sm:mt-8 flex items-center justify-between px-2 sm:px-6 max-w-4xl mx-auto">
           <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-100 shadow-sm"></div>
-          <div className="hidden sm:flex space-x-3">
-            <div className="w-2 h-2 sm:w-10 sm:h-3 rounded-full bg-blue-200"></div>
-            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-blue-200"></div>
-            <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-blue-200"></div>
+          <div className="flex space-x-2 sm:space-x-3 items-center">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="relative">
+                {/* Mobile Skeleton: Active is pill, others are dots */}
+                <div
+                  className={`sm:hidden rounded-full bg-blue-200 animate-pulse ${
+                    i === 1 ? "w-8 h-2" : "w-1.5 h-1.5"
+                  }`}
+                ></div>
+                {/* Desktop Skeleton: Bars */}
+                <div
+                  className={`hidden sm:block rounded-full bg-blue-200 animate-pulse ${
+                    i === 1 ? "w-10 h-3" : "w-3 h-3"
+                  }`}
+                ></div>
+              </div>
+            ))}
           </div>
           <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-100 shadow-sm"></div>
         </div>
