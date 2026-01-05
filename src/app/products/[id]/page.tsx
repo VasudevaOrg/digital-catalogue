@@ -223,10 +223,6 @@ export default function ProductDetailPage() {
       })
     );
 
-    const variantInfo = selectedVariant ? ` (${formatWeight()})` : "";
-    dispatch(
-      showSuccessNotification(`${product.name}${variantInfo} added to cart!`)
-    );
     setQuantity(1);
   };
 

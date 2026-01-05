@@ -79,7 +79,6 @@ export function ProductCard({
 
     // Always add only 1 unit from product card
     dispatch(addToCart({ product, quantity: 1 }));
-    dispatch(showSuccessNotification(`${product.name} added to cart!`));
   };
 
   const hasDiscount = product.discount && isDiscountActive(product.discount);
