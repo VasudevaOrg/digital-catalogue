@@ -22,13 +22,13 @@ import {
   Grid3X3,
   X,
 } from "lucide-react";
+import { GlobalSearch } from "@/components/ui/GlobalSearch";
 
 export function Header() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { isMobileMenuOpen } = useAppSelector((state) => state.ui);
   const { cart } = useAppSelector((state) => state.cart);
-  const [searchValue, setSearchValue] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isClient, setIsClient] = useState(false);
@@ -55,16 +55,6 @@ export function Header() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchValue.trim()) {
-      dispatch(setSearchQuery(searchValue));
-      router.push(`/products?search=${encodeURIComponent(searchValue)}`);
-      setSearchValue("");
-      setShowSearch(false);
-    }
-  };
 
   // Show skeleton loader while loading
   if (isLoading || !isClient) {
@@ -135,9 +125,17 @@ export function Header() {
               {/* Search - Hidden on mobile */}
               <button
                 onClick={() => setShowSearch(!showSearch)}
-                className="flex w-8 sm:w-9 md:w-10 h-8 sm:h-9 md:h-10 bg-gray-100 hover:bg-blue-100 text-gray-600 hover:text-blue-600 rounded-lg md:rounded-xl items-center justify-center transition-all duration-300"
+                className={`flex w-8 sm:w-9 md:w-10 h-8 sm:h-9 md:h-10 rounded-lg md:rounded-xl items-center justify-center transition-all duration-300 ${
+                  showSearch
+                    ? "bg-blue-600 text-white shadow-md rotate-90"
+                    : "bg-gray-100 hover:bg-blue-100 text-gray-600 hover:text-blue-600"
+                }`}
               >
-                <Search className="w-4 sm:w-5 h-4 sm:h-5" />
+                {showSearch ? (
+                  <X className="w-4 sm:w-5 h-4 sm:h-5" />
+                ) : (
+                  <Search className="w-4 sm:w-5 h-4 sm:h-5" />
+                )}
               </button>
 
               {/* Wishlist - Hidden on mobile */}
@@ -173,37 +171,11 @@ export function Header() {
 
           {/* Mobile/Desktop Search Bar */}
           {showSearch && (
-            <div className="pb-4 border-t border-gray-100 animate-slide-down">
-              <form onSubmit={handleSearch} className="max-w-2xl mx-auto pt-4">
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center">
-                    <Search className="w-4 sm:w-5 h-4 sm:h-5 text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    value={searchValue}
-                    onChange={(e) => setSearchValue(e.target.value)}
-                    placeholder="Search for products, categories, or brands..."
-                    className="w-full pl-10 sm:pl-12 pr-16 sm:pr-20 py-3 sm:py-4 bg-gray-50 border-2 border-gray-200 rounded-xl sm:rounded-2xl focus:border-blue-500 focus:bg-white outline-none transition-all duration-300 text-gray-800 placeholder-gray-500 text-sm sm:text-base"
-                    autoFocus
-                  />
-                  <div className="absolute inset-y-0 right-0 pr-2 flex items-center">
-                    <button
-                      type="button"
-                      onClick={() => setShowSearch(false)}
-                      className="mr-2 p-1 text-gray-400 hover:text-gray-600"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="submit"
-                      className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 sm:px-6 py-2 rounded-lg sm:rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 text-sm sm:text-base"
-                    >
-                      Search
-                    </button>
-                  </div>
-                </div>
-              </form>
+            <div className="pb-6 border-t border-gray-100 animate-slide-down">
+              <GlobalSearch
+                autoFocus={true}
+                onClose={() => setShowSearch(false)}
+              />
             </div>
           )}
         </div>

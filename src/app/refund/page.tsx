@@ -66,7 +66,7 @@ export default function RefundPage() {
                 </h3>
                 <ul className="list-disc pl-5 space-y-2">
                   <li>
-                    Contact us via Phone, Email, or WhatsApp within 24 hours of
+                    Contact us via Phone, Email, or WhatsApp within 2 hours of
                     delivery.
                   </li>
                   <li>
@@ -166,13 +166,13 @@ export default function RefundPage() {
             </p>
             <ul className="space-y-2">
               <li>
-                <strong>Phone:</strong> [Enter Customer Support Number]
+                <strong>Phone:</strong> 9448132930
               </li>
               <li>
-                <strong>Email:</strong> [Enter Customer Support Email]
+                <strong>Email:</strong> mrvstoresvps@gmail.com
               </li>
               <li>
-                <strong>Hours:</strong> [Enter Working Hours]
+                <strong>Hours:</strong> 9am to 8pm everyday
               </li>
             </ul>
           </section>

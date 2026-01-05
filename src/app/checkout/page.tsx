@@ -84,22 +84,24 @@ export default function CheckoutPage() {
 
   // Calculate eligible and delta amounts using the CORRECT utility
   const itemsWithPrices = cart.items.map((item) => {
-    const hasDiscount =
-      item.product.discount && isDiscountActive(item.product.discount);
-
-    // Use variant price if available
-    const productForPrice = item.selectedVariant
-      ? { ...item.product, price: item.selectedVariant.price }
+    // Use variant data if available
+    const productData = item.selectedVariant
+      ? {
+          ...item.product,
+          price: item.selectedVariant.price,
+          discount:
+            item.selectedVariant.discount &&
+            isDiscountActive(item.selectedVariant.discount)
+              ? item.selectedVariant.discount
+              : item.product.discount,
+        }
       : item.product;
 
-    const discountCalc = hasDiscount
-      ? calculateProductDiscount(productForPrice, item.quantity)
-      : null;
-    const finalPrice =
-      discountCalc?.discountedPrice || productForPrice.price * item.quantity;
+    const discountCalc = calculateProductDiscount(productData, item.quantity);
+    const finalPrice = discountCalc.discountedPrice;
 
     return {
-      product: productForPrice,
+      product: productData,
       quantity: item.quantity,
       finalPrice: finalPrice,
     };
@@ -283,9 +285,6 @@ export default function CheckoutPage() {
 
       // Calculate items with discounted prices
       const orderItems = cart.items.map((item) => {
-        const hasDiscount =
-          item.product.discount && isDiscountActive(item.product.discount);
-
         // Use variant data if available
         const productData = item.selectedVariant
           ? {
@@ -293,15 +292,22 @@ export default function CheckoutPage() {
               price: item.selectedVariant.price,
               weight: item.selectedVariant.weight,
               weightUnit: item.selectedVariant.weightUnit,
+              discount:
+                item.selectedVariant.discount &&
+                isDiscountActive(item.selectedVariant.discount)
+                  ? item.selectedVariant.discount
+                  : item.product.discount,
             }
           : item.product;
 
-        if (hasDiscount) {
-          const discountCalc = calculateProductDiscount(
-            productData,
-            item.quantity
-          );
+        const discountCalc = calculateProductDiscount(
+          productData,
+          item.quantity
+        );
 
+        const hasDiscount = discountCalc.discountAmount > 0;
+
+        if (hasDiscount) {
           return {
             product: {
               id: item.product.id,
@@ -313,12 +319,16 @@ export default function CheckoutPage() {
               weightUnit: productData.weightUnit || item.product.weightUnit, // Pass unit info
               category: item.product.category,
               images: item.product.images || [],
-              discount: item.product.discount,
+              discount: productData.discount, // Use the correct discount (variant or product)
               selectedVariant: item.selectedVariant, // Pass variant info
             },
             quantity: item.quantity,
             appliedDiscount: discountCalc.discountAmount,
             savings: discountCalc.discountAmount,
+            price: discountCalc.discountedPrice / item.quantity, // Unit price
+            totalPrice: discountCalc.discountedPrice,
+            weight: productData.weight,
+            totalWeight: productData.weight * item.quantity,
           };
         } else {
           return {
@@ -334,6 +344,10 @@ export default function CheckoutPage() {
               selectedVariant: item.selectedVariant, // Pass variant info
             },
             quantity: item.quantity,
+            price: productData.price,
+            totalPrice: productData.price * item.quantity,
+            weight: productData.weight,
+            totalWeight: productData.weight * item.quantity,
           };
         }
       });
@@ -1132,31 +1146,33 @@ Please confirm your order on WhatsApp. Redirecting now...`;
                 {/* Items */}
                 <div className="space-y-3 mb-6 max-h-64 overflow-y-auto">
                   {cart.items.map((item) => {
-                    const hasDiscount =
-                      item.product.discount &&
-                      isDiscountActive(item.product.discount);
-
                     // Use variant data
                     const productForDisplay = item.selectedVariant
                       ? {
                           ...item.product,
                           price: item.selectedVariant.price,
                           weight: item.selectedVariant.weight,
+                          discount:
+                            item.selectedVariant.discount &&
+                            isDiscountActive(item.selectedVariant.discount)
+                              ? item.selectedVariant.discount
+                              : item.product.discount,
                         }
                       : item.product;
 
-                    const discountCalc = hasDiscount
-                      ? calculateProductDiscount(
-                          productForDisplay,
-                          item.quantity
-                        )
-                      : null;
+                    const discountCalc = calculateProductDiscount(
+                      productForDisplay,
+                      item.quantity
+                    );
 
-                    const originalPrice =
-                      productForDisplay.price * item.quantity;
-                    const finalPrice =
-                      discountCalc?.discountedPrice || originalPrice;
-                    const savings = discountCalc?.discountAmount || 0;
+                    const unitOriginalPrice = productForDisplay.price;
+                    const totalOriginalPrice =
+                      unitOriginalPrice * item.quantity;
+                    const totalFinalPrice = discountCalc.discountedPrice;
+                    const unitFinalPrice = totalFinalPrice / item.quantity;
+                    const totalSavings = discountCalc.discountAmount;
+
+                    const hasEffectiveDiscount = totalSavings > 0;
 
                     const isItemDelta = isDeltaProduct(item.product);
 
@@ -1203,25 +1219,26 @@ Please confirm your order on WhatsApp. Redirecting now...`;
                             )}
                           </h4>
                           <div className="text-xs sm:text-sm text-gray-500">
-                            {hasDiscount && savings > 0 ? (
+                            {hasEffectiveDiscount && totalSavings > 0 ? (
                               <div className="flex flex-col gap-1">
                                 <div>
                                   <span className="line-through">
-                                    ₹{productForDisplay.price}
+                                    ₹{unitOriginalPrice.toFixed(2)}
                                   </span>{" "}
                                   →{" "}
                                   <span className="text-green-600 font-medium">
-                                    ₹{(finalPrice / item.quantity).toFixed(2)}
+                                    ₹{unitFinalPrice.toFixed(2)}
                                   </span>{" "}
                                   × {item.quantity}
                                 </div>
                                 <div className="text-green-600 font-medium text-xs">
-                                  Save ₹{savings.toFixed(2)}
+                                  Save ₹{totalSavings.toFixed(2)}
                                 </div>
                               </div>
                             ) : (
                               <>
-                                ₹{productForDisplay.price} × {item.quantity}
+                                ₹{unitOriginalPrice.toFixed(2)} ×{" "}
+                                {item.quantity}
                               </>
                             )}
                             {" • "}
@@ -1229,18 +1246,18 @@ Please confirm your order on WhatsApp. Redirecting now...`;
                           </div>
                         </div>
                         <div className="text-sm font-medium">
-                          {hasDiscount && savings > 0 ? (
+                          {hasEffectiveDiscount && totalSavings > 0 ? (
                             <div className="flex flex-col items-end gap-1">
                               <span className="text-green-600">
-                                ₹{finalPrice.toFixed(2)}
+                                ₹{totalFinalPrice.toFixed(2)}
                               </span>
                               <span className="text-xs text-gray-400 line-through">
-                                ₹{originalPrice.toFixed(2)}
+                                ₹{totalOriginalPrice.toFixed(2)}
                               </span>
                             </div>
                           ) : (
                             <span className="text-gray-900">
-                              ₹{finalPrice.toFixed(2)}
+                              ₹{totalFinalPrice.toFixed(2)}
                             </span>
                           )}
                         </div>

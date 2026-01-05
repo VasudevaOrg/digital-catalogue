@@ -217,23 +217,31 @@ export function CartSidebar() {
             ) : (
               <div className="p-4 sm:p-6 space-y-4">
                 {cart.items.map((item) => {
-                  const hasDiscount =
-                    item.product.discount &&
-                    isDiscountActive(item.product.discount);
-
-                  // Use variant price if available
-                  const productForPrice = item.selectedVariant
-                    ? { ...item.product, price: item.selectedVariant.price }
+                  // Calculate discount using variant data if available
+                  const productForDiscount = item.selectedVariant
+                    ? {
+                        ...item.product,
+                        price: item.selectedVariant.price,
+                        discount:
+                          item.selectedVariant.discount &&
+                          isDiscountActive(item.selectedVariant.discount)
+                            ? item.selectedVariant.discount
+                            : item.product.discount,
+                      }
                     : item.product;
 
-                  const discountCalc = hasDiscount
-                    ? calculateProductDiscount(productForPrice, item.quantity)
-                    : null;
+                  const discountCalc = calculateProductDiscount(
+                    productForDiscount,
+                    item.quantity
+                  );
 
-                  const originalPrice = productForPrice.price * item.quantity;
-                  const finalPrice =
-                    discountCalc?.discountedPrice || originalPrice;
-                  const savings = discountCalc?.discountAmount || 0;
+                  const unitOriginalPrice = productForDiscount.price;
+                  const totalOriginalPrice = unitOriginalPrice * item.quantity;
+                  const totalFinalPrice = discountCalc.discountedPrice;
+                  const unitFinalPrice = totalFinalPrice / item.quantity;
+                  const totalSavings = discountCalc.discountAmount;
+
+                  const hasEffectiveDiscount = totalSavings > 0;
 
                   const isEligible = isProductEligibleForFreeDelivery(
                     item.product
@@ -264,8 +272,7 @@ export function CartSidebar() {
                         )}
 
                         {/* Discount Badge */}
-                        {hasDiscount &&
-                          discountCalc &&
+                        {hasEffectiveDiscount &&
                           discountCalc.discountPercentage > 0 && (
                             <div className="absolute top-1 right-1">
                               <div className="bg-red-500 text-white px-1.5 py-0.5 rounded text-xs font-bold">
@@ -278,7 +285,7 @@ export function CartSidebar() {
                         {/* Not Eligible Badge */}
                         {!isEligible && (
                           <div className="absolute bottom-1 left-1">
-                            <div className="bg-amber-500 text-white px-1.5 py-0.5 rounded text-xs font-bold">
+                            <div className="bg-amber-50 text-white px-1.5 py-0.5 rounded text-xs font-bold">
                               ⚠️
                             </div>
                           </div>
@@ -296,6 +303,15 @@ export function CartSidebar() {
                           {item.product.category}
                         </p>
 
+                        {/* Variant Info */}
+                        {item.selectedVariant && (
+                          <p className="text-xs text-gray-500 mb-2">
+                            Variant:{" "}
+                            {item.selectedVariant.customUnit ||
+                              `${item.selectedVariant.weight} ${item.selectedVariant.weightUnit}`}
+                          </p>
+                        )}
+
                         {/* Not Eligible Warning */}
                         {!isEligible && (
                           <div className="flex items-center text-xs text-amber-600 mb-2">
@@ -306,27 +322,36 @@ export function CartSidebar() {
 
                         {/* Price with Discount */}
                         <div className="space-y-1 mb-3">
-                          <div className="flex items-center gap-2">
-                            {hasDiscount && savings > 0 ? (
+                          <div className="flex flex-wrap items-center gap-2">
+                            {hasEffectiveDiscount ? (
                               <>
-                                <span className="text-sm font-bold text-green-600">
-                                  ₹{finalPrice.toFixed(2)}
-                                </span>
-                                <span className="text-xs text-gray-500 line-through">
-                                  ₹{originalPrice.toFixed(2)}
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-sm font-bold text-green-600">
+                                    ₹{unitFinalPrice.toFixed(2)}
+                                  </span>
+                                  <span className="text-xs text-gray-500 line-through">
+                                    ₹{unitOriginalPrice.toFixed(2)}
+                                  </span>
+                                </div>
+                                <span className="text-xs text-gray-400">
+                                  × {item.quantity} =
+                                  <span className="ml-1 font-bold text-gray-900">
+                                    ₹{totalFinalPrice.toFixed(2)}
+                                  </span>
                                 </span>
                               </>
                             ) : (
                               <span className="text-sm font-semibold text-gray-900">
-                                ₹{finalPrice.toFixed(2)}
+                                ₹{unitOriginalPrice.toFixed(2)} ×{" "}
+                                {item.quantity} = ₹{totalFinalPrice.toFixed(2)}
                               </span>
                             )}
                           </div>
 
-                          {hasDiscount && savings > 0 && (
+                          {hasEffectiveDiscount && (
                             <div className="flex items-center text-xs text-green-600 font-medium">
                               <Tag className="w-3 h-3 mr-1" />
-                              <span>Save ₹{savings.toFixed(2)}</span>
+                              <span>Save ₹{totalSavings.toFixed(2)}</span>
                             </div>
                           )}
 
@@ -403,14 +428,16 @@ export function CartSidebar() {
                   <span className="text-gray-600">
                     Items ({cart.items.length})
                   </span>
-                  <span>₹{cart.totalAmount.toFixed(2)}</span>
+                  <span className="text-gray-600">
+                    ₹{cart.totalAmount.toFixed(2)}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600 flex items-center">
                     <Weight className="w-4 h-4 mr-1" />
                     Total Weight
                   </span>
-                  <span className="text-sm">
+                  <span className="text-sm text-gray-600">
                     {cart.totalWeight > 1000
                       ? `${(cart.totalWeight / 1000).toFixed(2)} kg`
                       : `${cart.totalWeight.toFixed(0)} g`}
@@ -523,8 +550,8 @@ export function CartSidebar() {
                       </p>
                       {excludedAmount > 0 && (
                         <p className="text-green-600 text-xs mt-1">
-                          (DELTA products: ₹{excludedAmount.toFixed(2)} - bonus
-                          items!)
+                          (Free delivery is applicable only if the first ₹1000
+                          of the cart value excludes oil, sugar, and jaggery.)
                         </p>
                       )}
                     </div>
