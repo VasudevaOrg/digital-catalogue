@@ -9,7 +9,7 @@ import { productAPI } from "@/lib/api";
 import { Product } from "@/types";
 import Link from "next/link";
 import { useAppDispatch } from "@/store";
-import { setSearchQuery } from "@/store/slices/productSlice";
+import { setSearchQuery, addProducts } from "@/store/slices/productSlice";
 
 interface GlobalSearchProps {
   onClose?: () => void;
@@ -46,7 +46,11 @@ export function GlobalSearch({
           search: debouncedQuery,
           limit: 6,
         });
-        setSuggestions(response.data || []);
+        const results = response.data || [];
+        setSuggestions(results);
+        if (results.length > 0) {
+          dispatch(addProducts(results));
+        }
         setIsOpen(true);
       } catch (error) {
         console.error("Error fetching suggestions:", error);
@@ -165,6 +169,7 @@ export function GlobalSearch({
                     <Link
                       href={`/products/${product.id}`}
                       onClick={() => {
+                        dispatch(addProducts([product]));
                         setIsOpen(false);
                         if (onClose) onClose();
                       }}

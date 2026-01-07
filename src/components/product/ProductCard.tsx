@@ -138,7 +138,7 @@ export function ProductCard({
         animate={{ opacity: 1, y: 0 }}
         transition={{
           duration: 0.5,
-          delay: index * 0.05,
+          delay: index * 0.02,
           ease: "easeOut",
         }}
         className="group relative w-full"
@@ -311,7 +311,7 @@ export function ProductCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{
         duration: 0.5,
-        delay: index * 0.1,
+        delay: index * 0.03,
         ease: "easeOut",
       }}
       className="group relative w-full"

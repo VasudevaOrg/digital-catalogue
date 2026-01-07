@@ -401,6 +401,17 @@ const productSlice = createSlice({
     clearProducts: (state) => {
       state.products = [];
     },
+    // Add action to cache products in state
+    addProducts: (state, action: PayloadAction<Product[]>) => {
+      action.payload.forEach((newProduct) => {
+        const index = state.products.findIndex((p) => p.id === newProduct.id);
+        if (index !== -1) {
+          state.products[index] = newProduct;
+        } else {
+          state.products.push(newProduct);
+        }
+      });
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -548,6 +559,7 @@ export const {
   setRecommendedFilter,
   clearError,
   clearProducts,
+  addProducts,
 } = productSlice.actions;
 
 export default productSlice.reducer;

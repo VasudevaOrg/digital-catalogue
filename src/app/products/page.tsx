@@ -49,45 +49,54 @@ export default function ProductsPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        await dispatch(fetchCategories());
-
-        const category = searchParams.get("category") || "";
-        const search = searchParams.get("search") || "";
-        const page = parseInt(searchParams.get("page") || "1");
-        const isRecommended = searchParams.get("recommended") === "true";
+        // Extract filters from URL
+        const urlFilters: any = {};
+        const categoryParam = searchParams.get("category");
+        if (categoryParam) urlFilters.category = categoryParam;
+        const searchParam = searchParams.get("search");
+        if (searchParam) urlFilters.searchQuery = searchParam;
+        const recommendedParam = searchParams.get("recommended");
+        if (recommendedParam === "true") urlFilters.isRecommended = true;
         const tagsParam = searchParams.get("tags");
-        const tags = tagsParam ? tagsParam.split(",") : [];
-        const minPrice = parseInt(searchParams.get("minPrice") || "0");
-        const maxPrice = parseInt(searchParams.get("maxPrice") || "10000");
-
-        const urlFilters = {
-          category,
-          searchQuery: search,
-          sortBy: "name" as const,
-          sortOrder: "asc" as const,
-          priceRange: [minPrice, maxPrice] as [number, number],
-          isRecommended,
-          tags,
-        };
-
-        console.log("Initial URL filters:", urlFilters);
-
-        dispatch(setFilters(urlFilters));
-        setLocalFilters(urlFilters);
-        setCurrentPage(page);
-
-        const result = await dispatch(
-          fetchProducts({
-            page: page,
-            limit: productsPerPage,
-            filters: urlFilters,
-          })
-        );
-
-        if (result.payload && result.payload.pagination) {
-          setTotalProducts(result.payload.pagination.total);
-          setTotalPages(result.payload.pagination.totalPages);
+        if (tagsParam) urlFilters.tags = tagsParam.split(",");
+        const minPriceParam = searchParams.get("minPrice");
+        const maxPriceParam = searchParams.get("maxPrice");
+        if (minPriceParam || maxPriceParam) {
+          urlFilters.priceRange = [
+            minPriceParam ? parseInt(minPriceParam) : 0,
+            maxPriceParam ? parseInt(maxPriceParam) : 10000,
+          ];
         }
+        const sortByParam = searchParams.get("sortBy");
+        const sortOrderParam = searchParams.get("sortOrder");
+        if (sortByParam) urlFilters.sortBy = sortByParam;
+        if (sortOrderParam) urlFilters.sortOrder = sortOrderParam;
+
+        // Set local filters from URL
+        setLocalFilters((prev) => ({ ...prev, ...urlFilters }));
+        dispatch(setFilters(urlFilters));
+
+        // Determine current page from URL
+        const pageParam = searchParams.get("page");
+        const initialPage = pageParam ? parseInt(pageParam) : 1;
+        setCurrentPage(initialPage);
+
+        // Fetch categories and products in parallel
+        await Promise.all([
+          dispatch(fetchCategories()),
+          dispatch(
+            fetchProducts({
+              page: initialPage,
+              limit: productsPerPage,
+              filters: urlFilters,
+            })
+          ).then((result: any) => {
+            if (result.payload && result.payload.pagination) {
+              setTotalProducts(result.payload.pagination.total);
+              setTotalPages(result.payload.pagination.totalPages);
+            }
+          }),
+        ]);
 
         setIsInitialized(true);
       } catch (error) {

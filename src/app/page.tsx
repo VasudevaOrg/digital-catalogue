@@ -53,28 +53,28 @@ export default function HomePage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Fetch categories first
-        await dispatch(fetchCategories());
-
-        // Fetch all products to filter recommended ones
-        const result = await dispatch(
-          fetchProducts({
-            page: 1,
-            limit: 50, // Get more products to filter recommended ones
-            filters: {
-              sortBy: "newest",
-              sortOrder: "desc",
-            },
-          })
-        );
-
-        // Filter recommended products from the fetched products
-        if (result.payload && result.payload.data) {
-          const recommended = result.payload.data.filter(
-            (product: any) => product.isRecommended === true
-          );
-          setRecommendedProducts(recommended.slice(0, 12)); // Show top 12 recommended
-        }
+        // Fetch categories and products in parallel for faster loading
+        await Promise.all([
+          dispatch(fetchCategories()),
+          dispatch(
+            fetchProducts({
+              page: 1,
+              limit: 50, // Get enough products to filter recommended ones
+              filters: {
+                sortBy: "newest",
+                sortOrder: "desc",
+              },
+            })
+          ).then((result: any) => {
+            // Filter recommended products from the fetched products
+            if (result.payload && result.payload.data) {
+              const recommended = result.payload.data.filter(
+                (product: any) => product.isRecommended === true
+              );
+              setRecommendedProducts(recommended.slice(0, 12)); // Show top 12 recommended
+            }
+          }),
+        ]);
 
         setDataLoaded(true);
       } catch (error) {
