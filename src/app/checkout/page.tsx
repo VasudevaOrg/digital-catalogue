@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAppSelector, useAppDispatch } from "@/store";
-import { clearCart } from "@/store/slices/cartSlice";
+import { clearCart, updateProductsInCart } from "@/store/slices/cartSlice";
 import {
   showSuccessNotification,
   showErrorNotification,
@@ -38,6 +38,8 @@ import {
   ArrowLeft,
   Weight,
   Tag,
+  AlertTriangle,
+  RefreshCw,
 } from "lucide-react";
 
 export default function CheckoutPage() {
@@ -72,6 +74,10 @@ export default function CheckoutPage() {
   // Terms and Conditions state
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
+
+  // Price mismatch state
+  const [showPriceModal, setShowPriceModal] = useState(false);
+  const [priceMismatches, setPriceMismatches] = useState<any[]>([]);
 
   // Auto-update payment method when delivery type changes
   useEffect(() => {
@@ -430,7 +436,19 @@ export default function CheckoutPage() {
         clearTimeout(orderTimeout);
         orderResult = await orderResponse.json();
 
-        if (!orderResponse.ok || !orderResult.success) {
+        if (!orderResponse.ok) {
+          if (
+            orderResponse.status === 400 &&
+            orderResult.error === "PRICE_MISMATCH"
+          ) {
+            throw orderResult; // Throw the whole result including mismatches
+          }
+          throw new Error(
+            orderResult.message || "Failed to create order in database"
+          );
+        }
+
+        if (!orderResult.success) {
           throw new Error(
             orderResult.message || "Failed to create order in database"
           );
@@ -551,6 +569,16 @@ Please confirm your order on WhatsApp. Redirecting now...`;
         router.push("/");
       }, 6000);
     } catch (error: any) {
+      // Handle Price Mismatch
+      if (
+        error.message === "PRICE_MISMATCH" ||
+        error.error === "PRICE_MISMATCH"
+      ) {
+        setPriceMismatches(error.mismatches || []);
+        setShowPriceModal(true);
+        return;
+      }
+
       console.error("❌ Order placement error:", error);
 
       let errorMessage = "Failed to place order. Please try again.";
@@ -580,6 +608,20 @@ Please confirm your order on WhatsApp. Redirecting now...`;
       dispatch(showErrorNotification(errorMessage));
     } finally {
       setIsPlacingOrder(false);
+    }
+  };
+
+  const handleUpdatePrices = () => {
+    if (priceMismatches.length > 0) {
+      const updates = priceMismatches.map((m) => ({
+        id: m.id,
+        product: m.product,
+      }));
+      dispatch(updateProductsInCart(updates));
+      setShowPriceModal(false);
+      dispatch(
+        showSuccessNotification("Prices updated. You can now place your order.")
+      );
     }
   };
 
@@ -1081,7 +1123,7 @@ Please confirm your order on WhatsApp. Redirecting now...`;
                         </p>
                       </div>
 
-                      <div
+                      {/* <div
                         className={`border-2 rounded-lg p-3 sm:p-4 cursor-pointer transition-colors ${
                           paymentMethod === "cash_on_pickup"
                             ? "border-blue-500 bg-blue-50"
@@ -1105,7 +1147,7 @@ Please confirm your order on WhatsApp. Redirecting now...`;
                         <p className="text-xs sm:text-sm text-gray-600 ml-10">
                           Pay when you receive your order
                         </p>
-                      </div>
+                      </div> */}
                     </div>
 
                     <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -1474,8 +1516,9 @@ Please confirm your order on WhatsApp. Redirecting now...`;
                                   DELTA products: ₹{deltaAmount.toFixed(2)}
                                 </p>
                                 <p className="text-blue-700 text-xs mt-1">
-                                  Sugar, oils, and jaggery don't count toward
-                                  the ₹1000 threshold but can stay in your cart.
+                                  Free delivery is applicable only if the first
+                                  ₹1000 of the cart value excludes oil, sugar,
+                                  and jaggery.
                                 </p>
                               </div>
                             </div>
@@ -1639,6 +1682,107 @@ Please confirm your order on WhatsApp. Redirecting now...`;
           </div>
         </div>
       </div>
+      {/* Price Mismatch Modal */}
+      {showPriceModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div
+              className="fixed inset-0 transition-opacity"
+              aria-hidden="true"
+              onClick={() => setShowPriceModal(false)}
+            >
+              <div className="absolute inset-0 bg-gray-900 opacity-60 backdrop-blur-sm"></div>
+            </div>
+
+            <span
+              className="hidden sm:inline-block sm:align-middle sm:h-screen"
+              aria-hidden="true"
+            >
+              &#8203;
+            </span>
+
+            <div className="relative inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border-t-4 border-red-500">
+              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div className="sm:flex sm:items-start">
+                  <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                    <AlertTriangle
+                      className="h-6 w-6 text-red-600"
+                      aria-hidden="true"
+                    />
+                  </div>
+                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                    <h3
+                      className="text-lg leading-6 font-bold text-gray-900"
+                      id="modal-title"
+                    >
+                      Price Updates Detected
+                    </h3>
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-500">
+                        Some items in your cart have updated prices. Please
+                        confirm the new prices before proceeding.
+                      </p>
+                    </div>
+
+                    <div className="mt-4 space-y-3">
+                      {priceMismatches.map((item, index) => (
+                        <div
+                          key={index}
+                          className="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-100"
+                        >
+                          <div className="flex-1">
+                            <p className="text-sm font-semibold text-gray-900">
+                              {item.name}
+                            </p>
+                            <div className="flex items-center mt-1 text-xs">
+                              <span className="text-gray-400 line-through mr-2">
+                                ₹{item.providedPrice.toFixed(2)}
+                              </span>
+                              <span className="text-red-600 font-bold">
+                                ₹{item.expectedPrice.toFixed(2)}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="ml-4">
+                            <span
+                              className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${
+                                item.expectedPrice > item.providedPrice
+                                  ? "bg-red-50 text-red-700"
+                                  : "bg-green-50 text-green-700"
+                              }`}
+                            >
+                              {item.expectedPrice > item.providedPrice
+                                ? "Increased"
+                                : "Decreased"}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-2">
+                <button
+                  type="button"
+                  onClick={handleUpdatePrices}
+                  className="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm items-center transition-all"
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Update & Continue
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowPriceModal(false)}
+                  className="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

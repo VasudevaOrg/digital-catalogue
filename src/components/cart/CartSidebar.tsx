@@ -527,8 +527,8 @@ export function CartSidebar() {
                             DELTA products: ₹{excludedAmount.toFixed(2)}
                           </p>
                           <p className="text-blue-700 text-xs mt-1">
-                            Sugar, oils, and jaggery don't count toward the
-                            ₹1000 threshold but can stay in your cart.
+                            Free delivery is applicable only if the first ₹1000
+                            of the cart value excludes oil, sugar, and jaggery.
                           </p>
                         </div>
                       </div>

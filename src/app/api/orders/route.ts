@@ -13,6 +13,94 @@ export async function POST(request: NextRequest) {
 
     console.log("📋 Order data received:", JSON.stringify(orderData, null, 2));
 
+    // --- PRICE VERIFICATION START ---
+    const productIds = orderData.items.map((item: any) => item.product.id);
+    const Product = (await import("@/models/Product")).default;
+    const { calculateProductDiscount, isDiscountActive } = await import(
+      "@/lib/discountUtils"
+    );
+
+    const dbProducts = await Product.find({ _id: { $in: productIds } }).lean();
+    const dbProductsMap = dbProducts.reduce((map: any, p: any) => {
+      map[p._id.toString()] = p;
+      return map;
+    }, {});
+
+    const mismatches = [];
+    for (const item of orderData.items) {
+      const dbProduct = dbProductsMap[item.product.id];
+      if (!dbProduct) {
+        mismatches.push({
+          id: item.product.id,
+          name: item.product.name,
+          reason: "NOT_FOUND",
+        });
+        continue;
+      }
+
+      // Check for variant price mismatch if applicable
+      let currentPrice = dbProduct.price;
+      let currentDiscount = dbProduct.discount;
+      let dbVariant = null;
+
+      if (item.product.selectedVariant) {
+        dbVariant = dbProduct.variants?.find(
+          (v: any) => v.sku === item.product.selectedVariant.sku
+        );
+        if (dbVariant) {
+          currentPrice = dbVariant.price;
+          currentDiscount =
+            dbVariant.discount && isDiscountActive(dbVariant.discount)
+              ? dbVariant.discount
+              : dbProduct.discount;
+        }
+      }
+
+      const productForCalc = {
+        ...dbProduct,
+        price: currentPrice,
+        discount: currentDiscount,
+      };
+      const discountCalc = calculateProductDiscount(
+        productForCalc,
+        item.quantity
+      );
+      const expectedUnitPrice = discountCalc.discountedPrice / item.quantity;
+      const providedUnitPrice = item.product.price; // This is the discounted unit price from frontend
+
+      // Allow for small rounding differences (0.01)
+      if (Math.abs(expectedUnitPrice - providedUnitPrice) > 0.01) {
+        mismatches.push({
+          id: item.product.id,
+          name: item.product.name,
+          providedPrice: providedUnitPrice,
+          expectedPrice: expectedUnitPrice,
+          product: {
+            ...dbProduct,
+            id: dbProduct._id.toString(),
+            _id: dbProduct._id.toString(),
+            price: currentPrice, // Original price for this variant
+            discount: currentDiscount, // Current discount for this variant
+          },
+        });
+      }
+    }
+
+    if (mismatches.length > 0) {
+      console.log("⚠️ Price mismatch detected:", mismatches);
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "Some product prices have been updated. Please review your cart.",
+          error: "PRICE_MISMATCH",
+          mismatches,
+        },
+        { status: 400 }
+      );
+    }
+    // --- PRICE VERIFICATION END ---
+
     // Generate unique identifiers
     const orderId = generateOrderId();
     const invoiceNumber = generateInvoiceNumber();
@@ -243,7 +331,7 @@ export async function GET(request: NextRequest) {
       .lean();
 
     // Format orders for response
-    const formattedOrders = orders.map((order) => ({
+    const formattedOrders = orders.map((order: any) => ({
       id: order._id.toString(),
       orderId: order.orderId,
       invoiceNumber: order.invoiceNumber,

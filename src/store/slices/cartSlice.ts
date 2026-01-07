@@ -320,6 +320,41 @@ const cartSlice = createSlice({
     initializeCart: (state) => {
       const storedCart = loadCartFromStorage();
       state.cart = storedCart;
+      saveCartToStorage(state.cart);
+    },
+
+    // Update multiple products in cart (e.g., when prices change)
+    updateProductsInCart: (
+      state,
+      action: PayloadAction<{ id: string; product: Product }[]>
+    ) => {
+      action.payload.forEach(({ id, product }) => {
+        state.cart.items.forEach((item) => {
+          if (item.product.id === id) {
+            // Update the main product data
+            item.product = product;
+
+            // If this item has a variant selected, update the variant data too
+            if (item.selectedVariant && product.variants) {
+              const updatedVariant = product.variants.find(
+                (v) => v.sku === item.selectedVariant?.sku
+              );
+              if (updatedVariant) {
+                item.selectedVariant = updatedVariant;
+              }
+            }
+          }
+        });
+      });
+
+      const totals = calculateCartTotals(state.cart.items);
+      state.cart = {
+        items: state.cart.items,
+        totalAmount: totals.totalAmount,
+        totalWeight: totals.totalWeight,
+        isEligibleForFreeDelivery: totals.isEligibleForFreeDelivery,
+      };
+      saveCartToStorage(state.cart);
     },
 
     // Recalculate cart (useful when discounts change)
@@ -373,6 +408,7 @@ export const {
   clearError,
   setWalkInMode,
   initializeCart,
+  updateProductsInCart,
   recalculateCart,
 } = cartSlice.actions;
 

@@ -26,6 +26,9 @@ export interface IProduct extends Document {
   supplier?: string;
   sku: string;
   isActive: boolean;
+  hasVariants?: boolean;
+  variants?: any[];
+  discount?: any;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -120,6 +123,14 @@ const ProductSchema = new Schema<IProduct>(
       default: true,
       index: true,
     },
+    hasVariants: {
+      type: Boolean,
+      default: false,
+    },
+    variants: [Schema.Types.Mixed],
+    discount: {
+      type: Schema.Types.Mixed,
+    },
   },
   {
     timestamps: true,
@@ -194,7 +205,7 @@ ProductSchema.methods.toggleRecommended = function () {
 };
 
 ProductSchema.methods.getFormattedWeight = function () {
-  const units = {
+  const units: Record<string, string> = {
     kg: "kg",
     grams: "g",
     ltr: "L",
