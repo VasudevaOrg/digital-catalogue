@@ -121,6 +121,10 @@ export function ProductCard({
 
   // Format weight display
   const formatWeight = () => {
+    if (product.weightUnit === "other" && product.customUnit) {
+      return `${product.weight} ${product.customUnit}`;
+    }
+
     const unit = WEIGHT_UNIT_LABELS[product.weightUnit] || product.weightUnit;
     if (product.weightUnit === "grams" && product.weight >= 1000) {
       return `${(product.weight / 1000).toFixed(1)} kg`;

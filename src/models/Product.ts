@@ -63,6 +63,10 @@ const ProductSchema = new Schema<IProduct>(
       default: "kg",
       required: true,
     },
+    customUnit: {
+      type: String,
+      trim: true,
+    },
     category: {
       type: String,
       required: true,
@@ -217,6 +221,10 @@ ProductSchema.methods.getFormattedWeight = function () {
   };
 
   const unit = units[this.weightUnit] || this.weightUnit;
+
+  if (this.weightUnit === "other" && this.customUnit) {
+    return `${this.weight} ${this.customUnit}`;
+  }
 
   // Auto-convert large values
   if (this.weightUnit === "grams" && this.weight >= 1000) {

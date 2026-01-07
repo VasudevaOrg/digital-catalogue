@@ -278,6 +278,10 @@ export default function ProductDetailPage() {
       return `${weight} ${selectedVariant.customUnit}`;
     }
 
+    if (product?.customUnit && weightUnit === "other") {
+      return `${weight} ${product.customUnit}`;
+    }
+
     const unit = WEIGHT_UNIT_LABELS[weightUnit] || weightUnit;
     if (weightUnit === "grams" && weight >= 1000) {
       return `${(weight / 1000).toFixed(1)} kg`;
@@ -493,8 +497,11 @@ export default function ProductDetailPage() {
                 <div className="text-sm text-gray-600 mt-2">
                   Price per {formatWeight()} • Total:{" "}
                   {(quantity * getCurrentWeight()).toFixed(2)}{" "}
-                  {WEIGHT_UNIT_LABELS[getCurrentWeightUnit()]?.split(" ")[1] ||
-                    getCurrentWeightUnit()}
+                  {getCurrentWeightUnit() === "other" && product.customUnit
+                    ? product.customUnit
+                    : WEIGHT_UNIT_LABELS[getCurrentWeightUnit()]?.split(
+                        " "
+                      )[1] || getCurrentWeightUnit()}
                 </div>
               </div>
 

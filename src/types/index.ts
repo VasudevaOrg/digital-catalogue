@@ -62,6 +62,7 @@ export interface Product {
     | "bags"
     | "pieces"
     | "other";
+  customUnit?: string;
   category: string;
   images: string[];
   stock: number;

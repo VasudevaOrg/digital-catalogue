@@ -1230,6 +1230,13 @@ Please confirm your order on WhatsApp. Redirecting now...`;
                     let weightDisplay = "";
                     if (customUnit) {
                       weightDisplay = `${weight * item.quantity} ${customUnit}`;
+                    } else if (
+                      item.product.customUnit &&
+                      weightUnit === "other"
+                    ) {
+                      weightDisplay = `${weight * item.quantity} ${
+                        item.product.customUnit
+                      }`;
                     } else {
                       weightDisplay = `${(weight * item.quantity).toFixed(
                         2

@@ -137,6 +137,10 @@ export function CartSidebar() {
       return `${weight * quantity} ${variant.customUnit}`;
     }
 
+    if (product?.customUnit && weightUnit === "other") {
+      return `${weight * quantity} ${product.customUnit}`;
+    }
+
     const totalWeight = weight * quantity;
     const unit =
       WEIGHT_UNIT_LABELS[weightUnit as keyof typeof WEIGHT_UNIT_LABELS] ||
