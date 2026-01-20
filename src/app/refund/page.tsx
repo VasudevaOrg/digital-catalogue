@@ -104,7 +104,7 @@ export default function RefundPage() {
                   1. Eligibility for Refund
                 </h3>
                 <ul className="list-disc pl-5 space-y-2">
-                  <li>Delivered item is damaged, expired, or incorrect.</li>
+                  <li>Dispatched item is damaged, expired, or incorrect.</li>
                   <li>Product is out of stock after order placement.</li>
                   <li>Order is canceled before dispatch.</li>
                   <li>Payment was processed but order failed.</li>
@@ -196,7 +196,7 @@ export default function RefundPage() {
             </h3>
             <p className="text-amber-800">
               Certain dry goods such as pulses, flours, rice, and packaged
-              staples are non-returnable once delivered, unless found expired,
+              staples are non-returnable once dispatched, unless found expired,
               damaged, or incorrect. To process such a claim, customers must
               provide clear unboxing video proof recorded before the product is
               opened or consumed.

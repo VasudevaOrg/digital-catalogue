@@ -552,7 +552,7 @@ Please confirm my order.`;
       const successMessage = `Order placed successfully! 
 
 Order Details:
-• Order ID: ${savedOrder.orderId}
+• OEN (order enquiry number): ${savedOrder.orderId}
 • Invoice: ${savedOrder.invoiceNumber}
 ${totalSavings > 0 ? `• You saved: ₹${totalSavings.toFixed(2)}` : ""}
 ${
@@ -647,7 +647,7 @@ Please confirm your order on WhatsApp. Redirecting now...`;
               Your cart is empty
             </h1>
             <p className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">
-              Add some products to your cart before checkout.
+              Add some products to your basket before proceeding to buy.
             </p>
             <button
               onClick={() => router.push("/products")}
@@ -787,7 +787,7 @@ Please confirm your order on WhatsApp. Redirecting now...`;
           </button>
 
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-            Checkout
+            Proceed to Buy
           </h1>
           <p className="text-gray-600 text-sm sm:text-base">
             Complete your order details
@@ -811,7 +811,7 @@ Please confirm your order on WhatsApp. Redirecting now...`;
                 </span>
               </div>
               <span className="ml-1 sm:ml-2 text-xs sm:text-sm text-blue-600">
-                Checkout
+                Proceed to Buy
               </span>
             </div>
             <div className="w-4 sm:w-8 h-0.5 bg-gray-200"></div>
@@ -993,7 +993,7 @@ Please confirm your order on WhatsApp. Redirecting now...`;
                 <div className="border-b p-4 sm:p-6">
                   <h2 className="text-lg font-semibold text-gray-900 flex items-center">
                     <MapPin className="w-5 h-5 mr-2" />
-                    Delivery Address
+                    Dispatching address/drop location
                   </h2>
                 </div>
                 <div className="p-4 sm:p-6">
@@ -1174,14 +1174,14 @@ Please confirm your order on WhatsApp. Redirecting now...`;
             </div>
           </div>
 
-          {/* Order Summary Sidebar */}
+          {/* Order Enquiry Sidebar */}
           <div className="lg:sticky lg:top-24 lg:self-start">
             <div className="bg-white rounded-lg shadow-sm border">
               <div className="border-b p-4 sm:p-6">
                 <h2 className="text-lg font-semibold text-gray-900 flex items-center justify-between">
                   <span className="flex items-center">
                     <ShoppingCart className="w-5 h-5 mr-2" />
-                    Order Summary
+                    Estimate copy
                   </span>
                   <span className="text-sm text-gray-500">
                     {cart.items.length} items
@@ -1636,7 +1636,7 @@ Please confirm your order on WhatsApp. Redirecting now...`;
                 ) : (
                   <>
                     <MessageCircle className="w-5 h-5" />
-                    <span>Place Order via WhatsApp</span>
+                    <span>Buy via WhatsApp</span>
                   </>
                 )}
               </button>

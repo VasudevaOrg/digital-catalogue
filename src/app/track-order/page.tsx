@@ -101,7 +101,7 @@ export default function TrackOrderPage() {
         const form = document.querySelector("form");
         if (form) {
           form.dispatchEvent(
-            new Event("submit", { bubbles: true, cancelable: true })
+            new Event("submit", { bubbles: true, cancelable: true }),
           );
         }
       }, 100);
@@ -112,7 +112,7 @@ export default function TrackOrderPage() {
     e.preventDefault();
 
     if (!orderId.trim()) {
-      setError("Please enter an Order ID");
+      setError("Please enter an OEN (order enquiry number)");
       return;
     }
 
@@ -131,7 +131,7 @@ export default function TrackOrderPage() {
       if (!response.ok) {
         if (response.status === 404) {
           throw new Error(
-            "Order not found. Please check your Order ID and try again."
+            "Order not found. Please check your OEN (order enquiry number) and try again.",
           );
         }
         throw new Error("Failed to fetch order details. Please try again.");
@@ -184,7 +184,7 @@ export default function TrackOrderPage() {
       delivered:
         deliveryType === "pickup"
           ? "Your order has been completed. Thank you for shopping with us!"
-          : "Your order has been delivered successfully. Thank you for shopping with us!",
+          : "Your order has been dispatched successfully. Thank you for shopping with us!",
       cancelled:
         "This order has been cancelled. Please contact us if you have any questions.",
     };
@@ -228,7 +228,7 @@ export default function TrackOrderPage() {
     {
       status: "delivered",
       label:
-        orderData?.deliveryType === "pickup" ? "Order Completed" : "Delivered",
+        orderData?.deliveryType === "pickup" ? "Order Completed" : "Dispatched",
       icon: orderData?.deliveryType === "pickup" ? Star : CheckCircle,
     },
   ];
@@ -266,10 +266,10 @@ export default function TrackOrderPage() {
             </div>
             <div>
               <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-800 via-blue-600 to-gray-800 bg-clip-text text-transparent">
-                Track Your Order
+                Order Status
               </h1>
               <p className="text-lg text-gray-600 mt-2">
-                Enter your Order ID to get real-time updates
+                Enter your OEN (order enquiry number) to get real-time updates
               </p>
             </div>
           </div>
@@ -289,7 +289,7 @@ export default function TrackOrderPage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Order ID
+                  OEN (order enquiry number)
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -299,7 +299,7 @@ export default function TrackOrderPage() {
                     type="text"
                     value={orderId}
                     onChange={(e) => setOrderId(e.target.value.toUpperCase())}
-                    placeholder="Enter your Order ID (e.g., ORD8857716373)"
+                    placeholder="Enter your OEN (order enquiry number) (e.g., ORD8857716373)"
                     className="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:bg-white outline-none transition-all duration-300 text-gray-800 placeholder-gray-500 font-mono"
                     disabled={isLoading}
                   />
@@ -323,7 +323,7 @@ export default function TrackOrderPage() {
                 ) : (
                   <>
                     <Search className="w-5 h-5" />
-                    <span>Track Order</span>
+                    <span>Order Status</span>
                   </>
                 )}
               </button>
@@ -346,7 +346,10 @@ export default function TrackOrderPage() {
                   <div className="mt-3 text-sm text-red-700">
                     <p className="font-medium">Please check:</p>
                     <ul className="list-disc list-inside mt-1 space-y-1">
-                      <li>Your Order ID is correct (e.g., ORD8857716373)</li>
+                      <li>
+                        Your OEN (order enquiry number) is correct (e.g.,
+                        ORD8857716373)
+                      </li>
                       <li>The order was placed recently</li>
                       <li>You received a confirmation message</li>
                     </ul>
@@ -371,7 +374,7 @@ export default function TrackOrderPage() {
                 <div>
                   <div className="flex items-center space-x-3 mb-2">
                     <h2 className="text-2xl font-bold text-gray-900">
-                      Order Details
+                      OEN (order enquiry number)
                     </h2>
                     <button
                       onClick={copyOrderId}
@@ -397,7 +400,7 @@ export default function TrackOrderPage() {
                 <div className="mt-4 md:mt-0">
                   <div
                     className={`inline-flex items-center px-4 py-2 rounded-full border font-medium ${getStatusColor(
-                      orderData.orderStatus
+                      orderData.orderStatus,
                     )}`}
                   >
                     {getStatusIcon(orderData.orderStatus)}
@@ -413,7 +416,7 @@ export default function TrackOrderPage() {
                 <p className="text-blue-800 font-medium">
                   {getStatusMessage(
                     orderData.orderStatus,
-                    orderData.deliveryType
+                    orderData.deliveryType,
                   )}
                 </p>
               </div>
@@ -531,7 +534,7 @@ export default function TrackOrderPage() {
                 <p className="text-blue-800 font-medium">
                   {getStatusMessage(
                     orderData.orderStatus,
-                    orderData.deliveryType
+                    orderData.deliveryType,
                   )}
                 </p>
               </div>
@@ -595,7 +598,7 @@ export default function TrackOrderPage() {
                             Home Delivery
                           </p>
                           <p className="text-sm text-gray-600">
-                            Delivered to your address
+                            Dispatch complete
                           </p>
                         </div>
                       </>
@@ -722,7 +725,7 @@ export default function TrackOrderPage() {
                 ))}
               </div>
 
-              {/* Order Summary */}
+              {/* Order Enquiry */}
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <div className="bg-gray-50 rounded-xl p-4">
                   <div className="space-y-2">
@@ -778,7 +781,7 @@ export default function TrackOrderPage() {
                         "ready",
                         "delivered",
                         "cancelled",
-                      ].includes(history.status)
+                      ].includes(history.status),
                     )
                     .map((history, index) => (
                       <div
@@ -863,12 +866,12 @@ export default function TrackOrderPage() {
           >
             <div className="max-w-2xl mx-auto">
               <h3 className="text-xl font-bold text-gray-900 mb-3">
-                Don't have your Order ID?
+                Don't have your OEN (order enquiry number)?
               </h3>
               <p className="text-gray-600 mb-6">
-                Your Order ID was sent to your WhatsApp when you placed the
-                order. It looks like "ORD" followed by numbers (e.g.,
-                ORD8857716373).
+                Your OEN (order enquiry number) was sent to your WhatsApp when
+                you placed the order. It looks like "ORD" followed by numbers
+                (e.g., ORD8857716373).
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button

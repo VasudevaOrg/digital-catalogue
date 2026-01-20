@@ -48,12 +48,12 @@ export class WhatsAppFlowService {
     const session = this.getOrCreateSession(phone);
 
     console.log(
-      `🔄 Processing message from ${phone} in state: ${session.state}`
+      `🔄 Processing message from ${phone} in state: ${session.state}`,
     );
 
     // Add message to history
     session.messageHistory.push(
-      `${new Date().toISOString()}: ${JSON.stringify(message)}`
+      `${new Date().toISOString()}: ${JSON.stringify(message)}`,
     );
 
     // Keep only last 10 messages in history
@@ -82,7 +82,7 @@ export class WhatsAppFlowService {
   // Handle messages based on current state
   private async handleMessageByState(
     session: UserSession,
-    message: any
+    message: any,
   ): Promise<FlowResponse> {
     switch (session.state) {
       case "welcome":
@@ -156,7 +156,7 @@ export class WhatsAppFlowService {
     return {
       messages: [
         this.createTextMessage(
-          "👋 Welcome to Digital Catalogue! How can I help you today?"
+          "👋 Welcome to Digital Catalogue! How can I help you today?",
         ),
         this.createMainMenu(),
       ],
@@ -167,7 +167,7 @@ export class WhatsAppFlowService {
   // Main menu state handler
   private handleMainMenuState(
     session: UserSession,
-    message: any
+    message: any,
   ): FlowResponse {
     const buttonId = this.extractButtonId(message);
     const text = this.extractTextFromMessage(message).toLowerCase();
@@ -210,7 +210,7 @@ export class WhatsAppFlowService {
   // Order tracking state handler
   private handleOrderTrackingState(
     session: UserSession,
-    message: any
+    message: any,
   ): FlowResponse {
     const buttonId = this.extractButtonId(message);
     const text = this.extractTextFromMessage(message);
@@ -220,7 +220,7 @@ export class WhatsAppFlowService {
         return {
           messages: [
             this.createTextMessage(
-              "🔍 *Track by Order ID*\n\nPlease enter your Order ID or Invoice Number:\n\n*Example:* ORD202501090001 or INV250109001\n\nType your order ID below:"
+              "🔍 *Track by OEN (order enquiry number)*\n\nPlease enter your OEN (order enquiry number) or Invoice Number:\n\n*Example:* ORD202501090001 or INV250109001\n\nType your OEN (order enquiry number) below:",
             ),
           ],
           nextState: "awaiting_order_id",
@@ -230,7 +230,7 @@ export class WhatsAppFlowService {
         return {
           messages: [
             this.createTextMessage(
-              "📱 *Track by Phone Number*\n\nPlease enter the phone number used for the order:\n\n*Example:* 9448132930 or +91 9448132930\n\nType your phone number below:"
+              "📱 *Track by Phone Number*\n\nPlease enter the phone number used for the order:\n\n*Example:* 9448132930 or +91 9448132930\n\nType your phone number below:",
             ),
           ],
           nextState: "awaiting_phone_number",
@@ -246,7 +246,7 @@ export class WhatsAppFlowService {
         };
 
       default:
-        // If user types order ID directly
+        // If user types OEN directly
         if (this.isOrderIdFormat(text)) {
           return this.processOrderIdInput(session, text);
         }
@@ -263,10 +263,10 @@ export class WhatsAppFlowService {
     }
   }
 
-  // Awaiting order ID state handler
+  // Awaiting OEN state handler
   private async handleAwaitingOrderIdState(
     session: UserSession,
-    message: any
+    message: any,
   ): Promise<FlowResponse> {
     const orderId = this.extractTextFromMessage(message).trim();
     return await this.processOrderIdInput(session, orderId);
@@ -275,7 +275,7 @@ export class WhatsAppFlowService {
   // Awaiting phone number state handler
   private async handleAwaitingPhoneNumberState(
     session: UserSession,
-    message: any
+    message: any,
   ): Promise<FlowResponse> {
     const phoneNumber = this.extractTextFromMessage(message).trim();
     return await this.processPhoneNumberInput(session, phoneNumber);
@@ -284,7 +284,7 @@ export class WhatsAppFlowService {
   // Order details state handler
   private handleOrderDetailsState(
     session: UserSession,
-    message: any
+    message: any,
   ): FlowResponse {
     const buttonId = this.extractButtonId(message);
 
@@ -312,10 +312,10 @@ export class WhatsAppFlowService {
     }
   }
 
-  // Process order ID input
+  // Process OEN input
   private async processOrderIdInput(
     session: UserSession,
-    orderId: string
+    orderId: string,
   ): Promise<FlowResponse> {
     try {
       const order = await this.findOrderById(orderId);
@@ -333,7 +333,7 @@ export class WhatsAppFlowService {
         return {
           messages: [
             this.createTextMessage(
-              `❌ *Order Not Found*\n\nSorry, I couldn't find an order with ID: *${orderId}*\n\nPlease check your order ID and try again:`
+              `❌ *OEN Not Found*\n\nSorry, I couldn't find an order with OEN: *${orderId}*\n\nPlease check your OEN (order enquiry number) and try again:`,
             ),
             this.createOrderTrackingMenu(),
           ],
@@ -344,7 +344,7 @@ export class WhatsAppFlowService {
       return {
         messages: [
           this.createTextMessage(
-            "Sorry, I encountered an error while searching for your order. Please try again or contact our support team."
+            "Sorry, I encountered an error while searching for your order. Please try again or contact our support team.",
           ),
           this.createMainMenu(),
         ],
@@ -356,7 +356,7 @@ export class WhatsAppFlowService {
   // Process phone number input
   private async processPhoneNumberInput(
     session: UserSession,
-    phoneNumber: string
+    phoneNumber: string,
   ): Promise<FlowResponse> {
     try {
       const orders = await this.findOrdersByPhone(phoneNumber);
@@ -371,7 +371,7 @@ export class WhatsAppFlowService {
         return {
           messages: [
             this.createTextMessage(
-              `❌ *No Orders Found*\n\nSorry, I couldn't find any orders for phone number: *${phoneNumber}*\n\nPlease check the phone number and try again:`
+              `❌ *No Orders Found*\n\nSorry, I couldn't find any orders for phone number: *${phoneNumber}*\n\nPlease check the phone number and try again:`,
             ),
             this.createOrderTrackingMenu(),
           ],
@@ -382,7 +382,7 @@ export class WhatsAppFlowService {
       return {
         messages: [
           this.createTextMessage(
-            "Sorry, I encountered an error while searching for orders. Please try again or contact our support team."
+            "Sorry, I encountered an error while searching for orders. Please try again or contact our support team.",
           ),
           this.createMainMenu(),
         ],
@@ -393,7 +393,7 @@ export class WhatsAppFlowService {
 
   // Handle recent orders request
   private async handleRecentOrdersRequest(
-    session: UserSession
+    session: UserSession,
   ): Promise<FlowResponse> {
     try {
       const orders = await this.findRecentOrdersForPhone(session.phone);
@@ -408,7 +408,7 @@ export class WhatsAppFlowService {
         return {
           messages: [
             this.createTextMessage(
-              "📦 *No Recent Orders*\n\nI couldn't find any recent orders for your number.\n\nWould you like to:\n• Try tracking with Order ID\n• Start shopping now"
+              "📦 *No Recent Orders*\n\nI couldn't find any recent orders for your number.\\n\\nWould you like to:\\n• Try tracking with OEN (order enquiry number)\\n• Start shopping now",
             ),
             this.createOrderTrackingMenu(),
           ],
@@ -419,7 +419,7 @@ export class WhatsAppFlowService {
       return {
         messages: [
           this.createTextMessage(
-            "Sorry, I encountered an error while fetching your orders. Please try again or contact our support team."
+            "Sorry, I encountered an error while fetching your orders. Please try again or contact our support team.",
           ),
         ],
         nextState: "main_menu",
@@ -430,7 +430,7 @@ export class WhatsAppFlowService {
   // Handle shopping flow
   private handleShoppingFlowState(
     session: UserSession,
-    message: any
+    message: any,
   ): FlowResponse {
     return {
       messages: [this.createMainMenu()],
@@ -441,7 +441,7 @@ export class WhatsAppFlowService {
   // Handle help support
   private handleHelpSupportState(
     session: UserSession,
-    message: any
+    message: any,
   ): FlowResponse {
     const text = this.extractTextFromMessage(message).toLowerCase();
 
@@ -463,7 +463,7 @@ export class WhatsAppFlowService {
     return {
       messages: [
         this.createTextMessage(
-          "Sorry, I encountered an error. Let me help you get back on track."
+          "Sorry, I encountered an error. Let me help you get back on track.",
         ),
         this.createMainMenu(),
       ],
@@ -520,7 +520,7 @@ export class WhatsAppFlowService {
                 type: "reply",
                 reply: {
                   id: "track_order",
-                  title: "📦 Track Order",
+                  title: "📦 Order Status",
                 },
               },
               {
@@ -564,15 +564,16 @@ export class WhatsAppFlowService {
             text: "Digital Catalogue",
           },
           action: {
-            button: "Track Order",
+            button: "Order Status",
             sections: [
               {
                 title: "Tracking Options",
                 rows: [
                   {
                     id: "track_by_id",
-                    title: "🔍 Track by Order ID",
-                    description: "Enter your Order ID or Invoice Number",
+                    title: "🔍 Track by OEN (order enquiry number)",
+                    description:
+                      "Enter your OEN (order enquiry number) or Invoice Number",
                   },
                   {
                     id: "track_by_phone",
@@ -614,7 +615,7 @@ export class WhatsAppFlowService {
 ━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📋 *Order Information*
-Order ID: ${order.orderId}
+OEN (order enquiry number): ${order.orderId}
 Invoice: ${order.invoiceNumber || "N/A"}
 Status: *${order.orderStatus.toUpperCase()}*
 Date: ${new Date(order.createdAt).toLocaleDateString("en-IN")}
@@ -627,11 +628,11 @@ Phone: +91${order.customerInfo.phoneNumber}
 ${order.items
   .map(
     (item: any, index: number) =>
-      `${index + 1}. ${item.product.name} x ${item.quantity}`
+      `${index + 1}. ${item.product.name} x ${item.quantity}`,
   )
   .join("\n")}
 
-💰 *Order Summary*
+💰 *Estimate Copy*
 Total Amount: ₹${order.totalAmount}
 Total Weight: ${order.totalWeight}kg
 Delivery Fee: ${order.deliveryFee === 0 ? "FREE" : `₹${order.deliveryFee}`}
@@ -718,8 +719,8 @@ Found ${orders.length} recent orders:
         order.orderStatus === "confirmed"
           ? "✅"
           : order.orderStatus === "delivered"
-          ? "🎉"
-          : "❌";
+            ? "🎉"
+            : "❌";
 
       message += `${index + 1}. ${statusEmoji} *${order.orderId}*
    Date: ${new Date(order.createdAt).toLocaleDateString("en-IN")}
@@ -731,7 +732,7 @@ Found ${orders.length} recent orders:
     });
 
     message += `━━━━━━━━━━━━━━━━━━━━━━━━━
-To get details of any order, just send me the Order ID.`;
+To get details of any order, just send me the OEN (order enquiry number).`;
 
     return this.createTextMessage(message);
   }
@@ -773,7 +774,7 @@ Happy Shopping! 🙏`;
 • Type "menu" - Main menu
 
 📦 *Order Tracking:*
-• Enter your Order ID directly
+• Enter your OEN (order enquiry number) directly
 • Use your phone number to find orders
 • Check recent order history
 
@@ -854,7 +855,7 @@ Only confirmed orders can be modified.`),
 
     const message = `📝 *Order Modification Request*
 
-Order ID: ${order.orderId}
+OEN (order enquiry number): ${order.orderId}
 Current Status: ${order.orderStatus.toUpperCase()}
 
 To modify your order, our team will contact you directly.
@@ -903,7 +904,7 @@ Only confirmed orders can be cancelled.`),
 
     const message = `❌ *Order Cancellation Request*
 
-Order ID: ${order.orderId}
+OEN (order enquiry number): ${order.orderId}
 Amount: ₹${order.totalAmount}
 
 Are you sure you want to cancel this order?
@@ -930,7 +931,7 @@ Our team will process your request immediately.`;
       return {
         messages: [
           this.createTextMessage(
-            "Please first track your order to reorder it."
+            "Please first track your order to reorder it.",
           ),
           this.createOrderTrackingMenu(),
         ],
@@ -940,21 +941,21 @@ Our team will process your request immediately.`;
 
     const message = `🔄 *Reorder Items*
 
-Order ID: ${order.orderId}
+OEN (order enquiry number): ${order.orderId}
 Original Amount: ₹${order.totalAmount}
 
 Items in this order:
 ${order.items
   .map(
     (item: any, index: number) =>
-      `${index + 1}. ${item.product.name} x ${item.quantity}`
+      `${index + 1}. ${item.product.name} x ${item.quantity}`,
   )
   .join("\n")}
 
 🛒 *To Reorder:*
 Visit our website: https://digital-catalogue-red.vercel.app
 
-Or call us at +91 91649 12322 and mention this Order ID.
+Or call us at +91 91649 12322 and mention this OEN (order enquiry number).
 
 Our team can help you place the same order with current prices and availability.`;
 
@@ -1038,7 +1039,7 @@ Our team can help you place the same order with current prices and availability.
   }
 
   private isOrderIdFormat(text: string): boolean {
-    // Check if text looks like an order ID (ORD... or INV...)
+    // Check if text looks like an OEN (ORD... or INV...)
     return /^(ORD|INV|ord|inv)[0-9a-zA-Z]+$/i.test(text.trim());
   }
 
@@ -1120,7 +1121,7 @@ Our team can help you place the same order with current prices and availability.
   // Contact flow handlers
   private handleContactFlowState(
     session: UserSession,
-    message: any
+    message: any,
   ): FlowResponse {
     return {
       messages: [this.createMainMenu()],
@@ -1130,12 +1131,12 @@ Our team can help you place the same order with current prices and availability.
 
   private handleFeedbackFlowState(
     session: UserSession,
-    message: any
+    message: any,
   ): FlowResponse {
     return {
       messages: [
         this.createTextMessage(
-          "Thank you for your feedback! We appreciate your input."
+          "Thank you for your feedback! We appreciate your input.",
         ),
         this.createMainMenu(),
       ],
@@ -1145,11 +1146,11 @@ Our team can help you place the same order with current prices and availability.
 
   private handleOrderListState(
     session: UserSession,
-    message: any
+    message: any,
   ): FlowResponse {
     const text = this.extractTextFromMessage(message);
 
-    // If user types an order ID from the list
+    // If user types an OEN from the list
     if (this.isOrderIdFormat(text)) {
       return this.processOrderIdInput(session, text);
     }
@@ -1162,7 +1163,7 @@ Our team can help you place the same order with current prices and availability.
 
   private handleOrderManagementState(
     session: UserSession,
-    message: any
+    message: any,
   ): FlowResponse {
     const buttonId = this.extractButtonId(message);
 

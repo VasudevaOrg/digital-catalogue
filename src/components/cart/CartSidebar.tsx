@@ -186,7 +186,7 @@ export function CartSidebar() {
           {/* Header */}
           <div className="flex items-center justify-between p-4 sm:p-6 border-b bg-gradient-to-r from-blue-600 to-indigo-600">
             <h2 className="text-lg sm:text-xl font-bold text-white">
-              Shopping Cart ({cart.items.length})
+              My Basket ({cart.items.length})
             </h2>
             <button
               onClick={handleClose}
@@ -236,7 +236,7 @@ export function CartSidebar() {
 
                   const discountCalc = calculateProductDiscount(
                     productForDiscount,
-                    item.quantity
+                    item.quantity,
                   );
 
                   const unitOriginalPrice = productForDiscount.price;
@@ -248,7 +248,7 @@ export function CartSidebar() {
                   const hasEffectiveDiscount = totalSavings > 0;
 
                   const isEligible = isProductEligibleForFreeDelivery(
-                    item.product
+                    item.product,
                   );
 
                   return (
@@ -365,7 +365,7 @@ export function CartSidebar() {
                               {formatWeight(
                                 item.product,
                                 item.quantity,
-                                item.selectedVariant
+                                item.selectedVariant,
                               )}
                             </span>
                           </div>
@@ -378,7 +378,7 @@ export function CartSidebar() {
                               onClick={() =>
                                 handleUpdateQuantity(
                                   item.product.id,
-                                  item.quantity - 1
+                                  item.quantity - 1,
                                 )
                               }
                               disabled={item.quantity <= 1}
@@ -397,7 +397,7 @@ export function CartSidebar() {
                               onClick={() =>
                                 handleUpdateQuantity(
                                   item.product.id,
-                                  item.quantity + 1
+                                  item.quantity + 1,
                                 )
                               }
                               disabled={item.quantity >= item.product.stock}
@@ -492,7 +492,7 @@ export function CartSidebar() {
                             const discountCalc = hasDiscount
                               ? calculateProductDiscount(
                                   item.product,
-                                  item.quantity
+                                  item.quantity,
                                 )
                               : null;
                             return total + (discountCalc?.discountAmount || 0);
@@ -563,12 +563,12 @@ export function CartSidebar() {
                 </div>
               )}
 
-              {/* Checkout Button */}
+              {/* Proceed to Buy Button */}
               <button
                 onClick={handleCheckout}
                 className="touch-target w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-3.5 sm:py-4 rounded-xl transition-all duration-200 font-bold text-base sm:text-lg shadow-lg hover:shadow-xl"
               >
-                Proceed to Checkout
+                Proceed to Buy
               </button>
             </div>
           )}

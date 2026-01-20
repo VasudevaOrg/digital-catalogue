@@ -19,10 +19,10 @@ export const createOrder = createAsyncThunk(
       return response.data;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to create order"
+        error.response?.data?.message || "Failed to create order",
       );
     }
-  }
+  },
 );
 
 export const fetchOrders = createAsyncThunk(
@@ -34,15 +34,15 @@ export const fetchOrders = createAsyncThunk(
       if (params?.limit) queryParams.append("limit", params.limit.toString());
 
       const response = await api.get<PaginatedResponse<Order>>(
-        `/api/orders?${queryParams.toString()}`
+        `/api/orders?${queryParams.toString()}`,
       );
       return response.data;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch orders"
+        error.response?.data?.message || "Failed to fetch orders",
       );
     }
-  }
+  },
 );
 
 export const fetchOrderById = createAsyncThunk(
@@ -53,17 +53,17 @@ export const fetchOrderById = createAsyncThunk(
       return response.data;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch order"
+        error.response?.data?.message || "Failed to fetch order",
       );
     }
-  }
+  },
 );
 
 export const updateOrderStatus = createAsyncThunk(
   "orders/updateOrderStatus",
   async (
     { orderId, status }: { orderId: string; status: Order["orderStatus"] },
-    { rejectWithValue }
+    { rejectWithValue },
   ) => {
     try {
       const response = await api.patch<Order>(`/api/orders/${orderId}/status`, {
@@ -72,10 +72,10 @@ export const updateOrderStatus = createAsyncThunk(
       return response.data;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to update order status"
+        error.response?.data?.message || "Failed to update order status",
       );
     }
-  }
+  },
 );
 
 export const updatePaymentStatus = createAsyncThunk(
@@ -85,27 +85,27 @@ export const updatePaymentStatus = createAsyncThunk(
       orderId,
       paymentStatus,
     }: { orderId: string; paymentStatus: Order["paymentStatus"] },
-    { rejectWithValue }
+    { rejectWithValue },
   ) => {
     try {
       const response = await api.patch<Order>(
         `/api/orders/${orderId}/payment`,
-        { paymentStatus }
+        { paymentStatus },
       );
       return response.data;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to update payment status"
+        error.response?.data?.message || "Failed to update payment status",
       );
     }
-  }
+  },
 );
 
 export const cancelOrder = createAsyncThunk(
   "orders/cancelOrder",
   async (
     { orderId, reason }: { orderId: string; reason?: string },
-    { rejectWithValue }
+    { rejectWithValue },
   ) => {
     try {
       const response = await api.patch<Order>(`/api/orders/${orderId}/cancel`, {
@@ -114,10 +114,10 @@ export const cancelOrder = createAsyncThunk(
       return response.data;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to cancel order"
+        error.response?.data?.message || "Failed to cancel order",
       );
     }
-  }
+  },
 );
 
 export const returnOrderItems = createAsyncThunk(
@@ -130,7 +130,7 @@ export const returnOrderItems = createAsyncThunk(
       orderId: string;
       items: { itemId: string; quantity: number; reason: string }[];
     },
-    { rejectWithValue }
+    { rejectWithValue },
   ) => {
     try {
       const response = await api.post<Order>(`/api/orders/${orderId}/return`, {
@@ -139,10 +139,10 @@ export const returnOrderItems = createAsyncThunk(
       return response.data;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to process return"
+        error.response?.data?.message || "Failed to process return",
       );
     }
-  }
+  },
 );
 
 export const trackOrder = createAsyncThunk(
@@ -150,15 +150,15 @@ export const trackOrder = createAsyncThunk(
   async (orderId: string, { rejectWithValue }) => {
     try {
       const response = await api.get<{ order: Order; tracking: any }>(
-        `/api/orders/${orderId}/track`
+        `/api/orders/${orderId}/track`,
       );
       return response.data;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to track order"
+        error.response?.data?.message || "Failed to get order status",
       );
     }
-  }
+  },
 );
 
 const orderSlice = createSlice({
@@ -176,7 +176,7 @@ const orderSlice = createSlice({
     },
     updateOrderInList: (state, action: PayloadAction<Order>) => {
       const index = state.orders.findIndex(
-        (order) => order.id === action.payload.id
+        (order) => order.id === action.payload.id,
       );
       if (index !== -1) {
         state.orders[index] = action.payload;
@@ -228,7 +228,7 @@ const orderSlice = createSlice({
 
         // Update in orders list if exists
         const index = state.orders.findIndex(
-          (order) => order.id === action.payload.id
+          (order) => order.id === action.payload.id,
         );
         if (index !== -1) {
           state.orders[index] = action.payload;
@@ -247,7 +247,7 @@ const orderSlice = createSlice({
       .addCase(updateOrderStatus.fulfilled, (state, action) => {
         state.isLoading = false;
         const index = state.orders.findIndex(
-          (order) => order.id === action.payload.id
+          (order) => order.id === action.payload.id,
         );
         if (index !== -1) {
           state.orders[index] = action.payload;
@@ -264,7 +264,7 @@ const orderSlice = createSlice({
       // Update Payment Status
       .addCase(updatePaymentStatus.fulfilled, (state, action) => {
         const index = state.orders.findIndex(
-          (order) => order.id === action.payload.id
+          (order) => order.id === action.payload.id,
         );
         if (index !== -1) {
           state.orders[index] = action.payload;
@@ -277,7 +277,7 @@ const orderSlice = createSlice({
       // Cancel Order
       .addCase(cancelOrder.fulfilled, (state, action) => {
         const index = state.orders.findIndex(
-          (order) => order.id === action.payload.id
+          (order) => order.id === action.payload.id,
         );
         if (index !== -1) {
           state.orders[index] = action.payload;
@@ -290,7 +290,7 @@ const orderSlice = createSlice({
       // Return Order Items
       .addCase(returnOrderItems.fulfilled, (state, action) => {
         const index = state.orders.findIndex(
-          (order) => order.id === action.payload.id
+          (order) => order.id === action.payload.id,
         );
         if (index !== -1) {
           state.orders[index] = action.payload;
@@ -300,7 +300,7 @@ const orderSlice = createSlice({
         }
       })
 
-      // Track Order
+      // Order Status
       .addCase(trackOrder.fulfilled, (state, action) => {
         state.currentOrder = action.payload.order;
       });

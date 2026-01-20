@@ -323,7 +323,7 @@ export function CheckoutPageSkeleton() {
               </div>
             </div>
 
-            {/* Checkout Button */}
+            {/* Proceed to Buy Button */}
             <Skeleton className="h-12 w-full" />
           </div>
         </div>

@@ -44,7 +44,7 @@ export function QuickTrackOrder() {
                 <Search className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold">Track Your Order</h3>
+                <h3 className="text-2xl font-bold">Order Status</h3>
                 <p className="text-blue-100">Get real-time updates instantly</p>
               </div>
             </div>
@@ -65,7 +65,7 @@ export function QuickTrackOrder() {
             <form onSubmit={handleQuickTrack} className="space-y-4">
               <div>
                 <label className="block text-blue-100 text-sm font-medium mb-2">
-                  Enter your Order ID
+                  Enter your OEN (order enquiry number)
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -91,7 +91,7 @@ export function QuickTrackOrder() {
                 }`}
               >
                 <Search className="w-5 h-5" />
-                <span>Track Order</span>
+                <span>Order Status</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>

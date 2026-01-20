@@ -72,7 +72,7 @@ export function ProductCard({
     // Validate stock before adding
     if (isOutOfStock) {
       dispatch(
-        showErrorNotification(`${product.name} is currently out of stock`)
+        showErrorNotification(`${product.name} is currently out of stock`),
       );
       return;
     }
@@ -203,7 +203,7 @@ export function ProductCard({
                         <span
                           key={tagIndex}
                           className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getTagColor(
-                            tag
+                            tag,
                           )}`}
                         >
                           {getTagIcon(tag)}
@@ -288,7 +288,7 @@ export function ProductCard({
                         className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center text-sm"
                       >
                         <ShoppingCart className="w-4 h-4 mr-2" />
-                        Add to Cart
+                        Add to Basket
                       </button>
                     ) : (
                       <button
@@ -393,7 +393,7 @@ export function ProductCard({
                 <span
                   key={tagIndex}
                   className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium border ${getTagColor(
-                    tag
+                    tag,
                   )}`}
                 >
                   {getTagIcon(tag)}
@@ -460,7 +460,7 @@ export function ProductCard({
             </div> */}
           </div>
 
-          {/* Add to Cart Button */}
+          {/* Add to Basket Button */}
           {showAddToCart && (
             <div className="mt-auto">
               {!isOutOfStock ? (
@@ -469,7 +469,7 @@ export function ProductCard({
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center text-sm"
                 >
                   <ShoppingCart className="w-4 h-4 mr-2" />
-                  Add to Cart
+                  Add to Basket
                 </button>
               ) : (
                 <button

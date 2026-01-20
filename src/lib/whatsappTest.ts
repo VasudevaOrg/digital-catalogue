@@ -17,7 +17,7 @@ export class WhatsAppTestService {
       isEligibleForFreeDelivery,
     } = orderData;
 
-    let message = `🛒 *NEW ORDER ENQUIRY*\n`;
+    let message = `🛒 *NEW ESTIMATE COPY*\n`;
     message += `━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
     // Customer Details
@@ -27,7 +27,7 @@ export class WhatsAppTestService {
 
     // Order Details
     message += `📦 *ORDER DETAILS*\n`;
-    message += `Order ID: ${orderData.orderId}\n`;
+    message += `OEN (order enquiry number): ${orderData.orderId}\n`;
     message += `Date: ${new Date().toLocaleDateString("en-IN")}\n`;
     message += `Time: ${new Date().toLocaleTimeString("en-IN")}\n\n`;
 
@@ -38,12 +38,12 @@ export class WhatsAppTestService {
       message += `   Price: ₹${item.product.price} x ${item.quantity}\n`;
       message += `   Weight: ${item.product.weight}kg each\n`;
       message += `   Subtotal: ₹${(item.product.price * item.quantity).toFixed(
-        2
+        2,
       )}\n\n`;
     });
 
     // Order Summary
-    message += `💰 *ORDER SUMMARY*\n`;
+    message += `💰 *ESTIMATE COPY*\n`;
     message += `Items Total: ₹${orderData.totalAmount - deliveryFee}\n`;
     message += `Total Weight: ${totalWeight.toFixed(2)}kg\n`;
     message += `Delivery Fee: ${
@@ -94,7 +94,7 @@ export class WhatsAppTestService {
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/${this.phoneNumber.replace(
       "+",
-      ""
+      "",
     )}?text=${encodedMessage}`;
     return whatsappUrl;
   }
@@ -108,7 +108,7 @@ export class WhatsAppTestService {
     message += `Your order has been confirmed and is being processed.\n\n`;
 
     message += `📋 *Order Details:*\n`;
-    message += `Order ID: ${orderData.orderId}\n`;
+    message += `OEN (order enquiry number): ${orderData.orderId}\n`;
     message += `Total Amount: ₹${orderData.totalAmount.toFixed(2)}\n`;
     message += `Items: ${orderData.items.length}\n`;
     message += `Weight: ${orderData.totalWeight.toFixed(2)}kg\n\n`;
@@ -168,8 +168,8 @@ export class WhatsAppTestService {
       ready:
         orderData.deliveryType === "pickup"
           ? "Your order is ready for pickup at our store"
-          : "Your order is ready and out for delivery",
-      delivered: "Your order has been delivered successfully",
+          : "Your order is ready and out for dispatch",
+      delivered: "Your order has been dispatched successfully",
       cancelled: "Your order has been cancelled",
     };
 
@@ -177,7 +177,7 @@ export class WhatsAppTestService {
     message += `━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
     message += `Hello ${orderData.customerInfo.name}! 👋\n\n`;
-    message += `📋 Order ID: ${orderData.orderId}\n`;
+    message += `📋 OEN (order enquiry number): ${orderData.orderId}\n`;
     message += `📊 Status: *${statusMessages[newStatus]}*\n\n`;
 
     // Specific instructions based on status
@@ -200,7 +200,7 @@ export class WhatsAppTestService {
           }\n\n`;
           message += `Please bring this message and a valid ID for pickup.\n`;
         } else {
-          message += `🚚 *OUT FOR DELIVERY*\n`;
+          message += `🚚 *OUT FOR DISPATCH*\n`;
           message += `Your order is on its way!\n\n`;
           message += `📍 Delivery Address:\n`;
           message += `${orderData.deliveryAddress.street}\n`;
@@ -211,7 +211,7 @@ export class WhatsAppTestService {
         break;
 
       case "delivered":
-        message += `🎉 *ORDER DELIVERED*\n`;
+        message += `🎉 *ORDER DISPATCHED*\n`;
         message += `Thank you for shopping with us!\n\n`;
         message += `📦 Order Details:\n`;
         message += `Items: ${orderData.items.length}\n`;
@@ -251,8 +251,8 @@ export class WhatsAppTestService {
 
     message += `🛍️ *How to Order:*\n`;
     message += `1. Browse our digital catalogue\n`;
-    message += `2. Add items to cart\n`;
-    message += `3. Checkout via WhatsApp\n`;
+    message += `2. Add items to basket\n`;
+    message += `3. Buy via WhatsApp\n`;
     message += `4. Get confirmation instantly\n\n`;
 
     message += `📱 Order now through WhatsApp!\n`;
@@ -306,7 +306,7 @@ export class WhatsAppTestService {
     console.log("-" * 30);
     const promoMessage = this.generatePromotionalMessage(
       orderData.customerInfo.name,
-      "🔥 FLASH SALE! Get 20% OFF on all rice varieties! Limited time offer - ends tonight at 11:59 PM."
+      "🔥 FLASH SALE! Get 20% OFF on all rice varieties! Limited time offer - ends tonight at 11:59 PM.",
     );
     console.log(promoMessage);
 
@@ -336,7 +336,7 @@ export class WhatsAppTestService {
   async sendWhatsAppMessage(
     phoneNumber: string,
     message: string,
-    messageType: string = "text"
+    messageType: string = "text",
   ) {
     console.log(`📤 Sending WhatsApp message to +91${phoneNumber}`);
     console.log(`Message Type: ${messageType}`);
@@ -360,11 +360,11 @@ export class WhatsAppTestService {
 export const createSampleOrderData = (items: any[], customerInfo: any) => {
   const totalAmount = items.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
-    0
+    0,
   );
   const totalWeight = items.reduce(
     (sum, item) => sum + item.product.weight * item.quantity,
-    0
+    0,
   );
 
   return {
@@ -420,8 +420,8 @@ export const simulateOrderConfirmation = (orderData: any) => {
   alert(
     `Order Confirmation will be sent via WhatsApp:\n\n${message.substring(
       0,
-      200
-    )}...`
+      200,
+    )}...`,
   );
 };
 

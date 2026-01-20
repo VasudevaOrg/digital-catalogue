@@ -270,7 +270,10 @@ export function TermsAndPoliciesModal({
                       • Contact us via WhatsApp (+91 9164912323) or phone within
                       the return window.
                     </p>
-                    <p>• Provide your Order ID and reason for return.</p>
+                    <p>
+                      • Provide your OEN (order enquiry number) and reason for
+                      return.
+                    </p>
                     <p>• Our team will guide you through the return process.</p>
                     <p>
                       • For home delivery orders, we will arrange pickup at no
@@ -329,7 +332,7 @@ export function TermsAndPoliciesModal({
                       processing fees.
                     </p>
                     <p>
-                      • Once an order is out for delivery, it cannot be
+                      • Once an order is out for dispatch, it cannot be
                       cancelled.
                     </p>
                   </div>
@@ -421,8 +424,8 @@ export function TermsAndPoliciesModal({
                     }`}
                   >
                     {stage === "cart"
-                      ? "Accept & Proceed to Checkout"
-                      : "Accept & Place Order"}
+                      ? "Accept & Proceed to Buy"
+                      : "Accept & Buy"}
                   </button>
                 </div>
 

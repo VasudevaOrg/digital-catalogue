@@ -20,7 +20,7 @@ Hello ${customer.name || "Customer"}! 👋
 Thank you for your order with Digital Catalogue. We have received your order request and need your confirmation to proceed.
 
 📋 *ORDER DETAILS*
-Order ID: ${order.invoiceNumber}
+📋 OEN (order enquiry number): ${order.invoiceNumber}
 Date: ${new Date(order.createdAt).toLocaleDateString("en-IN")}
 Time: ${new Date(order.createdAt).toLocaleTimeString("en-IN")}
 
@@ -31,11 +31,11 @@ ${order.items
       `${index + 1}. ${item.product.name}
    Price: ₹${item.product.price} x ${item.quantity}
    Weight: ${(item.product.weight * item.quantity).toFixed(2)}kg
-   Subtotal: ₹${(item.price * item.quantity).toFixed(2)}`
+   Subtotal: ₹${(item.price * item.quantity).toFixed(2)}`,
   )
   .join("\n\n")}
 
-💰 *ORDER SUMMARY*
+💰 *ESTIMATE COPY*
 Items Total: ₹${order.totalAmount - order.deliveryFee}
 Total Weight: ${order.totalWeight}kg
 Delivery Fee: ${order.deliveryFee === 0 ? "FREE" : `₹${order.deliveryFee}`}
@@ -76,7 +76,7 @@ Hello ${customer.name || "Customer"}! 👋
 Great news! Your order has been confirmed and is now being processed.
 
 📋 *ORDER DETAILS*
-Order ID: ${order.invoiceNumber}
+📋 OEN (order enquiry number): ${order.invoiceNumber}
 Status: CONFIRMED ✅
 Total Amount: ₹${order.totalAmount}
 
@@ -131,8 +131,8 @@ Thank you for shopping with Digital Catalogue! 🙏`;
       ready:
         order.deliveryType === "pickup"
           ? "Your order is ready for pickup at our store"
-          : "Your order is ready and out for delivery",
-      delivered: "Your order has been delivered successfully",
+          : "Your order is ready and out for dispatch",
+      delivered: "Your order has been dispatched successfully",
       cancelled: "Your order has been cancelled",
     };
 
@@ -141,7 +141,7 @@ Thank you for shopping with Digital Catalogue! 🙏`;
 
 Hello ${customer.name || "Customer"}! 👋
 
-📋 Order ID: ${order.invoiceNumber}
+📋 OEN (order enquiry number): ${order.invoiceNumber}
 📊 Status: *${statusMessages[order.orderStatus]}*
 
 ${
@@ -173,7 +173,7 @@ ${
   order.orderStatus === "ready" && order.deliveryType === "delivery"
     ? `
 🚚 *DELIVERY UPDATE*
-Your order is out for delivery!
+Your order is out for dispatch!
 
 📍 Delivery Address:
 ${order.deliveryAddress?.street}
@@ -206,9 +206,9 @@ Thank you for choosing Digital Catalogue! 🙏`;
 
 Hello ${customer.name || "Customer"}! 👋
 
-Your order is out for delivery and will reach you soon.
+Your order is out for dispatch and will reach you soon.
 
-📋 Order ID: ${order.invoiceNumber}
+📋 OEN (order enquiry number): ${order.invoiceNumber}
 📍 Delivery Address:
 ${order.deliveryAddress?.street}
 ${order.deliveryAddress?.city}, ${order.deliveryAddress?.state} - ${
@@ -240,8 +240,8 @@ ${message}
 
 🛍️ *HOW TO ORDER*
 1. Browse our digital catalogue
-2. Add items to cart
-3. Checkout with your details
+2. Add items to basket
+3. Buy with your details
 4. Get instant WhatsApp confirmation
 
 📱 Visit our website or reply to this message!
@@ -267,7 +267,7 @@ export class WhatsAppService {
   async sendMessage(
     phoneNumber: string,
     message: string,
-    messageType: WhatsAppMessage["messageType"] = "promotional"
+    messageType: WhatsAppMessage["messageType"] = "promotional",
   ): Promise<{ success: boolean; messageId?: string; error?: string }> {
     try {
       const response = await api.post("/api/whatsapp/send", {
@@ -295,33 +295,33 @@ export class WhatsAppService {
     const result = await this.sendMessage(
       customer.phoneNumber,
       message,
-      "order_enquiry"
+      "order_enquiry",
     );
     return result.success;
   }
 
   async sendOrderConfirmation(
     customer: Customer,
-    order: Order
+    order: Order,
   ): Promise<boolean> {
     const message = whatsappTemplates.orderConfirmation(customer, order);
     const result = await this.sendMessage(
       customer.phoneNumber,
       message,
-      "order_confirmation"
+      "order_confirmation",
     );
     return result.success;
   }
 
   async sendOrderStatusUpdate(
     customer: Customer,
-    order: Order
+    order: Order,
   ): Promise<boolean> {
     const message = whatsappTemplates.orderStatusUpdate(customer, order);
     const result = await this.sendMessage(
       customer.phoneNumber,
       message,
-      "status_update"
+      "status_update",
     );
     return result.success;
   }
@@ -331,14 +331,14 @@ export class WhatsAppService {
     const result = await this.sendMessage(
       customer.phoneNumber,
       message,
-      "delivery_update"
+      "delivery_update",
     );
     return result.success;
   }
 
   async sendPromotionalMessage(
     customers: Customer[],
-    message: string
+    message: string,
   ): Promise<{ success: number; failed: number }> {
     let success = 0;
     let failed = 0;
@@ -348,7 +348,7 @@ export class WhatsAppService {
       const result = await this.sendMessage(
         customer.phoneNumber,
         fullMessage,
-        "promotional"
+        "promotional",
       );
 
       if (result.success) {
@@ -365,7 +365,7 @@ export class WhatsAppService {
   }
 
   async getMessageStatus(
-    messageId: string
+    messageId: string,
   ): Promise<WhatsAppMessage["status"]> {
     try {
       const response = await api.get(`/api/whatsapp/status/${messageId}`);
@@ -378,11 +378,11 @@ export class WhatsAppService {
 
   async getMessageHistory(
     customerId: string,
-    limit: number = 50
+    limit: number = 50,
   ): Promise<WhatsAppMessage[]> {
     try {
       const response = await api.get(
-        `/api/whatsapp/history/${customerId}?limit=${limit}`
+        `/api/whatsapp/history/${customerId}?limit=${limit}`,
       );
       return response.data;
     } catch (error) {
@@ -396,7 +396,7 @@ export const whatsappService = new WhatsAppService();
 
 // Helper function to send order enquiry directly (used in checkout)
 export const sendOrderEnquiry = async (
-  orderData: any
+  orderData: any,
 ): Promise<{ success: boolean; messageId?: string; error?: string }> => {
   try {
     // Create customer object from order data

@@ -117,7 +117,7 @@ export function slugify(text: string): string {
 
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
-  delay: number
+  delay: number,
 ): (...args: Parameters<T>) => void {
   let timeoutId: NodeJS.Timeout;
 
@@ -129,7 +129,7 @@ export function debounce<T extends (...args: any[]) => any>(
 
 export function throttle<T extends (...args: any[]) => any>(
   func: T,
-  delay: number
+  delay: number,
 ): (...args: Parameters<T>) => void {
   let lastCall = 0;
 
@@ -170,7 +170,7 @@ export function generateRandomId(length: number = 8): string {
 
 export function calculateDiscountPercentage(
   originalPrice: number,
-  discountedPrice: number
+  discountedPrice: number,
 ): number {
   return Math.round(((originalPrice - discountedPrice) / originalPrice) * 100);
 }
@@ -178,7 +178,7 @@ export function calculateDiscountPercentage(
 export function isWithinDeliveryRadius(
   customerPincode: string,
   shopPincode: string,
-  radiusKm: number
+  radiusKm: number,
 ): boolean {
   // Simplified implementation - in reality, you'd use geolocation APIs
   // For demo, we'll consider all pincodes within the same first 3 digits as within radius
@@ -210,7 +210,7 @@ export function getPaymentStatusColor(status: string): string {
 
 export function getOrderStatusMessage(
   status: string,
-  deliveryType: "delivery" | "pickup"
+  deliveryType: "delivery" | "pickup",
 ): string {
   const messages = {
     confirmed:
@@ -218,7 +218,7 @@ export function getOrderStatusMessage(
     delivered:
       deliveryType === "pickup"
         ? "Your order has been completed. Thank you for shopping with us!"
-        : "Your order has been delivered successfully. Thank you for shopping with us!",
+        : "Your order has been dispatched successfully. Thank you for shopping with us!",
     cancelled:
       "This order has been cancelled. Please contact us if you have any questions.",
   };
@@ -245,7 +245,7 @@ export function getValidStatusTransitions(currentStatus: string): string[] {
 // Helper function to check if status can be updated
 export function canUpdateOrderStatus(
   currentStatus: string,
-  newStatus: string
+  newStatus: string,
 ): boolean {
   const validTransitions = getValidStatusTransitions(currentStatus);
   return validTransitions.includes(newStatus);
@@ -270,7 +270,7 @@ export function exportToCSV(data: any[], filename: string): void {
           }
           return value;
         })
-        .join(",")
+        .join(","),
     ),
   ].join("\n");
 

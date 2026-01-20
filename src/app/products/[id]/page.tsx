@@ -60,7 +60,7 @@ export default function ProductDetailPage() {
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
-    null
+    null,
   );
 
   useEffect(() => {
@@ -115,7 +115,7 @@ export default function ProductDetailPage() {
       const cartItem = cart.items.find(
         (item) =>
           item.product.id === product.id &&
-          item.selectedVariant?.sku === selectedVariant.sku
+          item.selectedVariant?.sku === selectedVariant.sku,
       );
       const quantityInCart = cartItem?.quantity || 0;
       return Math.max(0, currentStock - quantityInCart);
@@ -123,7 +123,7 @@ export default function ProductDetailPage() {
 
     // For non-variant products
     const cartItem = cart.items.find(
-      (item) => item.product.id === product.id && !item.selectedVariant
+      (item) => item.product.id === product.id && !item.selectedVariant,
     );
     const quantityInCart = cartItem?.quantity || 0;
     return Math.max(0, currentStock - quantityInCart);
@@ -146,8 +146,8 @@ export default function ProductDetailPage() {
         showErrorNotification(
           `Only ${availableStock} unit${
             availableStock !== 1 ? "s" : ""
-          } available for this product`
-        )
+          } available for this product`,
+        ),
       );
     }
   };
@@ -207,20 +207,20 @@ export default function ProductDetailPage() {
     if (quantity > availableStock) {
       dispatch(
         showErrorNotification(
-          `Cannot add ${quantity} units. Only ${availableStock} available.`
-        )
+          `Cannot add ${quantity} units. Only ${availableStock} available.`,
+        ),
       );
       return;
     }
 
-    // Add to cart with selected variant if applicable
+    // Add to basket with selected variant if applicable
     dispatch(
       addToCart({
         product,
         quantity,
         selectedVariant:
           product.hasVariants && selectedVariant ? selectedVariant : undefined,
-      })
+      }),
     );
 
     setQuantity(1);
@@ -488,7 +488,7 @@ export default function ProductDetailPage() {
                       <span>
                         {getSavingsMessage(
                           discountCalc.originalPrice,
-                          discountCalc.discountedPrice
+                          discountCalc.discountedPrice,
                         )}
                       </span>
                     </div>
@@ -500,7 +500,7 @@ export default function ProductDetailPage() {
                   {getCurrentWeightUnit() === "other" && product.customUnit
                     ? product.customUnit
                     : WEIGHT_UNIT_LABELS[getCurrentWeightUnit()]?.split(
-                        " "
+                        " ",
                       )[1] || getCurrentWeightUnit()}
                 </div>
               </div>
@@ -544,7 +544,7 @@ export default function ProductDetailPage() {
                 </span>
               </div>
 
-              {/* Quantity Selector and Add to Cart */}
+              {/* Quantity Selector and Add to Basket */}
               {!isOutOfStock && (
                 <div className="mb-6 sm:mb-8">
                   <label className="block text-gray-700 mb-2 font-medium">
@@ -588,7 +588,7 @@ export default function ProductDetailPage() {
                       className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 sm:py-3 px-6 sm:px-8 rounded-lg transition-colors flex items-center justify-center font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <ShoppingCart className="w-5 h-5 mr-2" />
-                      Add to Cart
+                      Add to Basket
                     </button>
                   </div>
 

@@ -36,7 +36,7 @@ export function Header() {
 
   const cartItemsCount = cart.items.reduce(
     (sum, item) => sum + item.quantity,
-    0
+    0,
   );
 
   // Set client-side flag after hydration
@@ -112,14 +112,14 @@ export function Header() {
 
             {/* Right Actions */}
             <div className="flex items-center space-x-2 sm:space-x-3 md:space-x-4">
-              {/* Track Order Button - Desktop only, hidden on mobile */}
+              {/* Order Status Button - Desktop only, hidden on mobile */}
               <Link
                 href="/track-order"
                 className="hidden md:inline-flex items-center bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-3 lg:px-4 py-2 rounded-lg font-semibold text-xs lg:text-sm transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-lg"
               >
                 <Search className="w-3 lg:w-4 h-3 lg:h-4 mr-1 lg:mr-2" />
-                <span className="hidden lg:inline">Track</span>
-                <span className="lg:hidden">Track</span>
+                <span className="hidden lg:inline">Status</span>
+                <span className="lg:hidden">Status</span>
               </Link>
 
               {/* Search - Hidden on mobile */}

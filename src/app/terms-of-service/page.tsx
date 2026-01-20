@@ -91,8 +91,7 @@ export default function TermsOfServicePage() {
                 after successful payment or valid COD confirmation.
               </li>
               <li>
-                We do not use online payment gateways or automated checkout
-                systems.
+                We do not use online payment gateways or automated buy systems.
               </li>
               <li>No partial payments are accepted.</li>
               <li>
@@ -138,7 +137,7 @@ export default function TermsOfServicePage() {
               6. Cancellation Policy
             </h2>
             <ul className="list-disc pl-5 space-y-2">
-              <li>Orders cannot be canceled once they are out for delivery.</li>
+              <li>Orders cannot be canceled once they are out for dispatch.</li>
               <li>
                 Cancellations before dispatch may be permitted on a case-by-case
                 basis.

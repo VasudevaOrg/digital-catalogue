@@ -22,7 +22,7 @@ export const smsTemplates: SMSTemplates = {
         order.deliveryType === "pickup"
           ? "Order ready for pickup"
           : "Order ready for delivery",
-      delivered: "Order delivered successfully",
+      delivered: "Order dispatched successfully",
       cancelled: "Order cancelled",
     };
 
@@ -48,7 +48,7 @@ export class SMSService {
   async sendSMS(
     phoneNumber: string,
     message: string,
-    messageType: SMSMessage["messageType"] = "promotional"
+    messageType: SMSMessage["messageType"] = "promotional",
   ): Promise<{ success: boolean; messageId?: string; error?: string }> {
     try {
       const response = await api.post("/api/sms/send", {
@@ -82,14 +82,14 @@ export class SMSService {
     const result = await this.sendSMS(
       customer.phoneNumber,
       message,
-      "order_update"
+      "order_update",
     );
     return result.success;
   }
 
   async sendPromotionalMessage(
     customers: Customer[],
-    message: string
+    message: string,
   ): Promise<{ success: number; failed: number }> {
     let success = 0;
     let failed = 0;
@@ -99,7 +99,7 @@ export class SMSService {
       const result = await this.sendSMS(
         customer.phoneNumber,
         fullMessage,
-        "promotional"
+        "promotional",
       );
 
       if (result.success) {
@@ -127,11 +127,11 @@ export class SMSService {
 
   async getMessageHistory(
     customerId: string,
-    limit: number = 50
+    limit: number = 50,
   ): Promise<SMSMessage[]> {
     try {
       const response = await api.get(
-        `/api/sms/history/${customerId}?limit=${limit}`
+        `/api/sms/history/${customerId}?limit=${limit}`,
       );
       return response.data;
     } catch (error) {
