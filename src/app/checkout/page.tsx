@@ -50,7 +50,7 @@ export default function CheckoutPage() {
   const [isClient, setIsClient] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [deliveryType, setDeliveryType] = useState<"delivery" | "pickup">(
-    "delivery"
+    "delivery",
   );
   const [paymentMethod, setPaymentMethod] = useState<
     "prepaid" | "cash_on_pickup"
@@ -233,7 +233,7 @@ export default function CheckoutPage() {
     const cleanPhone = customerInfo.phoneNumber.replace(/\D/g, "");
     if (!phoneRegex.test(cleanPhone)) {
       dispatch(
-        showErrorNotification("Please enter a valid 10-digit phone number")
+        showErrorNotification("Please enter a valid 10-digit phone number"),
       );
       return false;
     }
@@ -242,8 +242,8 @@ export default function CheckoutPage() {
       if (!isDeliveryAvailable) {
         dispatch(
           showErrorNotification(
-            "Delivery is not available for your pincode. Please choose store pickup."
-          )
+            "Delivery is not available for your pincode. Please choose store pickup.",
+          ),
         );
         return false;
       }
@@ -298,6 +298,7 @@ export default function CheckoutPage() {
               price: item.selectedVariant.price,
               weight: item.selectedVariant.weight,
               weightUnit: item.selectedVariant.weightUnit,
+              customUnit: item.selectedVariant.customUnit,
               discount:
                 item.selectedVariant.discount &&
                 isDiscountActive(item.selectedVariant.discount)
@@ -308,7 +309,7 @@ export default function CheckoutPage() {
 
         const discountCalc = calculateProductDiscount(
           productData,
-          item.quantity
+          item.quantity,
         );
 
         const hasDiscount = discountCalc.discountAmount > 0;
@@ -323,6 +324,7 @@ export default function CheckoutPage() {
               originalPrice: productData.price,
               weight: productData.weight,
               weightUnit: productData.weightUnit || item.product.weightUnit, // Pass unit info
+              customUnit: productData.customUnit || item.product.customUnit, // Pass custom unit info
               category: item.product.category,
               images: item.product.images || [],
               discount: productData.discount, // Use the correct discount (variant or product)
@@ -345,6 +347,7 @@ export default function CheckoutPage() {
               price: productData.price,
               weight: productData.weight,
               weightUnit: productData.weightUnit || item.product.weightUnit, // Pass unit info
+              customUnit: productData.customUnit || item.product.customUnit, // Pass custom unit info
               category: item.product.category,
               images: item.product.images || [],
               selectedVariant: item.selectedVariant, // Pass variant info
@@ -409,7 +412,7 @@ export default function CheckoutPage() {
             ? ` Customer saved ₹${totalSavings.toFixed(2)} with discounts.`
             : ""
         } Eligible amount: ₹${eligibleAmount.toFixed(
-          2
+          2,
         )}, DELTA products: ₹${deltaAmount.toFixed(2)}${
           isEligibleForFreeDelivery
             ? `. FREE delivery applied (eligible ≥₹1000).`
@@ -444,13 +447,13 @@ export default function CheckoutPage() {
             throw orderResult; // Throw the whole result including mismatches
           }
           throw new Error(
-            orderResult.message || "Failed to create order in database"
+            orderResult.message || "Failed to create order in database",
           );
         }
 
         if (!orderResult.success) {
           throw new Error(
-            orderResult.message || "Failed to create order in database"
+            orderResult.message || "Failed to create order in database",
           );
         }
 
@@ -469,7 +472,7 @@ export default function CheckoutPage() {
       // Clean and prefix customer phone
       const customerPhone = savedOrder.customerInfo.phoneNumber.replace(
         /\D/g,
-        ""
+        "",
       );
       const formattedCustomerPhone = customerPhone.startsWith("91")
         ? customerPhone
@@ -485,8 +488,8 @@ export default function CheckoutPage() {
         savedOrder.paymentMethod === "prepaid"
           ? "Prepaid"
           : savedOrder.deliveryType === "delivery"
-          ? "Cash on Delivery"
-          : "Cash on Pickup"
+            ? "Cash on Delivery"
+            : "Cash on Pickup"
       }${
         savedOrder.deliveryType === "delivery"
           ? `\n*Store UPI (Pay here):* 9448132930@hdfcbank`
@@ -509,7 +512,7 @@ Please confirm my order.`;
       // Redirect to WhatsApp
       const merchantNumber = "919448132930";
       const whatsappUrl = `https://wa.me/${merchantNumber}?text=${encodeURIComponent(
-        whatsappMessage
+        whatsappMessage,
       )}`;
 
       // Open in new tab to allow the success screen to show in the background
@@ -620,7 +623,9 @@ Please confirm your order on WhatsApp. Redirecting now...`;
       dispatch(updateProductsInCart(updates));
       setShowPriceModal(false);
       dispatch(
-        showSuccessNotification("Prices updated. You can now place your order.")
+        showSuccessNotification(
+          "Prices updated. You can now place your order.",
+        ),
       );
     }
   };
@@ -890,8 +895,8 @@ Please confirm your order on WhatsApp. Redirecting now...`;
                       deliveryType === "delivery"
                         ? "border-blue-500 bg-blue-50"
                         : isDeliveryAvailable
-                        ? "border-gray-200 hover:border-gray-300"
-                        : "border-gray-200 opacity-50 cursor-not-allowed"
+                          ? "border-gray-200 hover:border-gray-300"
+                          : "border-gray-200 opacity-50 cursor-not-allowed"
                     }`}
                     onClick={() =>
                       isDeliveryAvailable && setDeliveryType("delivery")
@@ -1204,7 +1209,7 @@ Please confirm your order on WhatsApp. Redirecting now...`;
 
                     const discountCalc = calculateProductDiscount(
                       productForDisplay,
-                      item.quantity
+                      item.quantity,
                     );
 
                     const unitOriginalPrice = productForDisplay.price;
@@ -1239,7 +1244,7 @@ Please confirm your order on WhatsApp. Redirecting now...`;
                       }`;
                     } else {
                       weightDisplay = `${(weight * item.quantity).toFixed(
-                        2
+                        2,
                       )} ${weightUnit}`;
                     }
 
@@ -1364,7 +1369,7 @@ Please confirm your order on WhatsApp. Redirecting now...`;
                               const discountCalc = hasDiscount
                                 ? calculateProductDiscount(
                                     productForDiscount,
-                                    item.quantity
+                                    item.quantity,
                                   )
                                 : null;
                               return (
@@ -1411,7 +1416,7 @@ Please confirm your order on WhatsApp. Redirecting now...`;
                         <span className="text-gray-900">
                           {measurementTotals.volume >= 1000
                             ? `${(measurementTotals.volume / 1000).toFixed(
-                                2
+                                2,
                               )} L`
                             : `${measurementTotals.volume} ml`}
                         </span>

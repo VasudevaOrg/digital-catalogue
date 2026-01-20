@@ -11,6 +11,8 @@ export interface IOrderItem extends Document {
     weight: number;
     category: string;
     images: string[];
+    weightUnit?: string;
+    customUnit?: string;
     discount?: any; // Store discount details
     selectedVariant?: any; // Store selected variant details
   };
@@ -90,6 +92,7 @@ const OrderItemSchema = new Schema(
       originalPrice: { type: Number }, // Original price before discount
       weight: { type: Number, required: true },
       weightUnit: { type: String }, // Store weight unit for non-variant products
+      customUnit: { type: String }, // Store custom unit for non-variant products
       category: { type: String, required: true },
       images: [{ type: String }],
       discount: { type: Schema.Types.Mixed }, // Store discount info
@@ -103,7 +106,7 @@ const OrderItemSchema = new Schema(
     appliedDiscount: { type: Number, default: 0 }, // Discount amount
     savings: { type: Number, default: 0 }, // Savings amount
   },
-  { strict: false }
+  { strict: false },
 );
 
 const OrderSchema = new Schema<IOrder>(
@@ -194,7 +197,7 @@ const OrderSchema = new Schema<IOrder>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Indexes for better query performance
@@ -237,7 +240,7 @@ OrderSchema.pre("save", function (next) {
 // Instance methods
 OrderSchema.methods.updateStatus = function (
   newStatus: string,
-  notes?: string
+  notes?: string,
 ) {
   this.orderStatus = newStatus;
   this.statusHistory.push({

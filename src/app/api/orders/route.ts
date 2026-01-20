@@ -16,9 +16,8 @@ export async function POST(request: NextRequest) {
     // --- PRICE VERIFICATION START ---
     const productIds = orderData.items.map((item: any) => item.product.id);
     const Product = (await import("@/models/Product")).default;
-    const { calculateProductDiscount, isDiscountActive } = await import(
-      "@/lib/discountUtils"
-    );
+    const { calculateProductDiscount, isDiscountActive } =
+      await import("@/lib/discountUtils");
 
     const dbProducts = await Product.find({ _id: { $in: productIds } }).lean();
     const dbProductsMap = dbProducts.reduce((map: any, p: any) => {
@@ -45,7 +44,7 @@ export async function POST(request: NextRequest) {
 
       if (item.product.selectedVariant) {
         dbVariant = dbProduct.variants?.find(
-          (v: any) => v.sku === item.product.selectedVariant.sku
+          (v: any) => v.sku === item.product.selectedVariant.sku,
         );
         if (dbVariant) {
           currentPrice = dbVariant.price;
@@ -63,7 +62,7 @@ export async function POST(request: NextRequest) {
       };
       const discountCalc = calculateProductDiscount(
         productForCalc,
-        item.quantity
+        item.quantity,
       );
       const expectedUnitPrice = discountCalc.discountedPrice / item.quantity;
       const providedUnitPrice = item.product.price; // This is the discounted unit price from frontend
@@ -96,7 +95,7 @@ export async function POST(request: NextRequest) {
           error: "PRICE_MISMATCH",
           mismatches,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
     // --- PRICE VERIFICATION END ---
@@ -112,12 +111,12 @@ export async function POST(request: NextRequest) {
         console.log(
           "🔍 Found selectedVariant in incoming item:",
           item.product.name,
-          item.product.selectedVariant
+          item.product.selectedVariant,
         );
       } else {
         console.log(
           "⚠️ NO selectedVariant in incoming item:",
-          item.product.name
+          item.product.name,
         );
       }
 
@@ -135,6 +134,7 @@ export async function POST(request: NextRequest) {
           originalPrice: item.product.originalPrice || unitPrice, // Store original price if available
           weight: item.product.weight,
           weightUnit: item.product.weightUnit, // Store weight unit
+          customUnit: item.product.customUnit, // Store custom unit
           category: item.product.category,
           images: item.product.images || [],
           discount: item.product.discount, // Store discount information
@@ -160,12 +160,12 @@ export async function POST(request: NextRequest) {
 
     const totalWeight = orderItems.reduce(
       (sum: number, item: any) => sum + item.totalWeight,
-      0
+      0,
     );
 
     const totalSavings = orderItems.reduce(
       (sum: number, item: any) => sum + (item.savings || 0),
-      0
+      0,
     );
 
     // Create the order document with discounted prices
@@ -255,7 +255,7 @@ export async function POST(request: NextRequest) {
       message:
         totalSavings > 0
           ? `Order confirmed successfully! You saved ₹${totalSavings.toFixed(
-              2
+              2,
             )}`
           : "Order confirmed successfully",
     };
@@ -272,7 +272,7 @@ export async function POST(request: NextRequest) {
             message: "Order ID already exists. Please try again.",
             error: "DUPLICATE_ORDER_ID",
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -283,7 +283,7 @@ export async function POST(request: NextRequest) {
             message: "Invalid order data provided.",
             error: error.message,
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
@@ -297,7 +297,7 @@ export async function POST(request: NextRequest) {
             ? error
             : "Internal server error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -375,7 +375,7 @@ export async function GET(request: NextRequest) {
             ? error
             : "Internal server error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
