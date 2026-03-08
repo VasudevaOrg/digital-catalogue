@@ -2,6 +2,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { list } from "@vercel/blob";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET(request: NextRequest) {
   try {
     console.log("🎠 Fetching carousel data from blob storage...");
@@ -14,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     console.log(
       `📁 Found ${blobs.length} files in carousel folder:`,
-      blobs.map((b) => b.pathname.split("/").pop())
+      blobs.map((b) => b.pathname.split("/").pop()),
     );
 
     // Filter and sort carousel items based on your admin's naming pattern
@@ -32,7 +35,7 @@ export async function GET(request: NextRequest) {
         const isActive = filename.includes("active-true");
 
         console.log(
-          `📄 File: ${filename}, isImage: ${isImage}, isActive: ${isActive}`
+          `📄 File: ${filename}, isImage: ${isImage}, isActive: ${isActive}`,
         );
 
         return isImage && isActive;
@@ -53,7 +56,7 @@ export async function GET(request: NextRequest) {
             .split("/")
             .pop()} (order: ${aOrder}) vs ${b.pathname
             .split("/")
-            .pop()} (order: ${bOrder})`
+            .pop()} (order: ${bOrder})`,
         );
 
         return aOrder - bOrder;
@@ -69,6 +72,21 @@ export async function GET(request: NextRequest) {
           let description = "Discover our premium collection";
           let category = "";
 
+          const decodeField = (str: string) => {
+            try {
+              const decoded = decodeURIComponent(
+                (str || "").replace(/%2D/g, "-").replace(/%2E/g, "."),
+              );
+              // Backward compatibility: replace underscores with space if no space exists
+              if (!decoded.includes(" ") && decoded.includes("_")) {
+                return decoded.replace(/[_]/g, " ");
+              }
+              return decoded;
+            } catch (e) {
+              return str.replace(/[_]/g, " ");
+            }
+          };
+
           // Find title, description, and category parts
           const titleIndex = parts.findIndex((part) => part === "title");
           const descIndex = parts.findIndex((part) => part === "desc");
@@ -80,14 +98,13 @@ export async function GET(request: NextRequest) {
               descIndex > titleIndex
                 ? descIndex
                 : orderIndex > titleIndex
-                ? orderIndex
-                : catIndex > titleIndex
-                ? catIndex
-                : parts.length;
-            title = parts
-              .slice(titleIndex + 1, titleEnd)
-              .join(" ")
-              .replace(/[_]/g, " ");
+                  ? orderIndex
+                  : catIndex > titleIndex
+                    ? catIndex
+                    : parts.length;
+            title = decodeField(
+              parts.slice(titleIndex + 1, titleEnd).join("-"),
+            );
           }
 
           if (descIndex >= 0 && descIndex + 1 < parts.length) {
@@ -95,12 +112,11 @@ export async function GET(request: NextRequest) {
               orderIndex > descIndex
                 ? orderIndex
                 : catIndex > descIndex
-                ? catIndex
-                : parts.length;
-            description = parts
-              .slice(descIndex + 1, descEnd)
-              .join(" ")
-              .replace(/[_]/g, " ");
+                  ? catIndex
+                  : parts.length;
+            description = decodeField(
+              parts.slice(descIndex + 1, descEnd).join("-"),
+            );
           }
 
           if (catIndex >= 0 && catIndex + 1 < parts.length) {
@@ -108,7 +124,7 @@ export async function GET(request: NextRequest) {
             const lastPart = parts[parts.length - 1];
             const catEnd = parts.length - 1;
 
-            category = parts.slice(catIndex + 1, catEnd).join(" ");
+            category = parts.slice(catIndex + 1, catEnd).join("-");
 
             // Add the name part before the dot if it exists
             const nameBeforeDot = lastPart.split(".")[0];
@@ -116,12 +132,14 @@ export async function GET(request: NextRequest) {
               nameBeforeDot &&
               nameBeforeDot !== "jpg" &&
               nameBeforeDot !== "png" &&
-              nameBeforeDot !== "webp"
+              nameBeforeDot !== "webp" &&
+              nameBeforeDot !== "jpeg"
             ) {
               category = category
-                ? `${category} ${nameBeforeDot}`
+                ? `${category}-${nameBeforeDot}`
                 : nameBeforeDot;
             }
+            category = decodeField(category);
           }
 
           // Clean up empty values
@@ -174,7 +192,7 @@ export async function GET(request: NextRequest) {
         message: "Failed to fetch carousel data",
         error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

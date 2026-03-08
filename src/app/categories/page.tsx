@@ -106,7 +106,7 @@ export default function CategoriesPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { categories, isLoading, error, products } = useAppSelector(
-    (state) => state.products
+    (state) => state.products,
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [categoriesWithCounts, setCategoriesWithCounts] = useState<
@@ -135,7 +135,7 @@ export default function CategoriesPage() {
           name: category,
           count: 0,
           isLoading: true,
-        })
+        }),
       );
 
       setCategoriesWithCounts(categoriesWithCountsTemp);
@@ -154,7 +154,7 @@ export default function CategoriesPage() {
                 sortOrder: "asc",
                 priceRange: [0, 10000],
               },
-            })
+            }),
           );
 
           return {
@@ -164,7 +164,7 @@ export default function CategoriesPage() {
         } catch (error) {
           console.error(
             `Error fetching count for category ${category}:`,
-            error
+            error,
           );
           return {
             category,
@@ -199,7 +199,7 @@ export default function CategoriesPage() {
   useEffect(() => {
     if (searchQuery) {
       const filtered = categoriesWithCounts.filter((category) =>
-        category.name.toLowerCase().includes(searchQuery.toLowerCase())
+        category.name.toLowerCase().includes(searchQuery.toLowerCase()),
       );
       setFilteredCategories(filtered);
     } else {
@@ -261,7 +261,7 @@ export default function CategoriesPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search categories..."
-              className="block w-full pl-10 pr-3 py-3 border-2 border-gray-200 rounded-xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:border-blue-500 transition-colors"
+              className="block w-full pl-10 pr-3 py-3 border-2 border-gray-200 rounded-xl leading-5 bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:border-blue-500 transition-colors"
             />
           </div>
         </div>
@@ -286,7 +286,7 @@ export default function CategoriesPage() {
                         Total products:{" "}
                         {filteredCategories.reduce(
                           (sum, cat) => sum + cat.count,
-                          0
+                          0,
                         )}
                       </span>
                     )}
@@ -312,7 +312,7 @@ export default function CategoriesPage() {
                       >
                         <Link
                           href={`/products?category=${encodeURIComponent(
-                            categoryData.name
+                            categoryData.name,
                           )}`}
                           className="group block"
                         >

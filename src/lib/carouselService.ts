@@ -130,7 +130,7 @@ export class CarouselService {
               item.accentColor ||
               staticSlides[index % staticSlides.length].accentColor,
             image: item.image, // This will be the blob URL
-          })
+          }),
         );
 
         // Cache the dynamic slides
@@ -138,11 +138,11 @@ export class CarouselService {
         this.cacheTimestamp = Date.now();
 
         console.log(
-          `✅ Loaded ${dynamicSlides.length} dynamic carousel slides from blob storage`
+          `✅ Loaded ${dynamicSlides.length} dynamic carousel slides from blob storage`,
         );
         console.log(
           "🖼️ Carousel images:",
-          dynamicSlides.map((s) => ({ title: s.title, hasImage: !!s.image }))
+          dynamicSlides.map((s) => ({ title: s.title, hasImage: !!s.image })),
         );
 
         return dynamicSlides;
@@ -153,15 +153,15 @@ export class CarouselService {
       }
     } catch (error) {
       console.warn(
-        "⚠️ Failed to fetch dynamic carousel content, falling back to static slides:"
+        "⚠️ Failed to fetch dynamic carousel content, falling back to static slides:",
       );
       console.warn(
         "Error details:",
-        error instanceof Error ? error.message : "Unknown error"
+        error instanceof Error ? error.message : "Unknown error",
       );
       console.warn(
         "Error stack:",
-        error instanceof Error ? error.stack : "No stack trace"
+        error instanceof Error ? error.stack : "No stack trace",
       );
 
       // Fallback to static slides
