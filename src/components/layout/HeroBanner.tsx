@@ -171,20 +171,18 @@ export function HeroBanner() {
               >
                 {/* Mobile version - active is pill, inactive is dot */}
                 <div
-                  className={`sm:hidden rounded-full transition-all duration-300 ${
-                    index === currentSlide
+                  className={`sm:hidden rounded-full transition-all duration-300 ${index === currentSlide
                       ? "w-8 h-2 bg-blue-600 shadow-sm"
                       : "w-1.5 h-1.5 bg-blue-200 hover:bg-blue-300"
-                  }`}
+                    }`}
                 />
 
                 {/* Desktop version - existing bar style */}
                 <div
-                  className={`hidden sm:block transition-all duration-300 ${
-                    index === currentSlide
+                  className={`hidden sm:block transition-all duration-300 ${index === currentSlide
                       ? "w-12 h-3 bg-blue-600 rounded-full shadow-md"
                       : "w-3 h-3 bg-blue-200 hover:bg-blue-300 rounded-full"
-                  }`}
+                    }`}
                 />
               </button>
             ))}
@@ -203,7 +201,7 @@ export function HeroBanner() {
         {/* WhatsApp Button */}
         <div className="mt-8 flex justify-center">
           <a
-            href="https://wa.me/919876543210" // Make sure to replace with the actual number
+            href="https://wa.me/919448132930" // Make sure to replace with the actual number
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center space-x-2 bg-green-500 hover:bg-green-600 text-white px-8 py-3.5 rounded-full font-semibold transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:scale-95"
